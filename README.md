@@ -1,0 +1,2 @@
+# InSilicoSeq
+A sequencing simulator
