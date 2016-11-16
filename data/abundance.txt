@@ -1,0 +1,5 @@
+genome_A    0.2
+genome_T    0.2
+genome_GC   0.4
+genome_ATCG 0.1
+genome_TA   0.1
