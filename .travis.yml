@@ -1,10 +1,13 @@
 language: python
 python:
-- "3.2"
-- "3.3"
-- "3.4"
-- "3.5"
+- '3.3'
+- '3.4'
+- '3.5'
 - '3.5'
 install:
 - pip install -r requirements.txt
 script: nosetests
+notifications:
+  email: false
+  slack:
+    secure: DNjnMK6hvSnVR+74xr+iKh4rvrz2xXjX9ZRPNW5Xl+8n+BYhy7TokWysm9+vgDrFW6ji/O6VuYutyOhxxx3qvoVlm/77m+Vj/uOnxskWKMhvkXFCvEnmp1lA4O2s3Nqkp75auPlc5twDFl51WzyjC7nJbH8G1yIKwFJhv5yjSuDTGJ7SkJ69IeAiTYJdmXQs7LSPcYgdHdxCNWsGa7/dmPLYwuNegY/rECJqpfrUNx5It/ACx53zihXoF77cEq6/YxnBAVQSagr0SnuO486irMvXgWlEyzvmMLG4FRkuU6KaZtaXiSaBU20qW5ZV9Q1Jk9SFAo9m3zaLNvC9tJEXM66I3bSfKhIsfhikfbQ8oVZPTTbhoDR+M6PhR/uRwg2NbS0r1iTZ/amZQBr3yw0nO7v/ypMwU87DFALL4waZH+PygFzlfXCNGpb89aDgvx4J6GDJp1spA91rQleEX8o4x4O8gO/IqllwEMCa9pbicoFR0xMwCbPitiuwG9QN4xip1CVVPh8rRrt7F5cOLupTBGpDXOQsyBg1XgjqzUMvZehYkgqWi54sQm0Ciw0u+rGIP2Bq9U8JCh4xjknEflrbgunWycSC4IdS/8au0fo6f6ZyT8qWPWVyt4k11Y+KOtqJ3HCU2kCz0dPUuOxLo8xS+Blr0kPlT08n7JOUsIzKWDY=
