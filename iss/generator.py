@@ -10,7 +10,7 @@ import random
 
 
 def reads(record, read_length, coverage):
-    """Simulates perfect reads. Each read is a
+    """Simulate perfect reads. Each read is a
     SeqRecord object. Return a generator.
 
     Arguments:

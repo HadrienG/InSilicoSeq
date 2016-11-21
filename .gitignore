@@ -10,3 +10,6 @@ __pycache__/
 
 # virtualenv
 venv_iss/
+
+# project specific files
+*.fastq
