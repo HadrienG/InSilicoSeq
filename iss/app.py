@@ -45,10 +45,18 @@ def main():
         help='Number of reads to generate (default: %(default)s)'
         )
     parser.add_argument(
+        '--insert_size',
+        '-i',
+        metavar='<int>',
+        type=int,
+        default=200,
+        help='Insert size for paired-end data (default: %(default)s)'
+        )
+    parser.add_argument(
         '--output',
         '-o',
         metavar='<fastq>',
-        help='Output file (Required)',
+        help='Output file prefix (Required)',
         required=True
         )
     parser._optionals.title = 'arguments'
@@ -70,6 +78,10 @@ def main():
             read_gen = generator.reads(
                 record,
                 args.read_length,
-                coverage
+                coverage,
+                args.insert_size
                 )
+            # for read_pairs in read_gen:
+            #     print(read_pairs)
+            #     break
             generator.to_fastq(read_gen, args.output)
