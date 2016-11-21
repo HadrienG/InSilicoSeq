@@ -17,7 +17,7 @@ def reads(record, read_length, coverage):
     input_record -- sequence of reference (from where the reads will
     originate). Must be a SeqRecord object.
     read_length -- desired read length (int)
-    coverage -- desired coverage of the genome (int)
+    coverage -- desired coverage of the genome
     """
     header = record.id
     sequence = record.seq
@@ -40,6 +40,6 @@ def reads(record, read_length, coverage):
 
 def to_fastq(generator, output):
     """Take a generator and write to a file in fastq format"""
-    with open(output, 'w') as o:
+    with open(output, 'a') as o:
         for read in generator:
             SeqIO.write(read, o, 'fastq-sanger')

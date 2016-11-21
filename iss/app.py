@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from iss import abundance
 from iss import generator
 from Bio import SeqIO
 
@@ -18,11 +19,17 @@ def main():
         '--genome',
         '-g',
         metavar='<fasta>',
-        help='Input genome from where the reads will originate (Required)',
+        help='Input genome(s) from where the reads will originate (Required)',
         required=True
     )
     parser.add_argument(
-        '--length',
+        '--abundance',
+        '-a',
+        metavar='<txt>',
+        help='abundance file for coverage calculations (default: %(default)s)'
+        )
+    parser.add_argument(
+        '--read_length',
         '-l',
         metavar='<int>',
         type=int,
@@ -30,12 +37,12 @@ def main():
         help='Read length (default: %(default)s)'
         )
     parser.add_argument(
-        '--coverage',
-        '-c',
+        '--n_reads',
+        '-n',
         metavar='<int>',
         type=int,
-        default=10,
-        help='Coverage (default: %(default)s)'
+        default=1000000,
+        help='Number of reads to generate (default: %(default)s)'
         )
     parser.add_argument(
         '--output',
@@ -47,13 +54,22 @@ def main():
     parser._optionals.title = 'arguments'
     args = parser.parse_args()
 
+    abundance_dic = abundance.parse_abundance_file(args.abundance)
     with open(args.genome, 'r') as f:
         fasta_file = SeqIO.parse(f, 'fasta')
         for record in fasta_file:
+            species_abundance = abundance_dic[record.id]
+            genome_size = len(record.seq)
+            coverage = abundance.to_coverage(
+                args.n_reads,
+                species_abundance,
+                args.read_length,
+                genome_size
+                )
+
             read_gen = generator.reads(
                 record,
-                args.length,
-                args.coverage
+                args.read_length,
+                coverage
                 )
-            break  # breaks after the 1st record. We only want a single-fasta!
-        generator.to_fastq(read_gen, args.output)
+            generator.to_fastq(read_gen, args.output)
