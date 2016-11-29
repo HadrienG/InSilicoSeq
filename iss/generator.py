@@ -11,7 +11,7 @@ import random
 
 
 def reads(record, read_length, coverage, insert_size, mean_qual):
-    """Simulate perfect reads. Each read is a SeqRecord object. Return a
+    """Simulate reads. Each read is a SeqRecord object. Return a
     generator of tuples containing the forward and reverse read.
 
     Arguments:
@@ -36,7 +36,7 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             id='%s_%s_1' % (header, i),
             description=''
         )
-        # add the quality
+        # add the quality and modify the nucleotides accordingly
         forward = error_model.introduce_error_scores(forward, mean_qual)
         forward.seq = error_model.mut_seq(forward)
 
@@ -50,7 +50,7 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             id='%s_%s_1' % (header, i),
             description=''
         )
-        # add the quality
+        # add the quality and modify the nucleotides accordingly
         reverse = error_model.introduce_error_scores(reverse, mean_qual)
         reverse.seq = error_model.mut_seq(reverse)
 

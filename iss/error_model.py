@@ -22,14 +22,16 @@ def prob_to_phred(p):
     return q
 
 
-def introduce_error_scores(seq, mean_qual):
-    seq.letter_annotations["phred_quality"] = basic(
-        phred_to_prob(mean_qual), 0.01, len(seq))
-    return seq
+def introduce_error_scores(record, mean_qual):
+    """Add phred scores to a SeqRecord according the the basic error_model"""
+    record.letter_annotations["phred_quality"] = basic(
+        phred_to_prob(mean_qual), 0.01, len(record))
+    return record
 
 
 def mut_seq(record):
-    """the SeqRecord given here should already have the right error scores"""
+    """modify the nucleotides of a SeqRecord according to the phred scores.
+    Return a sequence"""
     nucl_choices = {
         'A': ['T', 'C', 'G'],
         'T': ['A', 'C', 'G'],
