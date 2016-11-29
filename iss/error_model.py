@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from Bio.Seq import MutableSeq
+from Bio.SeqRecord import SeqRecord
 
+import random
 import numpy as np
 
 
@@ -19,10 +22,28 @@ def prob_to_phred(p):
     return q
 
 
-def introduce_errors(seq, mean_qual):
+def introduce_error_scores(seq, mean_qual):
     seq.letter_annotations["phred_quality"] = basic(
         phred_to_prob(mean_qual), 0.01, len(seq))
     return seq
+
+
+def mut_seq(record):
+    """the SeqRecord given here should already have the right error scores"""
+    nucl_choices = {
+        'A': ['T', 'C', 'G'],
+        'T': ['A', 'C', 'G'],
+        'C': ['A', 'T', 'G'],
+        'G': ['A', 'T', 'C']
+        }
+    mutable_seq = record.seq.tomutable()
+    quality_list = record.letter_annotations["phred_quality"]
+    position = 0
+    for nucl, qual in zip(mutable_seq, quality_list):
+        if random.random() > phred_to_prob(qual):
+            mutable_seq[position] = random.choice(nucl_choices[nucl])
+        position += 1
+    return mutable_seq.toseq()
 
 
 def basic(mean, stdev, length):

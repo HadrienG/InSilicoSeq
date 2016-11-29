@@ -37,7 +37,8 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             description=''
         )
         # add the quality
-        forward = error_model.introduce_errors(forward, mean_qual)
+        forward = error_model.introduce_error_scores(forward, mean_qual)
+        forward.seq = error_model.mut_seq(forward)
 
         # generate the reverse read
         reverse_start = forward_start + insert_size
@@ -50,7 +51,8 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             description=''
         )
         # add the quality
-        reverse = error_model.introduce_errors(reverse, mean_qual)
+        reverse = error_model.introduce_error_scores(reverse, mean_qual)
+        reverse.seq = error_model.mut_seq(reverse)
 
         yield(forward, reverse.reverse_complement(
             id='%s_%s_2' % (header, i),
