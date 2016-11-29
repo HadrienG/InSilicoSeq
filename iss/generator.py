@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from iss import error_model
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -9,7 +10,7 @@ from Bio.Alphabet import IUPAC
 import random
 
 
-def reads(record, read_length, coverage, insert_size):
+def reads(record, read_length, coverage, insert_size, mean_qual):
     """Simulate perfect reads. Each read is a SeqRecord object. Return a
     generator of tuples containing the forward and reverse read.
 
@@ -19,6 +20,7 @@ def reads(record, read_length, coverage, insert_size):
     read_length -- desired read length (int)
     coverage -- desired coverage of the genome
     insert_size -- insert size between the pairs
+    mean_qual -- mean quality score
     """
     header = record.id
     sequence = record.seq
@@ -35,7 +37,7 @@ def reads(record, read_length, coverage, insert_size):
             description=''
         )
         # add the quality
-        forward.letter_annotations["phred_quality"] = [40] * len(forward)
+        forward = error_model.introduce_errors(forward, mean_qual)
 
         # generate the reverse read
         reverse_start = forward_start + insert_size
@@ -47,7 +49,8 @@ def reads(record, read_length, coverage, insert_size):
             id='%s_%s_1' % (header, i),
             description=''
         )
-        reverse.letter_annotations["phred_quality"] = [40] * len(reverse)
+        # add the quality
+        reverse = error_model.introduce_errors(reverse, mean_qual)
 
         yield(forward, reverse.reverse_complement(
             id='%s_%s_2' % (header, i),

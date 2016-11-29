@@ -3,6 +3,7 @@
 
 from iss import abundance
 from iss import generator
+from iss import error_model
 from Bio import SeqIO
 
 import argparse
@@ -53,6 +54,14 @@ def main():
         help='Insert size for paired-end data (default: %(default)s)'
         )
     parser.add_argument(
+        '--mean_qual',
+        '-q',
+        metavar='<int>',
+        type=int,
+        default=30,
+        help='Mean quality score (Phred scale) (default: %(default)s)'
+        )
+    parser.add_argument(
         '--output',
         '-o',
         metavar='<fastq>',
@@ -79,9 +88,8 @@ def main():
                 record,
                 args.read_length,
                 coverage,
-                args.insert_size
-                )
-            # for read_pairs in read_gen:
-            #     print(read_pairs)
-            #     break
+                args.insert_size,
+                args.mean_qual
+                    )
+
             generator.to_fastq(read_gen, args.output)
