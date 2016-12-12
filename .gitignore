@@ -13,3 +13,5 @@ venv_iss/
 
 # project specific files
 *.fastq
+*.bam
+*.bam.bai

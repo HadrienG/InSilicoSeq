@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from iss import bam
 from iss import abundance
 from iss import generator
 from iss import error_model
@@ -69,27 +70,29 @@ def main():
         required=True
         )
     parser._optionals.title = 'arguments'
-    args = parser.parse_args()
+    # args = parser.parse_args()
+    #
+    # abundance_dic = abundance.parse_abundance_file(args.abundance)
+    # with open(args.genome, 'r') as f:
+    #     fasta_file = SeqIO.parse(f, 'fasta')
+    #     for record in fasta_file:
+    #         species_abundance = abundance_dic[record.id]
+    #         genome_size = len(record.seq)
+    #         coverage = abundance.to_coverage(
+    #             args.n_reads,
+    #             species_abundance,
+    #             args.read_length,
+    #             genome_size
+    #             )
+    #
+    #         read_gen = generator.reads(
+    #             record,
+    #             args.read_length,
+    #             coverage,
+    #             args.insert_size,
+    #             args.mean_qual
+    #                 )
+    #
+    #         generator.to_fastq(read_gen, args.output)
 
-    abundance_dic = abundance.parse_abundance_file(args.abundance)
-    with open(args.genome, 'r') as f:
-        fasta_file = SeqIO.parse(f, 'fasta')
-        for record in fasta_file:
-            species_abundance = abundance_dic[record.id]
-            genome_size = len(record.seq)
-            coverage = abundance.to_coverage(
-                args.n_reads,
-                species_abundance,
-                args.read_length,
-                genome_size
-                )
-
-            read_gen = generator.reads(
-                record,
-                args.read_length,
-                coverage,
-                args.insert_size,
-                args.mean_qual
-                    )
-
-            generator.to_fastq(read_gen, args.output)
+    bam.parse_bam('data/AM933172.bam')
