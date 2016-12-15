@@ -95,4 +95,6 @@ def main():
     #
     #         generator.to_fastq(read_gen, args.output)
 
-    bam.parse_bam('data/AM933172.bam')
+    qual_hist = bam.quality_distribution('data/AM933172.bam')
+    bam.write_to_file(qual_hist, 'profiles/ERR1743773.npy')
+    # bam.substitutions('data/AM933172.bam')

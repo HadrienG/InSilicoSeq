@@ -5,7 +5,7 @@ import pysam
 import numpy as np
 
 
-def parse_bam(bam_file):
+def substitutions(bam_file):
     array = np.empty([125, 16])
 
     dispatch_dict = {
@@ -28,33 +28,48 @@ def parse_bam(bam_file):
     }
 
     with pysam.AlignmentFile(bam_file, "rb") as bam:
-        # print(dir(bam))
         for read in bam.fetch():
-            # print(read.is_paired)
             if not read.is_unmapped:
                 alignment = read.get_aligned_pairs(
                     matches_only=True,
                     with_seq=True
                     )
                 for base in alignment:
-                    if read.seq[base[0]] != 'N':
+                    if read.seq[base[0]] != 'N':  # let's not deal with Ns
                         query_pos = base[0]
                         ref_base = base[2]
                         query_base = read.seq[query_pos]
                         dispatch_key = ref_base + query_base
-                        # print(read.tags)  # must be smarter to find MD tag
-                        md_index = (i for i, v in enumerate(
-                            read.tags) if v[0] == 'MD')
-                        print(read.tags[next(md_index)])
-                        print(read.tags)
-                        print(read.is_paired)
-                        if '^' in read.tags[6][1]:
-
-                            # if dispatch_key == 'TA':
-                            #     print(read.tags, dir(read))
+                        if '^' in read.get_tag('MD'):
                             continue
                             # how to handle deletions?
                             # cannot base ourselves of positions
                             # since you get a deletion, the bases are off :(
                         array[query_pos, dispatch_dict[dispatch_key]] += 1
     print(array)
+
+
+def quality_distribution(bam_file):
+    with pysam.AlignmentFile(bam_file, "rb") as bam:
+        n_reads = bam.count()
+        array_gen = (np.array(
+            read.query_qualities) for read in bam.fetch()
+                if not read.is_unmapped)
+
+        histograms = [np.histogram(i, bins=37) for i in zip(*array_gen)]
+    return np.array(histograms)
+
+
+def write_to_file(histograms, output):
+    np.save(output, histograms)
+
+    # TODO: THAT WILL GO TO THE ERROR_MODEL
+    # phred_list = []
+    # for hist in histograms:
+    #     values, indices = hist
+    #     weights = values / np.sum(values)
+    #     random_quality = np.random.choice(
+    #         indices[1:], p=weights
+    #     )
+    #     phred_list.append(round(random_quality))
+    # print(phred_list)
