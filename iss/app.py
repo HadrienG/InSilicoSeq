@@ -70,31 +70,34 @@ def main():
         required=True
         )
     parser._optionals.title = 'arguments'
-    # args = parser.parse_args()
-    #
-    # abundance_dic = abundance.parse_abundance_file(args.abundance)
-    # with open(args.genome, 'r') as f:
-    #     fasta_file = SeqIO.parse(f, 'fasta')
-    #     for record in fasta_file:
-    #         species_abundance = abundance_dic[record.id]
-    #         genome_size = len(record.seq)
-    #         coverage = abundance.to_coverage(
-    #             args.n_reads,
-    #             species_abundance,
-    #             args.read_length,
-    #             genome_size
-    #             )
-    #
-    #         read_gen = generator.reads(
-    #             record,
-    #             args.read_length,
-    #             coverage,
-    #             args.insert_size,
-    #             args.mean_qual
-    #                 )
-    #
-    #         generator.to_fastq(read_gen, args.output)
+    args = parser.parse_args()
 
-    qual_hist = bam.quality_distribution('data/AM933172.bam')
-    bam.write_to_file(qual_hist, 'profiles/ERR1743773.npy')
-    # bam.substitutions('data/AM933172.bam')
+    abundance_dic = abundance.parse_abundance_file(args.abundance)
+    with open(args.genome, 'r') as f:
+        fasta_file = SeqIO.parse(f, 'fasta')
+        for record in fasta_file:
+            species_abundance = abundance_dic[record.id]
+            genome_size = len(record.seq)
+            coverage = abundance.to_coverage(
+                args.n_reads,
+                species_abundance,
+                args.read_length,
+                genome_size
+                )
+
+            read_gen = generator.reads(
+                record,
+                args.read_length,
+                coverage,
+                args.insert_size,
+                args.mean_qual
+                    )
+
+            generator.to_fastq(read_gen, args.output)
+
+    # create the histogram file
+    # qual_hist = bam.quality_distribution('data/AM933172.bam')
+    # bam.write_to_file(qual_hist, 'profiles/ERR1743773.npy')
+    #
+    # generate reads based on the histogram file
+    # error_model.advanced('profiles/ERR1743773.npy')

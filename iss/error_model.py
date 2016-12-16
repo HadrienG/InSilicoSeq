@@ -23,9 +23,16 @@ def prob_to_phred(p):
 
 
 def introduce_error_scores(record, mean_qual):
-    """Add phred scores to a SeqRecord according the the basic error_model"""
+    """Add phred scores to a SeqRecord according to the basic error_model"""
     record.letter_annotations["phred_quality"] = basic(
         phred_to_prob(mean_qual), 0.01, len(record))
+    return record
+
+
+def introduce_advanced_scores(record, histograms):
+    """Add phred scores to a SeqRecord according to the basic error_model"""
+    record.letter_annotations["phred_quality"] = advanced(
+        histograms)
     return record
 
 
@@ -57,3 +64,22 @@ def basic(mean, stdev, length):
     # exp = [np.log(1 - q) / (- rate) for q in norm]
     phred = [prob_to_phred(p) for p in norm]
     return phred
+
+
+def load_npy(numpy_file):
+    """load the error profile npy file"""
+    histograms = np.load(numpy_file)
+    return histograms
+
+
+def advanced(histograms):
+    """Generate a list of phred scores based on real datasets"""
+    phred_list = []
+    for hist in histograms:
+        values, indices = hist
+        weights = values / np.sum(values)
+        random_quality = np.random.choice(
+            indices[1:], p=weights
+        )
+        phred_list.append(round(random_quality))
+    return phred_list

@@ -62,14 +62,3 @@ def quality_distribution(bam_file):
 
 def write_to_file(histograms, output):
     np.save(output, histograms)
-
-    # TODO: THAT WILL GO TO THE ERROR_MODEL
-    # phred_list = []
-    # for hist in histograms:
-    #     values, indices = hist
-    #     weights = values / np.sum(values)
-    #     random_quality = np.random.choice(
-    #         indices[1:], p=weights
-    #     )
-    #     phred_list.append(round(random_quality))
-    # print(phred_list)

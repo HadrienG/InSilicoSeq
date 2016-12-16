@@ -26,6 +26,8 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
     sequence = record.seq
 
     n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
+    histograms = error_model.load_npy('profiles/ERR1743773.npy')
+
     for i in range(n_pairs):
         forward_start = random.randrange(0, len(sequence) - read_length)
         forward_end = forward_start + read_length
@@ -37,7 +39,7 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             description=''
         )
         # add the quality and modify the nucleotides accordingly
-        forward = error_model.introduce_error_scores(forward, mean_qual)
+        forward = error_model.introduce_advanced_scores(forward, histograms)
         forward.seq = error_model.mut_seq(forward)
 
         # generate the reverse read
@@ -51,7 +53,7 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             description=''
         )
         # add the quality and modify the nucleotides accordingly
-        reverse = error_model.introduce_error_scores(reverse, mean_qual)
+        reverse = error_model.introduce_advanced_scores(reverse, histograms)
         reverse.seq = error_model.mut_seq(reverse)
 
         yield(forward, reverse.reverse_complement(
