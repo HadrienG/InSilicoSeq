@@ -10,68 +10,7 @@ from Bio import SeqIO
 import argparse
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog='InSilicoSeq',
-        usage='iss [options]',
-        description='InSilicoSeq: A sequencing simulator'
-    )
-
-    parser.add_argument(
-        '--genome',
-        '-g',
-        metavar='<fasta>',
-        help='Input genome(s) from where the reads will originate (Required)',
-        required=True
-    )
-    parser.add_argument(
-        '--abundance',
-        '-a',
-        metavar='<txt>',
-        help='abundance file for coverage calculations (default: %(default)s)'
-        )
-    parser.add_argument(
-        '--read_length',
-        '-l',
-        metavar='<int>',
-        type=int,
-        default=150,
-        help='Read length (default: %(default)s)'
-        )
-    parser.add_argument(
-        '--n_reads',
-        '-n',
-        metavar='<int>',
-        type=int,
-        default=1000000,
-        help='Number of reads to generate (default: %(default)s)'
-        )
-    parser.add_argument(
-        '--insert_size',
-        '-i',
-        metavar='<int>',
-        type=int,
-        default=200,
-        help='Insert size for paired-end data (default: %(default)s)'
-        )
-    parser.add_argument(
-        '--mean_qual',
-        '-q',
-        metavar='<int>',
-        type=int,
-        default=30,
-        help='Mean quality score (Phred scale) (default: %(default)s)'
-        )
-    parser.add_argument(
-        '--output',
-        '-o',
-        metavar='<fastq>',
-        help='Output file prefix (Required)',
-        required=True
-        )
-    parser._optionals.title = 'arguments'
-    args = parser.parse_args()
-
+def generate_reads(args):
     abundance_dic = abundance.parse_abundance_file(args.abundance)
     with open(args.genome, 'r') as f:
         fasta_file = SeqIO.parse(f, 'fasta')
@@ -81,23 +20,111 @@ def main():
             coverage = abundance.to_coverage(
                 args.n_reads,
                 species_abundance,
-                args.read_length,
+                125,
                 genome_size
                 )
 
             read_gen = generator.reads(
                 record,
-                args.read_length,
+                125,
                 coverage,
                 args.insert_size,
-                args.mean_qual
+                30
                     )
 
             generator.to_fastq(read_gen, args.output)
 
+
+def model_from_bam(args):
     # create the histogram file
-    # qual_hist = bam.quality_distribution('data/AM933172.bam')
-    # bam.write_to_file(qual_hist, 'profiles/ERR1743773.npy')
-    #
+    qual_hist = bam.quality_distribution(args.bam)
+    bam.write_to_file(qual_hist, args.output + '.npy')
+
     # generate reads based on the histogram file
     # error_model.advanced('profiles/ERR1743773.npy')
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog='InSilicoSeq',
+        usage='iss [options]',
+        description='InSilicoSeq: A sequencing simulator'
+    )
+    subparsers = parser.add_subparsers(
+            title='available commands',
+            metavar=''
+    )
+
+    parser_mod = subparsers.add_parser(
+        'mod',
+        prog='iss mod',
+        description='generate an error model from a bam file',
+        help='generate an error model from a bam file'
+    )
+    parser_gen = subparsers.add_parser(
+        'gen',
+        prog='iss gen',
+        description='simulate reads from an error model',
+        help='simulate reads from an error model'
+    )
+
+    # arguments form the read generator module
+    parser_gen.add_argument(
+        '--genome',
+        '-g',
+        metavar='<fasta>',
+        help='Input genome(s) from where the reads will originate (Required)',
+        required=True
+    )
+    parser_gen.add_argument(
+        '--abundance',
+        '-a',
+        metavar='<txt>',
+        help='abundance file for coverage calculations (default: %(default)s)'
+    )
+    parser_gen.add_argument(
+        '--n_reads',
+        '-n',
+        metavar='<int>',
+        type=int,
+        default=1000000,
+        help='Number of reads to generate (default: %(default)s)'
+    )
+    parser_gen.add_argument(
+        '--insert_size',
+        '-i',
+        metavar='<int>',
+        type=int,
+        default=200,
+        help='Insert size for paired-end data (default: %(default)s)'
+    )
+    parser_gen.add_argument(
+        '--output',
+        '-o',
+        metavar='<fastq>',
+        help='Output file prefix (Required)',
+        required=True
+    )
+    parser_gen._optionals.title = 'arguments'
+    parser_gen.set_defaults(func=generate_reads)
+
+    # arguments for the error model module
+    parser_mod.add_argument(
+        '--bam',
+        '-b',
+        metavar='<bam>',
+        help='aligned reads from which the model will be inferred (Required)',
+        required=True
+    )
+    parser_mod.add_argument(
+        '--output',
+        '-o',
+        metavar='<npy>',
+        help='Output file prefix (Required)',
+        required=True
+    )
+    parser_mod._optionals.title = 'arguments'
+    parser_mod.set_defaults(func=model_from_bam)
+
+    args = parser.parse_args()
+    args.func(args)
