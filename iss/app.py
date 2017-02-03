@@ -36,9 +36,10 @@ def generate_reads(args):
 
 
 def model_from_bam(args):
-    # create the histogram file
     qual_hist = bam.quality_distribution(args.bam)
-    bam.write_to_file(qual_hist, args.output + '.npy')
+    rl = len(qual_hist)
+    subsitution_matrix = bam.substitutions(args.bam, rl)
+    bam.write_to_file(rl, qual_hist, subsitution_matrix, args.output + '.npz')
 
     # generate reads based on the histogram file
     # error_model.advanced('profiles/ERR1743773.npy')
