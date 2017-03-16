@@ -1,3 +1,8 @@
+# project specific files
+*.fastq
+*.bam
+*.bam.bai
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
@@ -7,11 +12,8 @@ __pycache__/
 
 # Unit test / coverage reports
 .cache
+!SRR1660402_mapped.bam
+!SRR1660402_mapped.bam.bai
 
 # virtualenv
 venv_iss/
-
-# project specific files
-*.fastq
-*.bam
-*.bam.bai

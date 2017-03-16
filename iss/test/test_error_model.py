@@ -21,5 +21,7 @@ def test_phred_conversions():
 
 def test_basic_error_model():
     np.random.seed(42)
-    distribution = error_model.basic(0.999, 0.01, 10)
-    assert distribution == [40, 26, 40, 40, 25, 25, 40, 40, 22, 40]
+    err_mod = error_model.BasicErrorModel()
+
+    distribution = err_mod.gen_phred_scores(0.99)[:10]
+    assert distribution == [23, 19, 25, 40, 19, 19, 40, 26, 18, 23]

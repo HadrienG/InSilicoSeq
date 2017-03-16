@@ -50,9 +50,13 @@ def substitutions(bam_file, read_length):
                             # cannot base ourselves of positions
                             # since you get a deletion, the bases are off :(
                         if read.is_read1:
-                            array_f[query_pos, dispatch_dict[dispatch_key]] += 1
+                            array_f[
+                                query_pos,
+                                dispatch_dict[dispatch_key]] += 1
                         elif read.is_read2:
-                            array_r[query_pos, dispatch_dict[dispatch_key]] += 1
+                            array_r[
+                                query_pos,
+                                dispatch_dict[dispatch_key]] += 1
     return array_f, array_r
 
 

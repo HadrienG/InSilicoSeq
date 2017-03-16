@@ -22,48 +22,11 @@ def prob_to_phred(p):
     return q
 
 
-# def introduce_error_scores(record, mean_qual):
-#     """Add phred scores to a SeqRecord according to the basic error_model"""
-#     record.letter_annotations["phred_quality"] = basic(
-#         phred_to_prob(mean_qual), 0.01, len(record))
-#     return record
-
-
 def introduce_advanced_scores(record, histograms):
     """Add phred scores to a SeqRecord according to the basic error_model"""
     record.letter_annotations["phred_quality"] = advanced(
         histograms)
     return record
-
-
-# def mut_seq(record):
-#     """modify the nucleotides of a SeqRecord according to the phred scores.
-#     Return a sequence"""
-#     nucl_choices = {
-#         'A': ['T', 'C', 'G'],
-#         'T': ['A', 'C', 'G'],
-#         'C': ['A', 'T', 'G'],
-#         'G': ['A', 'T', 'C']
-#         }
-#     mutable_seq = record.seq.tomutable()
-#     quality_list = record.letter_annotations["phred_quality"]
-#     position = 0
-#     for nucl, qual in zip(mutable_seq, quality_list):
-#         if random.random() > phred_to_prob(qual):
-#             mutable_seq[position] = random.choice(nucl_choices[nucl])
-#         position += 1
-#     return mutable_seq.toseq()
-
-
-# def basic(mean, stdev, length):
-#     """Generate a normal distribution, transform to phred scores"""
-#     # rate = 1
-#     norm = [min(q, 0.9999) for q in np.random.normal(mean, stdev, length)]
-#     # inverse transform sampling ? or lognormal distribution ?
-#     # uni = [min(q, 0.9999) for q in np.random.uniform()]
-#     # exp = [np.log(1 - q) / (- rate) for q in norm]
-#     phred = [prob_to_phred(p) for p in norm]
-#     return phred
 
 
 def load_npz(numpy_file):
@@ -93,7 +56,6 @@ class ErrorModel(object):
     def __init__(self):
         self.read_length = int
         self.insert_size = int
-        self.quality = int
 
 
 class BasicErrorModel(ErrorModel):

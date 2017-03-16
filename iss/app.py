@@ -43,13 +43,13 @@ def model_from_bam(args):
     i_size = bam.get_insert_size(args.bam)
     hist_forward, hist_reverse = bam.quality_distribution(args.bam)
     read_length = len(hist_forward)
-    sub_forward, sub__reverse = bam.substitutions(args.bam, read_length)
+    sub_forward, sub_reverse = bam.substitutions(args.bam, read_length)
     bam.write_to_file(
         read_length,
         hist_forward,
         hist_reverse,
         sub_forward,
-        sub__reverse,
+        sub_reverse,
         i_size,
         args.output + '.npz')
 
