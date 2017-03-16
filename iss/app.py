@@ -11,8 +11,14 @@ import argparse
 
 
 def generate_reads(args):
+    # if args.model is not None:
+    #     err_mod_npz = args.model
+    #     err_mod = None
+    # else:
+    err_mod = error_model.BasicErrorModel()
+
     abundance_dic = abundance.parse_abundance_file(args.abundance)
-    with open(args.genome, 'r') as f:
+    with open(args.genomes, 'r') as f:
         fasta_file = SeqIO.parse(f, 'fasta')
         for record in fasta_file:
             species_abundance = abundance_dic[record.id]
@@ -20,17 +26,15 @@ def generate_reads(args):
             coverage = abundance.to_coverage(
                 args.n_reads,
                 species_abundance,
-                125,
+                err_mod.read_length,
                 genome_size
                 )
 
             read_gen = generator.reads(
                 record,
-                125,
                 coverage,
-                args.insert_size,
-                30
-                    )
+                err_mod
+                )
 
             generator.to_fastq(read_gen, args.output)
 
@@ -76,7 +80,7 @@ def main():
 
     # arguments form the read generator module
     parser_gen.add_argument(
-        '--genome',
+        '--genomes',
         '-g',
         metavar='<fasta>',
         help='Input genome(s) from where the reads will originate (Required)',
@@ -97,12 +101,12 @@ def main():
         help='Number of reads to generate (default: %(default)s)'
     )
     parser_gen.add_argument(
-        '--insert_size',
-        '-i',
-        metavar='<int>',
-        type=int,
-        default=200,
-        help='Insert size for paired-end data (default: %(default)s)'
+        '--model',
+        '-m',
+        metavar='<npz>',
+        default=None,
+        help='Error model. If not specified, using a basic \
+        error model instead (default: %(default)s)'
     )
     parser_gen.add_argument(
         '--output',

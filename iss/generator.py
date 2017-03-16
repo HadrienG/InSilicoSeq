@@ -10,25 +10,27 @@ from Bio.Alphabet import IUPAC
 import random
 
 
-def reads(record, read_length, coverage, insert_size, mean_qual):
-    """Simulate reads. Each read is a SeqRecord object. Return a
-    generator of tuples containing the forward and reverse read.
+def reads(record, coverage, ErrorModel):
+    """Simulate reads from one genome (or sequence). Each read is a SeqRecord
+    object. Return a generator of tuples containing the forward and
+    reverse read.
 
     Arguments:
-    input_record -- sequence of reference (from where the reads will
+    record -- sequence of reference (from where the reads will
     originate). Must be a SeqRecord object.
-    read_length -- desired read length (int)
     coverage -- desired coverage of the genome
-    insert_size -- insert size between the pairs
-    mean_qual -- mean quality score
+    ErrorModel -- an ErrorModel class
     """
     header = record.id
     sequence = record.seq
 
+    read_length = ErrorModel.read_length
+    insert_size = ErrorModel.insert_size
+
     n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
-    histograms = error_model.load_npy('profiles/ERR1743773.npy')
 
     for i in range(n_pairs):
+        # generate the forward read
         forward_start = random.randrange(0, len(sequence) - read_length)
         forward_end = forward_start + read_length
         forward = SeqRecord(
@@ -39,8 +41,8 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             description=''
         )
         # add the quality and modify the nucleotides accordingly
-        forward = error_model.introduce_advanced_scores(forward, histograms)
-        forward.seq = error_model.mut_seq(forward)
+        forward = ErrorModel.introduce_error_scores(forward)
+        forward.seq = ErrorModel.mut_sequence(forward)
 
         # generate the reverse read
         reverse_start = forward_start + insert_size
@@ -53,8 +55,8 @@ def reads(record, read_length, coverage, insert_size, mean_qual):
             description=''
         )
         # add the quality and modify the nucleotides accordingly
-        reverse = error_model.introduce_advanced_scores(reverse, histograms)
-        reverse.seq = error_model.mut_seq(reverse)
+        reverse = ErrorModel.introduce_error_scores(reverse)
+        reverse.seq = ErrorModel.mut_sequence(reverse)
 
         yield(forward, reverse.reverse_complement(
             id='%s_%s_2' % (header, i),
