@@ -6,7 +6,8 @@ import numpy as np
 
 
 def substitutions(bam_file, read_length):
-    array = np.empty([read_length, 16])
+    array_f = np.empty([read_length, 16])
+    array_r = np.empty([read_length, 16])
 
     dispatch_dict = {
         'AA': 0,
@@ -48,8 +49,11 @@ def substitutions(bam_file, read_length):
                             # how to handle deletions?
                             # cannot base ourselves of positions
                             # since you get a deletion, the bases are off :(
-                        array[query_pos, dispatch_dict[dispatch_key]] += 1
-    return array
+                        if read.is_read1:
+                            array_f[query_pos, dispatch_dict[dispatch_key]] += 1
+                        elif read.is_read2:
+                            array_r[query_pos, dispatch_dict[dispatch_key]] += 1
+    return array_f, array_r
 
 
 def quality_distribution(bam_file):
@@ -60,19 +64,41 @@ def quality_distribution(bam_file):
     Arguments:
     bam_file -- the input bam file containing mapped reads
     """
+    # deal with the forward reads
     with pysam.AlignmentFile(bam_file, "rb") as bam:
-        array_gen = (np.array(
+        array_gen_f = (np.array(
             read.query_qualities) for read in bam.fetch()
-                if not read.is_unmapped)
-        histograms = [np.histogram(
-                            i, bins=range(0, 41)) for i in zip(*array_gen)]
-    return np.array(histograms)
+                if not read.is_unmapped and read.is_read1)
+        histograms_forward = [np.histogram(
+            i, bins=range(0, 41)) for i in zip(*array_gen_f)]
+
+    # deal with the reverse reads
+    with pysam.AlignmentFile(bam_file, "rb") as bam:
+        array_gen_r = (np.array(
+            read.query_qualities) for read in bam.fetch()
+                if not read.is_unmapped and read.is_read2)
+        histograms_reverse = [np.histogram(
+            i, bins=range(0, 41)) for i in zip(*array_gen_r)]
+
+    return histograms_forward, histograms_reverse
 
 
-def write_to_file(read_length, histograms, substitutions, output):
+def get_insert_size(bam_file):
+    with pysam.AlignmentFile(bam_file, "rb") as bam:
+        i_size_dist = [
+            abs(read.template_length) for read in bam.fetch()
+            if not read.is_unmapped and read.is_proper_pair]
+        i_size = np.mean(i_size_dist)
+    return int(i_size)
+
+
+def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, i_size, output):
     np.savez_compressed(
         output,
         read_length=read_length,
-        quality_histograms=histograms,
-        substitutions=substitutions
+        insert_size=i_size,
+        quality_hist_forward=hist_f,
+        quality_hist_reverse=hist_r,
+        subst_matrix_forward=sub_f,
+        subst_matrix_reverse=sub_r
     )
