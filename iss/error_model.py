@@ -22,32 +22,6 @@ def prob_to_phred(p):
     return q
 
 
-def introduce_advanced_scores(record, histograms):
-    """Add phred scores to a SeqRecord according to the basic error_model"""
-    record.letter_annotations["phred_quality"] = advanced(
-        histograms)
-    return record
-
-
-def load_npz(numpy_file):
-    """load the error profile npz file"""
-    error_profile = np.load(numpy_file)
-    return error_profile
-
-
-def advanced(histograms):
-    """Generate a list of phred scores based on real datasets"""
-    phred_list = []
-    for hist in histograms:
-        values, indices = hist
-        weights = values / np.sum(values)
-        random_quality = np.random.choice(
-            indices[1:], p=weights
-        )
-        phred_list.append(round(random_quality))
-    return phred_list
-
-
 class ErrorModel(object):
     """Main ErrorModel Class
 
@@ -84,6 +58,80 @@ class BasicErrorModel(ErrorModel):
         return record
 
     def mut_sequence(self, record):
+        """modify the nucleotides of a SeqRecord according to the phred scores.
+        Return a sequence"""
+        nucl_choices = {
+            'A': ['T', 'C', 'G'],
+            'T': ['A', 'C', 'G'],
+            'C': ['A', 'T', 'G'],
+            'G': ['A', 'T', 'C']
+            }
+        mutable_seq = record.seq.tomutable()
+        quality_list = record.letter_annotations["phred_quality"]
+        position = 0
+        for nucl, qual in zip(mutable_seq, quality_list):
+            if random.random() > phred_to_prob(qual):
+                mutable_seq[position] = random.choice(nucl_choices[nucl])
+            position += 1
+        return mutable_seq.toseq()
+
+
+class KernelDensityErrorModel(ErrorModel):
+    """KernelDensityErrorModel class.
+
+    Error model based on .npz files derived from alignment with bowtie2.
+    the npz file must contain:
+
+    - the length of the reads
+    - the mean insert size
+    - the distribution of qualities for each position (for R1 and R2)
+    - the substitution for each nucleotide at each position (for R1 and R2)"""
+    def __init__(self, npz_path):
+        super().__init__()
+        self.npz_path = npz_path
+        self.error_profile = self.load_npz(npz_path)
+
+        self.read_length = error_profile['read_length']
+        self.insert_size = error_profile['insert_size']
+
+        self.quality_hist_forward = error_profile['quality_hist_forward']
+        self.quality_hist_reverse = error_profile['quality_hist_reverse']
+
+        self.subst_matrix_forward = error_profile['subst_matrix_forward']
+        self.subst_matrix_reverse = error_profile['subst_matrix_reverse']
+
+    def load_npz(self, npz_path):
+        """load the error profile npz file"""
+        error_profile = np.load(numpy_file)
+        return error_profile
+
+    def gen_phred_scores(self, histograms):
+        """Generate a list of phred scores based on real datasets"""
+        phred_list = []
+        for hist in histograms:
+            values, indices = hist
+            weights = values / np.sum(values)
+            random_quality = np.random.choice(
+                indices[1:], p=weights
+            )
+            phred_list.append(round(random_quality))
+        return phred_list
+
+    def introduce_error_scores(self, record, histograms, orientation):
+        """Add phred scores to a SeqRecord according to the error_model"""
+        if orientation == 'forward':
+            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
+                self.quality_hist_forward)
+        elif orientation == 'reverse':
+            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
+                self.quality_hist_reverse)
+        else:
+            print('bad orientation. Fatal')  # add an exit here
+
+        return record
+
+    def mut_sequence(self, record, subst_matrix, orientation):
+        # TODO
         """modify the nucleotides of a SeqRecord according to the phred scores.
         Return a sequence"""
         nucl_choices = {

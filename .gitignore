@@ -12,6 +12,9 @@ __pycache__/
 
 # Unit test / coverage reports
 .cache
+.coverage
+
+# files needed for tests
 !SRR1660402_mapped.bam
 !SRR1660402_mapped.bam.bai
 
