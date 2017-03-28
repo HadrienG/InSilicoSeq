@@ -11,11 +11,11 @@ import argparse
 
 
 def generate_reads(args):
-    # if args.model is not None:
-    #     err_mod_npz = args.model
-    #     err_mod = None
-    # else:
-    err_mod = error_model.BasicErrorModel()
+    if args.model is not None:
+        npz = args.model
+        err_mod = error_model.KernelDensityErrorModel(npz)
+    else:
+        err_mod = error_model.BasicErrorModel()
 
     abundance_dic = abundance.parse_abundance_file(args.abundance)
     with open(args.genomes, 'r') as f:

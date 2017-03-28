@@ -20,3 +20,6 @@ __pycache__/
 
 # virtualenv
 venv_iss/
+
+# MacOS stuff
+.DS_Store
