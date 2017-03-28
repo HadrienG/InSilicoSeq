@@ -6,6 +6,36 @@ import numpy as np
 
 
 def substitutions(bam_file, read_length):
+    """Get substitution rate for reads mapped to a reference genome.
+
+    Arguments:
+        bam_file (:obj:`str`): input bam file
+        read_length (:obj"`int`): length of the mapped reads
+    Returns:
+        tuple: (array_f, array_r). The arrays contain a dispatch dict with the
+        raw number of substitutions for each nucleotides.
+
+        Here are the corresponding keys. The reference base is first,
+        the query base second:
+                dispatch_dict = {
+                    'AA': 0,
+                    'aT': 1,
+                    'aG': 2,
+                    'aC': 3,
+                    'TT': 4,
+                    'tA': 5,
+                    'tG': 6,
+                    'tC': 7,
+                    'CC': 8,
+                    'cA': 9,
+                    'cT': 10,
+                    'cG': 11,
+                    'GG': 12,
+                    'gA': 13,
+                    'gT': 14,
+                    'gC': 15
+                }
+    """
     array_f = np.empty([read_length, 16])
     array_r = np.empty([read_length, 16])
 
@@ -66,7 +96,10 @@ def quality_distribution(bam_file):
     in all the reads. Returns a numpy array of the histograms for each position
 
     Arguments:
-    bam_file -- the input bam file containing mapped reads
+        bam_file (:obj:`str`): input bam file
+
+    Returns:
+        tuple: (histograms_forward, histograms_reverse)
     """
     # deal with the forward reads
     with pysam.AlignmentFile(bam_file, "rb") as bam:
@@ -88,6 +121,13 @@ def quality_distribution(bam_file):
 
 
 def get_insert_size(bam_file):
+    """Get the mean insert size give mapped reads in a bam file
+
+    Arguments:
+        bam_file (:obj:`str`): input bam file
+
+    Returns:
+        int: mean insert size"""
     with pysam.AlignmentFile(bam_file, "rb") as bam:
         i_size_dist = [
             abs(read.template_length) for read in bam.fetch()
@@ -97,6 +137,7 @@ def get_insert_size(bam_file):
 
 
 def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, i_size, output):
+    """write variables to a .npz file"""
     np.savez_compressed(
         output,
         read_length=read_length,
