@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from iss import generator
-from iss import error_model
+from iss.error_models import ErrorModel, basic, cdf
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -15,7 +15,7 @@ import numpy as np
 def test_basic():
     random.seed(42)
     np.random.seed(42)
-    err_mod = error_model.BasicErrorModel()
+    err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(
         Seq(str('CGTTTCAACC' * 40),
             IUPAC.unambiguous_dna
@@ -32,10 +32,10 @@ def test_basic():
 CAACCCGTTTCAACCCGTTTCAACCCGTTTCAACCCGGTTCAACCCGTTTCA'
 
 
-def test_kde():
+def test_cdf():
     random.seed(42)
     np.random.seed(42)
-    err_mod = error_model.KernelDensityErrorModel('profiles/SRR5166376.npz')
+    err_mod = cdf.CDFErrorModel('profiles/SRR5166376.npz')
     ref_genome = SeqRecord(
         Seq(str('CGTTTCAACC' * 40),
             IUPAC.unambiguous_dna
