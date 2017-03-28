@@ -91,18 +91,18 @@ class KernelDensityErrorModel(ErrorModel):
         self.npz_path = npz_path
         self.error_profile = self.load_npz(npz_path)
 
-        self.read_length = error_profile['read_length']
-        self.insert_size = error_profile['insert_size']
+        self.read_length = self.error_profile['read_length']
+        self.insert_size = self.error_profile['insert_size']
 
-        self.quality_hist_forward = error_profile['quality_hist_forward']
-        self.quality_hist_reverse = error_profile['quality_hist_reverse']
+        self.quality_hist_forward = self.error_profile['quality_hist_forward']
+        self.quality_hist_reverse = self.error_profile['quality_hist_reverse']
 
-        self.subst_matrix_forward = error_profile['subst_matrix_forward']
-        self.subst_matrix_reverse = error_profile['subst_matrix_reverse']
+        self.subst_matrix_forward = self.error_profile['subst_matrix_forward']
+        self.subst_matrix_reverse = self.error_profile['subst_matrix_reverse']
 
     def load_npz(self, npz_path):
         """load the error profile npz file"""
-        error_profile = np.load(numpy_file)
+        error_profile = np.load(npz_path)
         return error_profile
 
     def gen_phred_scores(self, histograms):
@@ -130,21 +130,48 @@ class KernelDensityErrorModel(ErrorModel):
 
         return record
 
+    def subst_matrix_to_choices(self, subst_dispatch_dict):
+        """from the raw substitutions at one position, returns nucleotides
+        and probabilties of state change"""
+        sums = {
+            'A': sum(subst_dispatch_dict[1:4]),
+            'T': sum(subst_dispatch_dict[5:8]),
+            'C': sum(subst_dispatch_dict[9:12]),
+            'G': sum(subst_dispatch_dict[13:])
+        }
+
+        nucl_choices = {
+            'A': (
+                ['T', 'C', 'G'],
+                [count / sums['A'] for count in subst_dispatch_dict[1:4]]
+                ),
+            'T': (
+                ['A', 'C', 'G'],
+                [count / sums['T'] for count in subst_dispatch_dict[5:8]]
+                ),
+            'C': (
+                ['A', 'T', 'G'],
+                [count / sums['C'] for count in subst_dispatch_dict[9:12]]
+                ),
+            'G': (
+                ['A', 'T', 'C'],
+                [count / sums['G'] for count in subst_dispatch_dict[13:]]
+                )
+        }
+        return nucl_choices
+
     def mut_sequence(self, record, subst_matrix, orientation):
         # TODO
         """modify the nucleotides of a SeqRecord according to the phred scores.
         Return a sequence"""
-        nucl_choices = {
-            'A': ['T', 'C', 'G'],
-            'T': ['A', 'C', 'G'],
-            'C': ['A', 'T', 'G'],
-            'G': ['A', 'T', 'C']
-            }
         mutable_seq = record.seq.tomutable()
         quality_list = record.letter_annotations["phred_quality"]
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
+            nucl_choices = subst_matrix_to_choices(subst_matrix[position])
             if random.random() > phred_to_prob(qual):
-                mutable_seq[position] = random.choice(nucl_choices[nucl])
+                mutable_seq[position] = np.random.choice(
+                    nucl_choices[nucl][0],
+                    p=nucl_choices[nucl][1])
             position += 1
         return mutable_seq.toseq()

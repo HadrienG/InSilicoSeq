@@ -12,7 +12,7 @@ import random
 import numpy as np
 
 
-def test_reads():
+def test_basic():
     random.seed(42)
     np.random.seed(42)
     err_mod = error_model.BasicErrorModel()
