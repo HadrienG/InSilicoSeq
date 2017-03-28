@@ -4,7 +4,6 @@
 from iss import bam
 from iss import abundance
 from iss import generator
-from iss import error_model
 from Bio import SeqIO
 
 import argparse
@@ -12,10 +11,12 @@ import argparse
 
 def generate_reads(args):
     if args.model is not None:
+        from iss.error_models import cdf
         npz = args.model
-        err_mod = error_model.KernelDensityErrorModel(npz)
+        err_mod = cdf.CDFErrorModel(npz)
     else:
-        err_mod = error_model.BasicErrorModel()
+        from iss.error_models import basic
+        err_mod = basic.BasicErrorModel()
 
     abundance_dic = abundance.parse_abundance_file(args.abundance)
     with open(args.genomes, 'r') as f:

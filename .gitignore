@@ -23,3 +23,6 @@ venv_iss/
 
 # MacOS stuff
 .DS_Store
+
+# fastqc reports
+*fastqc*
