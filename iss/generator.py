@@ -41,8 +41,8 @@ def reads(record, coverage, ErrorModel):
             description=''
         )
         # add the quality and modify the nucleotides accordingly
-        forward = ErrorModel.introduce_error_scores(forward)
-        forward.seq = ErrorModel.mut_sequence(forward)
+        forward = ErrorModel.introduce_error_scores(forward, 'forward')
+        forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
         # generate the reverse read
         reverse_start = forward_start + insert_size
@@ -55,8 +55,8 @@ def reads(record, coverage, ErrorModel):
             description=''
         )
         # add the quality and modify the nucleotides accordingly
-        reverse = ErrorModel.introduce_error_scores(reverse)
-        reverse.seq = ErrorModel.mut_sequence(reverse)
+        reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
+        reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
 
         yield(forward, reverse.reverse_complement(
             id='%s_%s_2' % (header, i),

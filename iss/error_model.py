@@ -51,13 +51,13 @@ class BasicErrorModel(ErrorModel):
         phred = [prob_to_phred(p) for p in norm]
         return phred
 
-    def introduce_error_scores(self, record):
+    def introduce_error_scores(self, record, orientation):
         """Add phred scores to a SeqRecord"""
         record.letter_annotations["phred_quality"] = self.gen_phred_scores(
             phred_to_prob(self.quality))
         return record
 
-    def mut_sequence(self, record):
+    def mut_sequence(self, record, orientation):
         """modify the nucleotides of a SeqRecord according to the phred scores.
         Return a sequence"""
         nucl_choices = {
@@ -117,7 +117,7 @@ class KernelDensityErrorModel(ErrorModel):
             phred_list.append(round(random_quality))
         return phred_list
 
-    def introduce_error_scores(self, record, histograms, orientation):
+    def introduce_error_scores(self, record, orientation):
         """Add phred scores to a SeqRecord according to the error_model"""
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
@@ -160,15 +160,24 @@ class KernelDensityErrorModel(ErrorModel):
         }
         return nucl_choices
 
-    def mut_sequence(self, record, subst_matrix, orientation):
+    def mut_sequence(self, record, orientation):
         # TODO
         """modify the nucleotides of a SeqRecord according to the phred scores.
         Return a sequence"""
+
+        # get the right subst_matrix
+        if orientation == 'forward':
+            subst_matrix = self.subst_matrix_forward
+        elif orientation == 'reverse':
+            subst_matrix = self.subst_matrix_reverse
+        else:
+            print('this is bad')  # TODO error message and proper logging
+
         mutable_seq = record.seq.tomutable()
         quality_list = record.letter_annotations["phred_quality"]
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
-            nucl_choices = subst_matrix_to_choices(subst_matrix[position])
+            nucl_choices = self.subst_matrix_to_choices(subst_matrix[position])
             if random.random() > phred_to_prob(qual):
                 mutable_seq[position] = np.random.choice(
                     nucl_choices[nucl][0],
