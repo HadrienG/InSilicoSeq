@@ -10,13 +10,20 @@ import argparse
 
 
 def generate_reads(args):
-    if args.model is not None:
+    if args.model == 'cdf':
         from iss.error_models import cdf
-        npz = args.model
+        npz = args.model_file
         err_mod = cdf.CDFErrorModel(npz)
-    else:
+    elif args.model == 'kde':
+        print('Using kde')
+        from iss.error_models import kde
+        npz = args.model_file
+        err_mod = kde.KDErrorModel(npz)
+    elif args.model is None:
         from iss.error_models import basic
         err_mod = basic.BasicErrorModel()
+    else:
+        print('bad error model')
 
     abundance_dic = abundance.parse_abundance_file(args.abundance)
     with open(args.genomes, 'r') as f:
@@ -104,9 +111,18 @@ def main():
     parser_gen.add_argument(
         '--model',
         '-m',
-        metavar='<npz>',
+        metavar='[\'cdf\', \'kde\']',
+        choices=['cdf', 'kde', None],
         default=None,
         help='Error model. If not specified, using a basic \
+        error model instead (default: %(default)s). Can be \'kde\' or \'cdf\''
+    )
+    parser_gen.add_argument(
+        '--model_file',
+        '-f',
+        metavar='<npz>',
+        default=None,
+        help='Error model file. If not specified, using a basic \
         error model instead (default: %(default)s)'
     )
     parser_gen.add_argument(

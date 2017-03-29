@@ -26,6 +26,15 @@ class KDErrorModel(ErrorModel):
         self.npz_path = npz_path
         self.error_profile = self.load_npz(npz_path)
 
+        self.read_length = self.error_profile['read_length']
+        self.insert_size = self.error_profile['insert_size']
+
+        self.quality_hist_forward = self.error_profile['quality_hist_forward']
+        self.quality_hist_reverse = self.error_profile['quality_hist_reverse']
+
+        self.subst_matrix_forward = self.error_profile['subst_matrix_forward']
+        self.subst_matrix_reverse = self.error_profile['subst_matrix_reverse']
+
     def load_npz(self, npz_path):
         """load the error profile npz file"""
         error_profile = np.load(npz_path)
