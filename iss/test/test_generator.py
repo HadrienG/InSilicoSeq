@@ -35,7 +35,7 @@ CAACCCGTTTCAACCCGTTTCAACCCGTTTCAACCCGGTTCAACCCGTTTCA'
 def test_cdf():
     random.seed(42)
     np.random.seed(42)
-    err_mod = cdf.CDFErrorModel('profiles/SRR5166376.npz')
+    err_mod = cdf.CDFErrorModel('profiles/SRR5166376_cdf.npz')
     ref_genome = SeqRecord(
         Seq(str('CGTTTCAACC' * 40),
             IUPAC.unambiguous_dna

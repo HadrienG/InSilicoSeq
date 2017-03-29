@@ -30,7 +30,7 @@ def test_basic_error_model():
 
 def test_cdf_error_model_substitutions():
     err_mod = cdf.CDFErrorModel(
-        npz_path='profiles/SRR5166376.npz'
+        npz_path='profiles/SRR5166376_cdf.npz'
         )
     dispatch = np.array(
         [2.77297000e+05, 2.58000000e+02, 3.22000000e+02, 7.37000000e+02,
