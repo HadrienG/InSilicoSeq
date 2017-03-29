@@ -28,7 +28,7 @@ def test_basic_error_model():
     assert distribution == [23, 19, 25, 40, 19, 19, 40, 26, 18, 23]
 
 
-def test_kde_error_model_substitutions():
+def test_cdf_error_model_substitutions():
     err_mod = cdf.CDFErrorModel(
         npz_path='profiles/SRR5166376.npz'
         )
