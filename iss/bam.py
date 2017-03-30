@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from scipy import stats
+
 import pysam
 import numpy as np
 
@@ -15,8 +17,8 @@ def substitutions(bam_file, read_length):
         dict: for each nucleotide (keys) the values are a tuple containing the
         choices and probabilties of transiting to another nucleotide.
     """
-    array_f = np.empty([read_length, 16])
-    array_r = np.empty([read_length, 16])
+    array_f = np.empty([read_length, 16], dtype=uint64)
+    array_r = np.empty([read_length, 16], dtype=uint64)
     nucl_choices_f = []
     nucl_choices_r = []
 
@@ -107,7 +109,7 @@ def subst_matrix_to_choices(subst_dispatch_dict):
     return nucl_choices
 
 
-def quality_distribution(bam_file):
+def quality_distribution(model, bam_file):
     """Generate numpy histograms for each position of the input mapped reads.
     A histogram contains the distribution of the phred scores for one position
     in all the reads. Returns a numpy array of the histograms for each position
@@ -123,18 +125,54 @@ def quality_distribution(bam_file):
         array_gen_f = (np.array(
             read.query_qualities) for read in bam.fetch()
                 if not read.is_unmapped and read.is_read1)
-        histograms_forward = [np.histogram(
-            i, bins=range(0, 41)) for i in zip(*array_gen_f)]
+        if model == 'cdf':
+            histograms_forward = [np.histogram(
+                i, bins=range(0, 41)) for i in zip(*array_gen_f)]
+        elif model == 'kde':
+            quals_forward = [i for i in zip(*array_gen_f)]
 
     # deal with the reverse reads
     with pysam.AlignmentFile(bam_file, "rb") as bam:
         array_gen_r = (np.array(
             read.query_qualities) for read in bam.fetch()
                 if not read.is_unmapped and read.is_read2)
-        histograms_reverse = [np.histogram(
-            i, bins=range(0, 41)) for i in zip(*array_gen_r)]
+        if model == 'cdf':
+            histograms_reverse = [np.histogram(
+                i, bins=range(0, 41)) for i in zip(*array_gen_r)]
+        elif model == 'kde':
+            quals_reverse = [i for i in zip(*array_gen_r)]
 
-    return histograms_forward, histograms_reverse
+    # calculate weights and indices
+    if model == 'cdf':
+        weights_forward = []
+        weights_reverse = []
+        for hist in histograms_forward:
+            values, indices = hist
+            weights = values / np.sum(values)
+            weights_forward.append((indices, weights))
+        for hist in histograms_reverse:
+            values, indices = hist
+            weights = values / np.sum(values)
+            weights_reverse.append((indices, weights))
+        return weights_forward, weights_reverse
+
+    if model == 'kde':
+        cdfs_forward = []
+        cdfs_reverse = []
+        for x in quals_forward:
+            # print(x)
+            kde = stats.gaussian_kde(x, bw_method=0.2 / np.std(x, ddof=1))
+            kde = kde.evaluate(range(41))
+            cdf = np.cumsum(kde)
+            cdf = cdf / cdf[-1]
+            cdfs_forward.append(cdf)
+        for x in quals_reverse:
+            kde = stats.gaussian_kde(x, bw_method=0.2 / np.std(x, ddof=1))
+            kde = kde.evaluate(range(41))
+            cdf = np.cumsum(kde)
+            cdf = cdf / cdf[-1]
+            cdfs_reverse.append(cdf)
+        return cdfs_forward, cdfs_reverse
 
 
 def get_insert_size(bam_file):

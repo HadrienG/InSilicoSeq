@@ -49,7 +49,7 @@ def generate_reads(args):
 
 def model_from_bam(args):
     i_size = bam.get_insert_size(args.bam)
-    hist_forward, hist_reverse = bam.quality_distribution(args.bam)
+    hist_forward, hist_reverse = bam.quality_distribution(args.model, args.bam)
     read_length = len(hist_forward)
     sub_forward, sub_reverse = bam.substitutions(args.bam, read_length)
     bam.write_to_file(
@@ -74,14 +74,14 @@ def main():
     )
 
     parser_mod = subparsers.add_parser(
-        'mod',
-        prog='iss mod',
+        'model',
+        prog='iss model',
         description='generate an error model from a bam file',
         help='generate an error model from a bam file'
     )
     parser_gen = subparsers.add_parser(
-        'gen',
-        prog='iss gen',
+        'generate',
+        prog='iss generate',
         description='simulate reads from an error model',
         help='simulate reads from an error model'
     )
@@ -142,6 +142,15 @@ def main():
         metavar='<bam>',
         help='aligned reads from which the model will be inferred (Required)',
         required=True
+    )
+    parser_mod.add_argument(
+        '--model',
+        '-m',
+        metavar='[\'cdf\', \'kde\']',
+        choices=['cdf', 'kde'],
+        default='cdf',
+        help='Error model to generate. (default: %(default)s). \
+        Can be \'kde\' or \'cdf\''
     )
     parser_mod.add_argument(
         '--output',

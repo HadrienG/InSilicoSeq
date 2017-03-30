@@ -40,14 +40,10 @@ class KDErrorModel(ErrorModel):
         error_profile = np.load(npz_path)
         return error_profile
 
-    def gen_phred_scores(self, qual_data):
+    def gen_phred_scores(self, cdfs):
         """Generate a list of phred scores based on real datasets"""
         phred_list = []
-        for x in qual_data:
-            kde = stats.gaussian_kde(x, bw_method=0.2 / x.std(ddof=1))
-            kde = kde.evaluate(range(41))
-            cdf = np.cumsum(kde)
-            cdf = cdf / cdf[-1]
+        for cdf in cdfs:
             random_quality = np.searchsorted(cdf, np.random.rand())
             phred_list.append(random_quality)
         return phred_list
@@ -56,7 +52,7 @@ class KDErrorModel(ErrorModel):
         """Add phred scores to a SeqRecord according to the error_model"""
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_hist_forw)
+                self.quality_hist_for)
         elif orientation == 'reverse':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
                 self.quality_hist_rev)

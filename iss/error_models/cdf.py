@@ -42,11 +42,9 @@ class CDFErrorModel(ErrorModel):
     def gen_phred_scores(self, histograms):
         """Generate a list of phred scores based on real datasets"""
         phred_list = []
-        for hist in histograms:
-            values, indices = hist
-            weights = values / np.sum(values)
+        for w in histograms:
             random_quality = np.random.choice(
-                indices[1:], p=weights
+                w[0][1:], p=w[1]
             )
             phred_list.append(round(random_quality))
         return phred_list
