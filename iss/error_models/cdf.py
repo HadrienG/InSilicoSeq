@@ -64,36 +64,6 @@ class CDFErrorModel(ErrorModel):
 
         return record
 
-    def subst_matrix_to_choices(self, subst_dispatch_dict):
-        """from the raw substitutions at one position, returns nucleotides
-        and probabilties of state change"""
-        sums = {
-            'A': sum(subst_dispatch_dict[1:4]),
-            'T': sum(subst_dispatch_dict[5:8]),
-            'C': sum(subst_dispatch_dict[9:12]),
-            'G': sum(subst_dispatch_dict[13:])
-        }
-
-        nucl_choices = {
-            'A': (
-                ['T', 'C', 'G'],
-                [count / sums['A'] for count in subst_dispatch_dict[1:4]]
-                ),
-            'T': (
-                ['A', 'C', 'G'],
-                [count / sums['T'] for count in subst_dispatch_dict[5:8]]
-                ),
-            'C': (
-                ['A', 'T', 'G'],
-                [count / sums['C'] for count in subst_dispatch_dict[9:12]]
-                ),
-            'G': (
-                ['A', 'T', 'C'],
-                [count / sums['G'] for count in subst_dispatch_dict[13:]]
-                )
-        }
-        return nucl_choices
-
     def mut_sequence(self, record, orientation):
         # TODO
         """modify the nucleotides of a SeqRecord according to the phred scores.

@@ -17,6 +17,8 @@ def substitutions(bam_file, read_length):
     """
     array_f = np.empty([read_length, 16])
     array_r = np.empty([read_length, 16])
+    nucl_choices_f = []
+    nucl_choices_r = []
 
     dispatch_dict = {
         'AA': 0,
@@ -66,10 +68,11 @@ def substitutions(bam_file, read_length):
                             array_r[
                                 query_pos,
                                 dispatch_dict[dispatch_key]] += 1
-    # TODO
-    # for pos in array[pos], append nucl choice.
-    nucl_choices_f = subst_matrix_to_choices(array_f)
-    nucl_choices_r = subst_matrix_to_choices(array_r)
+
+    for position in range(read_length):
+        nucl_choices_f.append(subst_matrix_to_choices(array_f[position]))
+        nucl_choices_r.append(subst_matrix_to_choices(array_r[position]))
+
     return nucl_choices_f, nucl_choices_r
 
 
