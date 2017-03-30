@@ -123,14 +123,16 @@ def quality_distribution(bam_file):
         array_gen_f = (np.array(
             read.query_qualities) for read in bam.fetch()
                 if not read.is_unmapped and read.is_read1)
-        histograms_forward = [i for i in zip(*array_gen_f)]
+        histograms_forward = [np.histogram(
+            i, bins=range(0, 41)) for i in zip(*array_gen_f)]
 
     # deal with the reverse reads
     with pysam.AlignmentFile(bam_file, "rb") as bam:
         array_gen_r = (np.array(
             read.query_qualities) for read in bam.fetch()
                 if not read.is_unmapped and read.is_read2)
-        histograms_reverse = [i for i in zip(*array_gen_r)]
+        histograms_reverse = [np.histogram(
+            i, bins=range(0, 41)) for i in zip(*array_gen_r)]
 
     return histograms_forward, histograms_reverse
 
