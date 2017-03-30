@@ -28,11 +28,11 @@ class CDFErrorModel(ErrorModel):
         self.read_length = self.error_profile['read_length']
         self.insert_size = self.error_profile['insert_size']
 
-        self.quality_hist_forward = self.error_profile['quality_hist_forward']
-        self.quality_hist_reverse = self.error_profile['quality_hist_reverse']
+        self.quality_hist_for = self.error_profile['quality_hist_forward']
+        self.quality_hist_rev = self.error_profile['quality_hist_reverse']
 
-        self.subst_matrix_forward = self.error_profile['subst_matrix_forward']
-        self.subst_matrix_reverse = self.error_profile['subst_matrix_reverse']
+        self.subst_choices_for = self.error_profile['subst_choices_forward']
+        self.subst_choices_rev = self.error_profile['subst_choices_forward']
 
     def load_npz(self, npz_path):
         """load the error profile npz file"""
@@ -55,10 +55,10 @@ class CDFErrorModel(ErrorModel):
         """Add phred scores to a SeqRecord according to the error_model"""
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_hist_forward)
+                self.quality_hist_for)
         elif orientation == 'reverse':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_hist_reverse)
+                self.quality_hist_rev)
         else:
             print('bad orientation. Fatal')  # add an exit here
 
@@ -71,9 +71,9 @@ class CDFErrorModel(ErrorModel):
 
         # get the right subst_matrix
         if orientation == 'forward':
-            subst_matrix = self.subst_matrix_forward
+            subst_matrix = self.subst_matrix_for
         elif orientation == 'reverse':
-            subst_matrix = self.subst_matrix_reverse
+            subst_matrix = self.subst_matrix_rev
         else:
             print('this is bad')  # TODO error message and proper logging
 
@@ -81,10 +81,9 @@ class CDFErrorModel(ErrorModel):
         quality_list = record.letter_annotations["phred_quality"]
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
-            nucl_choices = self.subst_matrix_to_choices(subst_matrix[position])
             if random.random() > util.phred_to_prob(qual):
                 mutable_seq[position] = np.random.choice(
-                    nucl_choices[nucl][0],
+                    nucl_choices[position][nucl][0],
                     p=nucl_choices[nucl][1])
             position += 1
         return mutable_seq.toseq()
