@@ -17,8 +17,8 @@ def substitutions(bam_file, read_length):
         dict: for each nucleotide (keys) the values are a tuple containing the
         choices and probabilties of transiting to another nucleotide.
     """
-    array_f = np.empty([read_length, 16], dtype=uint64)
-    array_r = np.empty([read_length, 16], dtype=uint64)
+    array_f = np.zeros([read_length, 16])
+    array_r = np.zeros([read_length, 16])
     nucl_choices_f = []
     nucl_choices_r = []
 
@@ -82,12 +82,11 @@ def subst_matrix_to_choices(subst_dispatch_dict):
     """from the raw substitutions at one position, returns nucleotides
     and probabilties of state change"""
     sums = {
-        'A': sum(subst_dispatch_dict[1:4]),
-        'T': sum(subst_dispatch_dict[5:8]),
-        'C': sum(subst_dispatch_dict[9:12]),
-        'G': sum(subst_dispatch_dict[13:])
+        'A': np.sum(subst_dispatch_dict[1:4]),
+        'T': np.sum(subst_dispatch_dict[5:8]),
+        'C': np.sum(subst_dispatch_dict[9:12]),
+        'G': np.sum(subst_dispatch_dict[13:])
     }
-
     nucl_choices = {
         'A': (
             ['T', 'C', 'G'],
