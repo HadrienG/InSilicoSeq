@@ -12,29 +12,8 @@ def substitutions(bam_file, read_length):
         bam_file (:obj:`str`): input bam file
         read_length (:obj"`int`): length of the mapped reads
     Returns:
-        tuple: (array_f, array_r). The arrays contain a dispatch dict with the
-        raw number of substitutions for each nucleotides.
-
-        Here are the corresponding keys. The reference base is first,
-        the query base second:
-                dispatch_dict = {
-                    'AA': 0,
-                    'aT': 1,
-                    'aG': 2,
-                    'aC': 3,
-                    'TT': 4,
-                    'tA': 5,
-                    'tG': 6,
-                    'tC': 7,
-                    'CC': 8,
-                    'cA': 9,
-                    'cT': 10,
-                    'cG': 11,
-                    'GG': 12,
-                    'gA': 13,
-                    'gT': 14,
-                    'gC': 15
-                }
+        dict: for each nucleotide (keys) the values are a tuple containing the
+        choices and probabilties of transiting to another nucleotide.
     """
     array_f = np.empty([read_length, 16])
     array_r = np.empty([read_length, 16])
@@ -87,7 +66,42 @@ def substitutions(bam_file, read_length):
                             array_r[
                                 query_pos,
                                 dispatch_dict[dispatch_key]] += 1
-    return array_f, array_r
+    # TODO
+    # for pos in array[pos], append nucl choice.
+    nucl_choices_f = subst_matrix_to_choices(array_f)
+    nucl_choices_r = subst_matrix_to_choices(array_r)
+    return nucl_choices_f, nucl_choices_r
+
+
+def subst_matrix_to_choices(subst_dispatch_dict):
+    """from the raw substitutions at one position, returns nucleotides
+    and probabilties of state change"""
+    sums = {
+        'A': sum(subst_dispatch_dict[1:4]),
+        'T': sum(subst_dispatch_dict[5:8]),
+        'C': sum(subst_dispatch_dict[9:12]),
+        'G': sum(subst_dispatch_dict[13:])
+    }
+
+    nucl_choices = {
+        'A': (
+            ['T', 'C', 'G'],
+            [count / sums['A'] for count in subst_dispatch_dict[1:4]]
+            ),
+        'T': (
+            ['A', 'C', 'G'],
+            [count / sums['T'] for count in subst_dispatch_dict[5:8]]
+            ),
+        'C': (
+            ['A', 'T', 'G'],
+            [count / sums['C'] for count in subst_dispatch_dict[9:12]]
+            ),
+        'G': (
+            ['A', 'T', 'C'],
+            [count / sums['G'] for count in subst_dispatch_dict[13:]]
+            )
+    }
+    return nucl_choices
 
 
 def quality_distribution(bam_file):
@@ -142,6 +156,6 @@ def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, i_size, output):
         insert_size=i_size,
         quality_hist_forward=hist_f,
         quality_hist_reverse=hist_r,
-        subst_matrix_forward=sub_f,
-        subst_matrix_reverse=sub_r
+        subst_choices_forward=sub_f,
+        subst_choices_reverse=sub_r
     )
