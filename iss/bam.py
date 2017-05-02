@@ -58,7 +58,8 @@ def substitutions(bam_file, read_length):
                         ref_base = base[2]
                         dispatch_key = ref_base + query_base
                         if '^' in read.get_tag('MD'):
-                            continue
+                            print(read.get_tag('MD'))
+                            print(dir(read))
                             # how to handle deletions?
                             # cannot base ourselves of positions
                             # since you get a deletion, the bases are off :(
