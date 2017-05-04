@@ -48,18 +48,19 @@ def generate_reads(args):
 
 
 def model_from_bam(args):
-    i_size = bam.get_insert_size(args.bam)
-    hist_forward, hist_reverse = bam.quality_distribution(args.model, args.bam)
-    read_length = len(hist_forward)
+    # i_size = bam.get_insert_size(args.bam)
+    # hist_forward, hist_reverse = bam.quality_distribution(args.model, args.bam)
+    # read_length = len(hist_forward)
+    read_length = 150
     sub_forward, sub_reverse = bam.substitutions(args.bam, read_length)
-    bam.write_to_file(
-        read_length,
-        hist_forward,
-        hist_reverse,
-        sub_forward,
-        sub_reverse,
-        i_size,
-        args.output + '.npz')
+    # bam.write_to_file(
+    #     read_length,
+    #     hist_forward,
+    #     hist_reverse,
+    #     sub_forward,
+    #     sub_reverse,
+    #     i_size,
+    #     args.output + '.npz')
 
 
 def main():

@@ -6,6 +6,8 @@ from scipy import stats
 import pysam
 import numpy as np
 
+import sys  # debug
+
 
 def substitutions(bam_file, read_length):
     """Get substitution rate for reads mapped to a reference genome.
@@ -17,8 +19,8 @@ def substitutions(bam_file, read_length):
         dict: for each nucleotide (keys) the values are a tuple containing the
         choices and probabilties of transiting to another nucleotide.
     """
-    array_f = np.zeros([read_length, 16])
-    array_r = np.zeros([read_length, 16])
+    array_f = np.zeros([read_length, 24])
+    array_r = np.zeros([read_length, 24])
     nucl_choices_f = []
     nucl_choices_r = []
 
@@ -27,50 +29,63 @@ def substitutions(bam_file, read_length):
         'aT': 1,
         'aG': 2,
         'aC': 3,
-        'TT': 4,
-        'tA': 5,
-        'tG': 6,
-        'tC': 7,
-        'CC': 8,
-        'cA': 9,
-        'cT': 10,
-        'cG': 11,
-        'GG': 12,
-        'gA': 13,
-        'gT': 14,
-        'gC': 15
+        'A1': 4,
+        'A2': 5,
+        'TT': 6,
+        'tA': 7,
+        'tG': 8,
+        'tC': 9,
+        'T1': 10,
+        'T2': 11,
+        'CC': 12,
+        'cA': 13,
+        'cT': 14,
+        'cG': 15,
+        'C1': 16,
+        'C2': 17,
+        'GG': 18,
+        'gA': 19,
+        'gT': 20,
+        'gC': 21,
+        'G1': 22,
+        'G2': 23
     }
 
     with pysam.AlignmentFile(bam_file, "rb") as bam:
         for read in bam.fetch():
             if not read.is_unmapped:
-                # a list of tuples: aligned read (query) and reference
-                # positions. the parameter with_seq adds the ref sequence as
-                # the 3rd element of the tuples. substitutions are lower-case
+                # alignment is a list of tuples: aligned read (query) and
+                # reference positions. the parameter with_seq adds the ref
+                # sequence as the 3rd element of the tuples.
+                # substitutions are lower-case.
                 alignment = read.get_aligned_pairs(
                     matches_only=True,
                     with_seq=True
                     )
+                has_indels = False
                 for base in alignment:
                     if read.seq[base[0]] != 'N':  # let's not deal with Ns
                         query_pos = base[0]
                         query_base = read.seq[query_pos]
                         ref_base = base[2]
                         dispatch_key = ref_base + query_base
-                        if '^' in read.get_tag('MD'):
-                            print(read.get_tag('MD'))
-                            print(dir(read))
-                            # how to handle deletions?
-                            # cannot base ourselves of positions
-                            # since you get a deletion, the bases are off :(
-                        if read.is_read1:
+                        if (query_base.casefold() != ref_base.casefold()
+                                and ref_base.isupper()):
+                            # flag reads that have one or more indels
+                            has_indels = True
+                        if read.is_read1 and has_indels is False:
                             array_f[
                                 query_pos,
                                 dispatch_dict[dispatch_key]] += 1
-                        elif read.is_read2:
+                        elif read.is_read2 and has_indels is False:
                             array_r[
                                 query_pos,
                                 dispatch_dict[dispatch_key]] += 1
+                # once we've counted the substitutions, we count the indels
+                # looking at the cigar
+                if has_indels == 1:
+                    print(read.cigartuples)
+                    sys.exit(1)
 
     for position in range(read_length):
         nucl_choices_f.append(subst_matrix_to_choices(array_f[position]))
