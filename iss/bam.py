@@ -85,6 +85,20 @@ def substitutions(bam_file, read_length):
                 # looking at the cigar
                 if has_indels == 1:
                     print(read.cigartuples)
+                    print(alignment)
+                    print(dispatch_key)
+                    position = 0
+                    for (cigar_type, cigar_length) in read.cigartuples:
+                        if cigar_type == 0:  # match
+                            position += cigar_length
+                        if cigar_type == 1:  # insertion
+                            print(cigar_length)
+                            print(position)
+
+                            pass
+                        if cigar_type == 2:  # deletion
+                            dispatch_key = ref_base + '2'
+                            dispatch_dict[dispatch_key] += 1
                     sys.exit(1)
 
     for position in range(read_length):
