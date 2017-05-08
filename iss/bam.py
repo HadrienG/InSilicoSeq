@@ -6,8 +6,6 @@ from scipy import stats
 import pysam
 import numpy as np
 
-import sys  # debug
-
 
 def substitutions(bam_file, read_length):
     """Get substitution rate for reads mapped to a reference genome.
@@ -84,22 +82,35 @@ def substitutions(bam_file, read_length):
                 # once we've counted the substitutions, we count the indels
                 # looking at the cigar
                 if has_indels == 1:
-                    print(read.cigartuples)
-                    print(alignment)
-                    print(dispatch_key)
                     position = 0
                     for (cigar_type, cigar_length) in read.cigartuples:
                         if cigar_type == 0:  # match
                             position += cigar_length
-                        if cigar_type == 1:  # insertion
-                            print(cigar_length)
-                            print(position)
-
-                            pass
-                        if cigar_type == 2:  # deletion
-                            dispatch_key = ref_base + '2'
-                            dispatch_dict[dispatch_key] += 1
-                    sys.exit(1)
+                        elif cigar_type == 1:  # insertion
+                            dispatch_key = ref_base.upper() + '1'
+                            if read.is_read1:
+                                array_f[
+                                    position,
+                                    dispatch_dict[dispatch_key]] += 1
+                                print('hit!', position)
+                            elif read.is_read2:
+                                array_r[
+                                    position,
+                                    dispatch_dict[dispatch_key]] += 1
+                            position += cigar_length
+                        elif cigar_type == 2:  # deletion
+                            dispatch_key = ref_base.upper() + '2'
+                            if read.is_read1:
+                                array_f[
+                                    position,
+                                    dispatch_dict[dispatch_key]] += 1
+                            elif read.is_read2:
+                                array_r[
+                                    position,
+                                    dispatch_dict[dispatch_key]] += 1
+                            position += cigar_length
+                        else:
+                            print('error')
 
     for position in range(read_length):
         nucl_choices_f.append(subst_matrix_to_choices(array_f[position]))
