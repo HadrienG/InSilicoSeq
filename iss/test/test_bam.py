@@ -5,16 +5,16 @@ from iss import bam
 from nose.tools import assert_almost_equals
 
 
-def test_substitutions():
+def test_mismatches():
     bam_file = 'data/SRR1660402_mapped.bam'
-    sub_forward, sub_reverse = bam.substitutions(bam_file, 150)
+    sub_forward, sub_reverse = bam.get_mismatches(bam_file, 150)
     assert len(sub_forward) == 150
     assert sub_forward[-1]['G'] == (
         ['A', 'T', 'C'],
         [0.17763157894736842, 0.20394736842105263, 0.61842105263157898])
 
 
-def substitutions_to_choices():
+def test_substitutions_to_choices():
     dispatch = np.array(
         [2.77297000e+05, 2.58000000e+02, 3.22000000e+02, 7.37000000e+02,
             2.81467000e+05, 2.18000000e+02, 4.17000000e+02, 3.27000000e+02,

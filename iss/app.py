@@ -48,11 +48,10 @@ def generate_reads(args):
 
 
 def model_from_bam(args):
-    # i_size = bam.get_insert_size(args.bam)
-    # hist_forward, hist_reverse = bam.quality_distribution(args.model, args.bam)
-    # read_length = len(hist_forward)
-    read_length = 150
-    sub_forward, sub_reverse = bam.substitutions(args.bam, read_length)
+    i_size = bam.get_insert_size(args.bam)
+    hist_forward, hist_reverse = bam.quality_distribution(args.model, args.bam)
+    read_length = len(hist_forward)
+    sub_forward, sub_reverse = bam.get_mismatches(args.bam, read_length)
     # bam.write_to_file(
     #     read_length,
     #     hist_forward,

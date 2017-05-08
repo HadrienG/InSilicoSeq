@@ -7,8 +7,8 @@ import pysam
 import numpy as np
 
 
-def substitutions(bam_file, read_length):
-    """Get substitution rate for reads mapped to a reference genome.
+def get_mismatches(bam_file, read_length):
+    """Get substitution and indel rate for reads mapped to a reference genome.
 
     Arguments:
         bam_file (:obj:`str`): input bam file
