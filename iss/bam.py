@@ -92,7 +92,6 @@ def substitutions(bam_file, read_length):
                                 array_f[
                                     position,
                                     dispatch_dict[dispatch_key]] += 1
-                                print('hit!', position)
                             elif read.is_read2:
                                 array_r[
                                     position,
@@ -124,9 +123,9 @@ def subst_matrix_to_choices(subst_dispatch_dict):
     and probabilties of state change"""
     sums = {
         'A': np.sum(subst_dispatch_dict[1:4]),
-        'T': np.sum(subst_dispatch_dict[5:8]),
-        'C': np.sum(subst_dispatch_dict[9:12]),
-        'G': np.sum(subst_dispatch_dict[13:])
+        'T': np.sum(subst_dispatch_dict[7:10]),
+        'C': np.sum(subst_dispatch_dict[13:16]),
+        'G': np.sum(subst_dispatch_dict[19:22])
     }
     nucl_choices = {
         'A': (
@@ -135,17 +134,18 @@ def subst_matrix_to_choices(subst_dispatch_dict):
             ),
         'T': (
             ['A', 'C', 'G'],
-            [count / sums['T'] for count in subst_dispatch_dict[5:8]]
+            [count / sums['T'] for count in subst_dispatch_dict[7:10]]
             ),
         'C': (
             ['A', 'T', 'G'],
-            [count / sums['C'] for count in subst_dispatch_dict[9:12]]
+            [count / sums['C'] for count in subst_dispatch_dict[13:16]]
             ),
         'G': (
             ['A', 'T', 'C'],
-            [count / sums['G'] for count in subst_dispatch_dict[13:]]
+            [count / sums['G'] for count in subst_dispatch_dict[19:22]]
             )
     }
+    print(nucl_choices)
     return nucl_choices
 
 
