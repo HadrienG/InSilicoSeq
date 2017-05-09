@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from iss.util import rev_comp
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -32,6 +33,7 @@ def reads(record, coverage, ErrorModel):
         # generate the forward read
         forward_start = random.randrange(0, len(sequence) - read_length)
         forward_end = forward_start + read_length
+        bounds = (forward_start, forward_end)
         forward = SeqRecord(
             Seq(str(sequence[forward_start:forward_end]),
                 IUPAC.unambiguous_dna
@@ -40,7 +42,7 @@ def reads(record, coverage, ErrorModel):
             description=''
         )
         # add the indels, the qual scores and modify the record accordingly
-        forward = ErrorModel.introduce_indels(forward, 'forward', sequence)
+        forward = ErrorModel.introduce_indels(forward, 'forward', sequence, bounds)
         forward = ErrorModel.introduce_error_scores(forward, 'forward')
         forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
@@ -48,21 +50,18 @@ def reads(record, coverage, ErrorModel):
         reverse_start = forward_start + insert_size
         reverse_end = reverse_start + read_length
         reverse = SeqRecord(
-            Seq(str(sequence[forward_start:forward_end]),
+            Seq(rev_comp(str(sequence[forward_start:forward_end])),
                 IUPAC.unambiguous_dna
                 ),
-            id='%s_%s_1' % (header, i),
+            id='%s_%s_2' % (header, i),
             description=''
         )
         # add the indels, the qual scores and modify the record accordingly
-        reverse = ErrorModel.introduce_indels(reverse, 'reverse', sequence)
+        reverse = ErrorModel.introduce_indels(reverse, 'reverse', sequence, bounds)
         reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
         reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
 
-        yield(forward, reverse.reverse_complement(
-            id='%s_%s_2' % (header, i),
-            description=''
-            ))
+        yield(forward, reverse)
 
 
 def to_fastq(generator, output):

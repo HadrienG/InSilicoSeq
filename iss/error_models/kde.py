@@ -51,9 +51,11 @@ class KDErrorModel(ErrorModel):
             phred_list.append(random_quality)
         return phred_list
 
-    def introduce_indels(self, record, orientation, full_sequence):
+    def introduce_indels(self, record, orientation, full_sequence, bounds):
         """Introduce insertions or deletions in a sequence.
         Return a sequence"""
+        full_sequence_start, full_sequence_end = bounds
+
         # get the right indel array
         if orientation == 'forward':
             indels = self.indels_for
@@ -78,8 +80,10 @@ class KDErrorModel(ErrorModel):
                 mutable_seq.pop()
             return mutable_seq.toseq()
         else:  # len smaller
-            while len(mutable_seq) < self.read_length:
-                mutable_seq.append('N')  # TODO: shouldn't be Ns.
+            to_add = self.read_length - len(mutable_seq)
+            for i in range(to_add):
+                nucl_to_add = full_sequence[full_sequence_end + i]
+                mutable_seq.append(nucl_to_add)
             return mutable_seq.toseq()
 
     def introduce_error_scores(self, record, orientation):
