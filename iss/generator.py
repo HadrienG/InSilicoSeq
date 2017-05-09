@@ -39,7 +39,8 @@ def reads(record, coverage, ErrorModel):
             id='%s_%s_1' % (header, i),
             description=''
         )
-        # add the quality and modify the nucleotides accordingly
+        # add the indels, the qual scores and modify the record accordingly
+        forward = ErrorModel.introduce_indels(forward, 'forward', sequence)
         forward = ErrorModel.introduce_error_scores(forward, 'forward')
         forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
@@ -53,7 +54,8 @@ def reads(record, coverage, ErrorModel):
             id='%s_%s_1' % (header, i),
             description=''
         )
-        # add the quality and modify the nucleotides accordingly
+        # add the indels, the qual scores and modify the record accordingly
+        reverse = ErrorModel.introduce_indels(reverse, 'reverse', sequence)
         reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
         reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
 

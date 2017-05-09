@@ -35,6 +35,9 @@ class KDErrorModel(ErrorModel):
         self.subst_choices_for = self.error_profile['subst_choices_forward']
         self.subst_choices_rev = self.error_profile['subst_choices_reverse']
 
+        self.indels_for = self.error_profile['indels_forward']
+        self.indels_rev = self.error_profile['indels_reverse']
+
     def load_npz(self, npz_path):
         """load the error profile npz file"""
         error_profile = np.load(npz_path)
@@ -47,6 +50,37 @@ class KDErrorModel(ErrorModel):
             random_quality = np.searchsorted(cdf, np.random.rand())
             phred_list.append(random_quality)
         return phred_list
+
+    def introduce_indels(self, record, orientation, full_sequence):
+        """Introduce insertions or deletions in a sequence.
+        Return a sequence"""
+        # get the right indel array
+        if orientation == 'forward':
+            indels = self.indels_for
+        elif orientation == 'reverse':
+            indels = self.indels_rev
+        else:
+            print('this is bad')  # TODO error message and proper logging
+
+        mutable_seq = record.seq.tomutable()
+        position = 0
+        for nucl in mutable_seq:
+            if random.random() < indels[position][nucl][1][0]:  # insertions
+                mutable_seq.insert(position, 'N')  # TODO shouldn't be Ns
+            if random.random() < indels[position][nucl][1][1]:  # deletions
+                mutable_seq.pop(position)
+            position += 1
+
+        if len(mutable_seq) == self.read_length:
+            return mutable_seq.toseq()
+        elif len(mutable_seq) > self.read_length:
+            while len(mutable_seq) > self.read_length:
+                mutable_seq.pop()
+            return mutable_seq.toseq()
+        else:  # len smaller
+            while len(mutable_seq) < self.read_length:
+                mutable_seq.append('N')  # TODO: shouldn't be Ns.
+            return mutable_seq.toseq()
 
     def introduce_error_scores(self, record, orientation):
         """Add phred scores to a SeqRecord according to the error_model"""

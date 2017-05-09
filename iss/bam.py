@@ -149,7 +149,6 @@ def subst_matrix_to_choices(mismatches_array):
             [count / sums['G'] for count in mismatches_array[19:22]]
             )
     }
-    print(nucl_choices)
     return nucl_choices
 
 
