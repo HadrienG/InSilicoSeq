@@ -51,15 +51,18 @@ def model_from_bam(args):
     i_size = bam.get_insert_size(args.bam)
     hist_forward, hist_reverse = bam.quality_distribution(args.model, args.bam)
     read_length = len(hist_forward)
-    sub_forward, sub_reverse = bam.get_mismatches(args.bam, read_length)
-    # bam.write_to_file(
-    #     read_length,
-    #     hist_forward,
-    #     hist_reverse,
-    #     sub_forward,
-    #     sub_reverse,
-    #     i_size,
-    #     args.output + '.npz')
+    sub_forward, sub_reverse, indels_forward, indels_reverse = \
+        bam.get_mismatches(args.bam, read_length)
+    bam.write_to_file(
+        read_length,
+        hist_forward,
+        hist_reverse,
+        sub_forward,
+        sub_reverse,
+        indels_forward,
+        indels_reverse,
+        i_size,
+        args.output + '.npz')
 
 
 def main():

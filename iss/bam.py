@@ -21,6 +21,8 @@ def get_mismatches(bam_file, read_length):
     array_r = np.zeros([read_length, 24])
     nucl_choices_f = []
     nucl_choices_r = []
+    indels_f = []
+    indels_r = []
 
     dispatch_dict = {
         'AA': 0,
@@ -114,39 +116,70 @@ def get_mismatches(bam_file, read_length):
     for position in range(read_length):
         nucl_choices_f.append(subst_matrix_to_choices(array_f[position]))
         nucl_choices_r.append(subst_matrix_to_choices(array_r[position]))
+        indels_f.append(indel_rate(array_f[position]))
+        indels_r.append(indel_rate(array_r[position]))
 
-    return nucl_choices_f, nucl_choices_r
+    return nucl_choices_f, nucl_choices_r, indels_f, indels_r
 
 
-def subst_matrix_to_choices(subst_dispatch_dict):
-    """from the raw substitutions at one position, returns nucleotides
-    and probabilties of state change"""
+def subst_matrix_to_choices(mismatches_array):
+    """from the raw mismatches at one position, returns nucleotides
+    and probabilties of state change (substitutions)"""
     sums = {
-        'A': np.sum(subst_dispatch_dict[1:4]),
-        'T': np.sum(subst_dispatch_dict[7:10]),
-        'C': np.sum(subst_dispatch_dict[13:16]),
-        'G': np.sum(subst_dispatch_dict[19:22])
+        'A': np.sum(mismatches_array[1:4]),
+        'T': np.sum(mismatches_array[7:10]),
+        'C': np.sum(mismatches_array[13:16]),
+        'G': np.sum(mismatches_array[19:22])
     }
     nucl_choices = {
         'A': (
             ['T', 'C', 'G'],
-            [count / sums['A'] for count in subst_dispatch_dict[1:4]]
+            [count / sums['A'] for count in mismatches_array[1:4]]
             ),
         'T': (
             ['A', 'C', 'G'],
-            [count / sums['T'] for count in subst_dispatch_dict[7:10]]
+            [count / sums['T'] for count in mismatches_array[7:10]]
             ),
         'C': (
             ['A', 'T', 'G'],
-            [count / sums['C'] for count in subst_dispatch_dict[13:16]]
+            [count / sums['C'] for count in mismatches_array[13:16]]
             ),
         'G': (
             ['A', 'T', 'C'],
-            [count / sums['G'] for count in subst_dispatch_dict[19:22]]
+            [count / sums['G'] for count in mismatches_array[19:22]]
             )
     }
-    print(nucl_choices)
     return nucl_choices
+
+
+def indel_rate(mismatches_array):
+    """from the raw mismatches at one position, returns nucleotides
+    and probabilties of indel"""
+    sums = {
+        'A': np.sum(mismatches_array[0:4]),
+        'T': np.sum(mismatches_array[6:10]),
+        'C': np.sum(mismatches_array[12:16]),
+        'G': np.sum(mismatches_array[18:22])
+    }
+    indels = {
+        'A': (
+            ['1', '2'],
+            [count / sums['A'] for count in mismatches_array[4:6]]
+            ),
+        'T': (
+            ['1', '2'],
+            [count / sums['T'] for count in mismatches_array[10:12]]
+            ),
+        'C': (
+            ['1', '2'],
+            [count / sums['C'] for count in mismatches_array[16:18]]
+            ),
+        'G': (
+            ['1', '2'],
+            [count / sums['G'] for count in mismatches_array[22:]]
+            )
+    }
+    return indels
 
 
 def quality_distribution(model, bam_file):
@@ -231,7 +264,8 @@ def get_insert_size(bam_file):
     return int(i_size)
 
 
-def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, i_size, output):
+def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, indels_f,
+                  indels_r, i_size, output):
     """write variables to a .npz file"""
     np.savez_compressed(
         output,
@@ -240,5 +274,7 @@ def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, i_size, output):
         quality_hist_forward=hist_f,
         quality_hist_reverse=hist_r,
         subst_choices_forward=sub_f,
-        subst_choices_reverse=sub_r
+        subst_choices_reverse=sub_r,
+        indels_forward=indels_f,
+        indels_reverse=indels_r
     )
