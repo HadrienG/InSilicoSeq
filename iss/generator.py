@@ -42,13 +42,15 @@ def reads(record, coverage, ErrorModel):
             description=''
         )
         # add the indels, the qual scores and modify the record accordingly
-        forward = ErrorModel.introduce_indels(forward, 'forward', sequence, bounds)
+        forward.seq = ErrorModel.introduce_indels(
+            forward, 'forward', sequence, bounds)
         forward = ErrorModel.introduce_error_scores(forward, 'forward')
         forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
         # generate the reverse read
         reverse_start = forward_start + insert_size
         reverse_end = reverse_start + read_length
+        bounds = (reverse_start, reverse_end)
         reverse = SeqRecord(
             Seq(rev_comp(str(sequence[forward_start:forward_end])),
                 IUPAC.unambiguous_dna
@@ -57,7 +59,8 @@ def reads(record, coverage, ErrorModel):
             description=''
         )
         # add the indels, the qual scores and modify the record accordingly
-        reverse = ErrorModel.introduce_indels(reverse, 'reverse', sequence, bounds)
+        reverse.seq = ErrorModel.introduce_indels(
+            reverse, 'reverse', sequence, bounds)
         reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
         reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
 

@@ -68,7 +68,8 @@ class KDErrorModel(ErrorModel):
         position = 0
         for nucl in mutable_seq:
             if random.random() < indels[position][nucl][1][0]:  # insertions
-                mutable_seq.insert(position, 'N')  # TODO shouldn't be Ns
+                # we want to insert after the base read, hence position + 1
+                mutable_seq.insert(position + 1, 'N')  # TODO shouldn't be Ns
             if random.random() < indels[position][nucl][1][1]:  # deletions
                 mutable_seq.pop(position)
             position += 1
@@ -81,9 +82,16 @@ class KDErrorModel(ErrorModel):
             return mutable_seq.toseq()
         else:  # len smaller
             to_add = self.read_length - len(mutable_seq)
-            for i in range(to_add):
-                nucl_to_add = full_sequence[full_sequence_end + i]
-                mutable_seq.append(nucl_to_add)
+            if orientation == 'forward':
+                for i in range(to_add):
+                    nucl_to_add = full_sequence[full_sequence_end + i]
+                    mutable_seq.append(nucl_to_add)
+            elif orientation == 'reverse':
+                for i in range(to_add):
+                    nucl_to_add = util.rev_comp(
+                        full_sequence[full_sequence_start - i]
+                    )
+                    mutable_seq.append(nucl_to_add)
             return mutable_seq.toseq()
 
     def introduce_error_scores(self, record, orientation):
