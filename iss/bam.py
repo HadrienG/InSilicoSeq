@@ -17,14 +17,17 @@ def get_mismatches(bam_file, read_length):
         dict: for each nucleotide (keys) the values are a tuple containing the
         choices and probabilties of transiting to another nucleotide.
     """
-    array_f = np.zeros([read_length, 24])
-    array_r = np.zeros([read_length, 24])
+    subst_array_f = np.zeros([read_length, 16])
+    subst_array_r = np.zeros([read_length, 16])
+    del_array_f = np.zeros([read_length, 4])
+    del_array_r = np.zeros([read_length, 4])
+
     nucl_choices_f = []
     nucl_choices_r = []
-    indels_f = []
-    indels_r = []
+    deletions_f = []
+    deletions_r = []
 
-    dispatch_dict = {
+    dispatch_subst = {
         'AA': 0,
         'aT': 1,
         'aG': 2,
@@ -41,6 +44,13 @@ def get_mismatches(bam_file, read_length):
         'gA': 13,
         'gT': 14,
         'gC': 15
+    }
+
+    dispatch_del = {
+        'A': 0,
+        'T': 1,
+        'C': 2,
+        'G': 3
     }
 
     with pysam.AlignmentFile(bam_file, "rb") as bam:
@@ -66,13 +76,13 @@ def get_mismatches(bam_file, read_length):
                             # flag reads that have one or more indels
                             has_indels = True
                         if read.is_read1 and has_indels is False:
-                            array_f[
+                            subst_array_f[
                                 query_pos,
-                                dispatch_dict[dispatch_key]] += 1
+                                dispatch_subst[dispatch_key]] += 1
                         elif read.is_read2 and has_indels is False:
-                            array_r[
+                            subst_array_r[
                                 query_pos,
-                                dispatch_dict[dispatch_key]] += 1
+                                dispatch_subst[dispatch_key]] += 1
                 # once we've counted the substitutions, we count the indels
                 # looking at the cigar
                 if has_indels == 1:
@@ -92,59 +102,61 @@ def get_mismatches(bam_file, read_length):
                                     dispatch_dict[dispatch_key]] += 1
                             position += cigar_length
                         elif cigar_type == 2:  # deletion
-                            dispatch_key = ref_base.upper() + '2'
+                            deletion = ref_base.upper()
                             if read.is_read1:
-                                array_f[
+                                del_array_f[
                                     position,
-                                    dispatch_dict[dispatch_key]] += 1
+                                    dispatch_del[dispatch_key]] += 1
                             elif read.is_read2:
-                                array_r[
+                                del_array_r[
                                     position,
-                                    dispatch_dict[dispatch_key]] += 1
+                                    dispatch_del[dispatch_key]] += 1
                             position += cigar_length
                         else:
                             print('error')
 
     for position in range(read_length):
-        nucl_choices_f.append(subst_matrix_to_choices(array_f[position]))
-        nucl_choices_r.append(subst_matrix_to_choices(array_r[position]))
+        nucl_choices_f.append(subst_matrix_to_choices(subst_array_f[position]))
+        nucl_choices_r.append(subst_matrix_to_choices(subst_array_r[position]))
+        deletions_f.append(deletion_rate(del_array_f[position]))
+        deletions_r.append(deletion_rate(del_array_r[position]))
         indels_f.append(indel_rate(array_f[position]))
         indels_r.append(indel_rate(array_r[position]))
 
     return nucl_choices_f, nucl_choices_r, indels_f, indels_r
 
 
-def subst_matrix_to_choices(mismatches_array):
+def subst_matrix_to_choices(substitutions_array):
     """from the raw mismatches at one position, returns nucleotides
     and probabilties of state change (substitutions)"""
     sums = {
-        'A': np.sum(mismatches_array[1:4]),
-        'T': np.sum(mismatches_array[5:8]),
-        'C': np.sum(mismatches_array[9:12]),
-        'G': np.sum(mismatches_array[13:])
+        'A': np.sum(substitutions_array[1:4]),
+        'T': np.sum(substitutions_array[5:8]),
+        'C': np.sum(substitutions_array[9:12]),
+        'G': np.sum(substitutions_array[13:])
     }
     nucl_choices = {
         'A': (
             ['T', 'C', 'G'],
-            [count / sums['A'] for count in mismatches_array[1:4]]
+            [count / sums['A'] for count in substitutions_array[1:4]]
             ),
         'T': (
             ['A', 'C', 'G'],
-            [count / sums['T'] for count in mismatches_array[5:8]]
+            [count / sums['T'] for count in substitutions_array[5:8]]
             ),
         'C': (
             ['A', 'T', 'G'],
-            [count / sums['C'] for count in mismatches_array[9:12]]
+            [count / sums['C'] for count in substitutions_array[9:12]]
             ),
         'G': (
             ['A', 'T', 'C'],
-            [count / sums['G'] for count in mismatches_array[13:]]
+            [count / sums['G'] for count in substitutions_array[13:]]
             )
     }
     return nucl_choices
 
 
-def indel_rate(mismatches_array):
+def insertion_rate(mismatches_array):
     """from the raw mismatches at one position, returns nucleotides
     and probabilties of indel"""
     sums = {
@@ -172,6 +184,19 @@ def indel_rate(mismatches_array):
             )
     }
     return indels
+
+
+def deletion_rate(deletions_array):
+    """from the raw deletion rates at one position, returns nucleotides
+    and probabilties of deletion"""
+    total = np.sum(deletions_array)  # total of deletions at one position
+    deletions = {
+        'A': deletions_array[0] / total,
+        'T': deletions_array[1] / total,
+        'C': deletions_array[2] / total,
+        'G': deletions_array[3] / total
+    }
+    return deletions
 
 
 def quality_distribution(model, bam_file):
