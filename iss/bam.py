@@ -78,8 +78,7 @@ def get_mismatches(bam_file, read_length):
                         query_base = read.seq[query_pos]
                         ref_base = base[2]
                         dispatch_key = ref_base + query_base
-                        if (query_base.casefold() != ref_base.casefold()
-                                and ref_base.isupper()):
+                        if dispatch_key not in dispatch_subst:
                             # flag reads that have one or more indels
                             has_indels = True
                         if read.is_read1 and has_indels is False:
@@ -118,7 +117,7 @@ def get_mismatches(bam_file, read_length):
                                 indel_array_r[
                                     position,
                                     dispatch_indels[deletion]] += 1
-                            position += cigar_length
+                            position -= cigar_length
                         else:
                             print('error')
 
