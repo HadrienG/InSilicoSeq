@@ -19,13 +19,15 @@ def get_mismatches(bam_file, read_length):
     """
     subst_array_f = np.zeros([read_length, 16])
     subst_array_r = np.zeros([read_length, 16])
-    del_array_f = np.zeros([read_length, 4])
-    del_array_r = np.zeros([read_length, 4])
+    indel_array_f = np.zeros([read_length, 8])
+    indel_array_r = np.zeros([read_length, 8])
 
     nucl_choices_f = []
     nucl_choices_r = []
-    deletions_f = []
-    deletions_r = []
+    ins_f = []
+    ins_r = []
+    del_f = []
+    del_r = []
 
     dispatch_subst = {
         'AA': 0,
@@ -46,11 +48,15 @@ def get_mismatches(bam_file, read_length):
         'gC': 15
     }
 
-    dispatch_del = {
-        'A': 0,
-        'T': 1,
-        'C': 2,
-        'G': 3
+    dispatch_indels = {
+        'A1': 0,
+        'T1': 1,
+        'C1': 2,
+        'G1': 3,
+        'A2': 4,
+        'T2': 5,
+        'C2': 6,
+        'G2': 7
     }
 
     with pysam.AlignmentFile(bam_file, "rb") as bam:
@@ -91,26 +97,26 @@ def get_mismatches(bam_file, read_length):
                         if cigar_type == 0:  # match
                             position += cigar_length
                         elif cigar_type == 1:  # insertion
-                            dispatch_key = ref_base.upper() + '1'
+                            insertion = query_base.upper() + '1'
                             if read.is_read1:
-                                array_f[
+                                indel_array_f[
                                     position,
-                                    dispatch_dict[dispatch_key]] += 1
+                                    dispatch_indels[insertion]] += 1
                             elif read.is_read2:
-                                array_r[
+                                indel_array_r[
                                     position,
-                                    dispatch_dict[dispatch_key]] += 1
+                                    dispatch_indels[insertion]] += 1
                             position += cigar_length
                         elif cigar_type == 2:  # deletion
-                            deletion = ref_base.upper()
+                            deletion = ref_base.upper() + '2'
                             if read.is_read1:
-                                del_array_f[
+                                indel_array_f[
                                     position,
-                                    dispatch_del[dispatch_key]] += 1
+                                    dispatch_indels[deletion]] += 1
                             elif read.is_read2:
-                                del_array_r[
+                                indel_array_r[
                                     position,
-                                    dispatch_del[dispatch_key]] += 1
+                                    dispatch_indels[deletion]] += 1
                             position += cigar_length
                         else:
                             print('error')
@@ -118,12 +124,12 @@ def get_mismatches(bam_file, read_length):
     for position in range(read_length):
         nucl_choices_f.append(subst_matrix_to_choices(subst_array_f[position]))
         nucl_choices_r.append(subst_matrix_to_choices(subst_array_r[position]))
-        deletions_f.append(deletion_rate(del_array_f[position]))
-        deletions_r.append(deletion_rate(del_array_r[position]))
-        indels_f.append(indel_rate(array_f[position]))
-        indels_r.append(indel_rate(array_r[position]))
+        ins_f.append(indel_rate(indel_array_f[position])[0])
+        ins_r.append(indel_rate(indel_array_r[position])[0])
+        del_f.append(indel_rate(indel_array_f[position])[1])
+        del_r.append(indel_rate(indel_array_r[position])[1])
 
-    return nucl_choices_f, nucl_choices_r, indels_f, indels_r
+    return nucl_choices_f, nucl_choices_r, ins_f, ins_r, del_f, del_r
 
 
 def subst_matrix_to_choices(substitutions_array):
@@ -156,47 +162,24 @@ def subst_matrix_to_choices(substitutions_array):
     return nucl_choices
 
 
-def insertion_rate(mismatches_array):
-    """from the raw mismatches at one position, returns nucleotides
-    and probabilties of indel"""
-    sums = {
-        'A': np.sum(mismatches_array[0:4]),
-        'T': np.sum(mismatches_array[6:10]),
-        'C': np.sum(mismatches_array[12:16]),
-        'G': np.sum(mismatches_array[18:22])
-    }
-    indels = {
-        'A': (
-            ['1', '2'],
-            [count / sums['A'] for count in mismatches_array[4:6]]
-            ),
-        'T': (
-            ['1', '2'],
-            [count / sums['T'] for count in mismatches_array[10:12]]
-            ),
-        'C': (
-            ['1', '2'],
-            [count / sums['C'] for count in mismatches_array[16:18]]
-            ),
-        'G': (
-            ['1', '2'],
-            [count / sums['G'] for count in mismatches_array[22:]]
-            )
-    }
-    return indels
-
-
-def deletion_rate(deletions_array):
+def indel_rate(indels_array):
     """from the raw deletion rates at one position, returns nucleotides
     and probabilties of deletion"""
-    total = np.sum(deletions_array)  # total of deletions at one position
-    deletions = {
-        'A': deletions_array[0] / total,
-        'T': deletions_array[1] / total,
-        'C': deletions_array[2] / total,
-        'G': deletions_array[3] / total
+    sum_insertions = np.sum(indels_array[0:4])
+    sum_deletions = np.sum(indels_array[4:])
+    insertions = {
+        'A': indels_array[0] / sum_insertions,
+        'T': indels_array[1] / sum_insertions,
+        'C': indels_array[2] / sum_insertions,
+        'G': indels_array[3] / sum_insertions
     }
-    return deletions
+    deletions = {
+        'A': indels_array[4] / sum_deletions,
+        'T': indels_array[5] / sum_deletions,
+        'C': indels_array[6] / sum_deletions,
+        'G': indels_array[7] / sum_deletions
+    }
+    return insertions, deletions
 
 
 def quality_distribution(model, bam_file):
@@ -281,8 +264,8 @@ def get_insert_size(bam_file):
     return int(i_size)
 
 
-def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, indels_f,
-                  indels_r, i_size, output):
+def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
+                  ins_r, del_f, del_r, i_size, output):
     """write variables to a .npz file"""
     np.savez_compressed(
         output,
@@ -292,6 +275,8 @@ def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, indels_f,
         quality_hist_reverse=hist_r,
         subst_choices_forward=sub_f,
         subst_choices_reverse=sub_r,
-        indels_forward=indels_f,
-        indels_reverse=indels_r
+        ins_forward=ins_f,
+        ins_reverse=ins_r,
+        del_forward=del_f,
+        del_reverse=del_r
     )
