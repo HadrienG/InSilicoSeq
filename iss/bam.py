@@ -19,8 +19,8 @@ def get_mismatches(bam_file, read_length):
     """
     subst_array_f = np.zeros([read_length, 16])
     subst_array_r = np.zeros([read_length, 16])
-    indel_array_f = np.zeros([read_length, 8])
-    indel_array_r = np.zeros([read_length, 8])
+    indel_array_f = np.zeros([read_length, 9])
+    indel_array_r = np.zeros([read_length, 9])
 
     nucl_choices_f = []
     nucl_choices_r = []
@@ -49,14 +49,15 @@ def get_mismatches(bam_file, read_length):
     }
 
     dispatch_indels = {
-        'A1': 0,
-        'T1': 1,
-        'C1': 2,
-        'G1': 3,
-        'A2': 4,
-        'T2': 5,
-        'C2': 6,
-        'G2': 7
+        0: 0,
+        'A1': 1,
+        'T1': 2,
+        'C1': 3,
+        'G1': 4,
+        'A2': 5,
+        'T2': 6,
+        'C2': 7,
+        'G2': 8
     }
 
     with pysam.AlignmentFile(bam_file, "rb") as bam:
@@ -122,6 +123,10 @@ def get_mismatches(bam_file, read_length):
                             print('error')
 
     for position in range(read_length):
+        # update base count in indel arrays
+        indel_array_f[position][0] = sum(subst_array_f[position][::4])
+        indel_array_r[position][0] = sum(subst_array_r[position][::4])
+
         nucl_choices_f.append(subst_matrix_to_choices(subst_array_f[position]))
         nucl_choices_r.append(subst_matrix_to_choices(subst_array_r[position]))
         ins_f.append(indel_rate(indel_array_f[position])[0])
@@ -165,19 +170,17 @@ def subst_matrix_to_choices(substitutions_array):
 def indel_rate(indels_array):
     """from the raw deletion rates at one position, returns nucleotides
     and probabilties of deletion"""
-    sum_insertions = np.sum(indels_array[0:4])
-    sum_deletions = np.sum(indels_array[4:])
     insertions = {
-        'A': indels_array[0] / sum_insertions,
-        'T': indels_array[1] / sum_insertions,
-        'C': indels_array[2] / sum_insertions,
-        'G': indels_array[3] / sum_insertions
+        'A': indels_array[1] / indels_array[0],
+        'T': indels_array[2] / indels_array[0],
+        'C': indels_array[3] / indels_array[0],
+        'G': indels_array[4] / indels_array[0]
     }
     deletions = {
-        'A': indels_array[4] / sum_deletions,
-        'T': indels_array[5] / sum_deletions,
-        'C': indels_array[6] / sum_deletions,
-        'G': indels_array[7] / sum_deletions
+        'A': indels_array[5] / indels_array[0],
+        'T': indels_array[6] / indels_array[0],
+        'C': indels_array[7] / indels_array[0],
+        'G': indels_array[8] / indels_array[0]
     }
     return insertions, deletions
 

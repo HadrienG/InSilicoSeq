@@ -35,8 +35,10 @@ class KDErrorModel(ErrorModel):
         self.subst_choices_for = self.error_profile['subst_choices_forward']
         self.subst_choices_rev = self.error_profile['subst_choices_reverse']
 
-        self.indels_for = self.error_profile['indels_forward']
-        self.indels_rev = self.error_profile['indels_reverse']
+        self.ins_for = self.error_profile['ins_forward']
+        self.ins_rev = self.error_profile['ins_reverse']
+        self.del_for = self.error_profile['del_forward']
+        self.del_rev = self.error_profile['del_reverse']
 
     def load_npz(self, npz_path):
         """load the error profile npz file"""
@@ -56,21 +58,24 @@ class KDErrorModel(ErrorModel):
         Return a sequence"""
         full_sequence_start, full_sequence_end = bounds
 
-        # get the right indel array
+        # get the right indel arrays
         if orientation == 'forward':
-            indels = self.indels_for
+            insertions = self.ins_for
+            deletions = self.del_for
         elif orientation == 'reverse':
-            indels = self.indels_rev
+            insertions = self.ins_rev
+            deletions = self.del_rev
         else:
             print('this is bad')  # TODO error message and proper logging
 
         mutable_seq = record.seq.tomutable()
         position = 0
         for nucl in mutable_seq:
-            if random.random() < indels[position][nucl][1][0]:  # insertions
-                # we want to insert after the base read, hence position + 1
-                mutable_seq.insert(position + 1, 'N')  # TODO shouldn't be Ns
-            if random.random() < indels[position][nucl][1][1]:  # deletions
+            for nucl_to_insert, prob in insertions[position].items():  # ins
+                if random.random() < prob:
+                    # we want to insert after the base read, hence position + 1
+                    mutable_seq.insert(position + 1, nucl_to_insert)
+            if random.random() < deletions[position][nucl]:  # del
                 mutable_seq.pop(position)
             position += 1
 
