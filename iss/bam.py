@@ -29,26 +29,18 @@ def get_mismatches(bam_file, read_length):
         'aT': 1,
         'aG': 2,
         'aC': 3,
-        'A1': 4,
-        'A2': 5,
-        'TT': 6,
-        'tA': 7,
-        'tG': 8,
-        'tC': 9,
-        'T1': 10,
-        'T2': 11,
-        'CC': 12,
-        'cA': 13,
-        'cT': 14,
-        'cG': 15,
-        'C1': 16,
-        'C2': 17,
-        'GG': 18,
-        'gA': 19,
-        'gT': 20,
-        'gC': 21,
-        'G1': 22,
-        'G2': 23
+        'TT': 4,
+        'tA': 5,
+        'tG': 6,
+        'tC': 7,
+        'CC': 8,
+        'cA': 9,
+        'cT': 10,
+        'cG': 11,
+        'GG': 12,
+        'gA': 13,
+        'gT': 14,
+        'gC': 15
     }
 
     with pysam.AlignmentFile(bam_file, "rb") as bam:
@@ -127,9 +119,9 @@ def subst_matrix_to_choices(mismatches_array):
     and probabilties of state change (substitutions)"""
     sums = {
         'A': np.sum(mismatches_array[1:4]),
-        'T': np.sum(mismatches_array[7:10]),
-        'C': np.sum(mismatches_array[13:16]),
-        'G': np.sum(mismatches_array[19:22])
+        'T': np.sum(mismatches_array[5:8]),
+        'C': np.sum(mismatches_array[9:12]),
+        'G': np.sum(mismatches_array[13:])
     }
     nucl_choices = {
         'A': (
@@ -138,15 +130,15 @@ def subst_matrix_to_choices(mismatches_array):
             ),
         'T': (
             ['A', 'C', 'G'],
-            [count / sums['T'] for count in mismatches_array[7:10]]
+            [count / sums['T'] for count in mismatches_array[5:8]]
             ),
         'C': (
             ['A', 'T', 'G'],
-            [count / sums['C'] for count in mismatches_array[13:16]]
+            [count / sums['C'] for count in mismatches_array[9:12]]
             ),
         'G': (
             ['A', 'T', 'C'],
-            [count / sums['G'] for count in mismatches_array[19:22]]
+            [count / sums['G'] for count in mismatches_array[13:]]
             )
     }
     return nucl_choices
