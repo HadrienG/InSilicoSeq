@@ -10,41 +10,50 @@ import argparse
 
 
 def generate_reads(args):
-    if args.model == 'cdf':
-        from iss.error_models import cdf
-        npz = args.model_file
-        err_mod = cdf.CDFErrorModel(npz)
-    elif args.model == 'kde':
-        print('Using kde')
-        from iss.error_models import kde
-        npz = args.model_file
-        err_mod = kde.KDErrorModel(npz)
-    elif args.model is None:
-        from iss.error_models import basic
-        err_mod = basic.BasicErrorModel()
-    else:
-        print('bad error model')
+    try:  # try to load the correct error model
+        if args.model == 'cdf':
+            from iss.error_models import cdf
+            npz = args.model_file
+            err_mod = cdf.CDFErrorModel(npz)
+        elif args.model == 'kde':
+            from iss.error_models import kde
+            npz = args.model_file
+            err_mod = kde.KDErrorModel(npz)
+        elif args.model is None:
+            from iss.error_models import basic
+            err_mod = basic.BasicErrorModel()
+    except ImportError as e:
+        print('Error:', e)
+    except FileNotFoundError as e:
+        print('Error:', e)
 
+    # read the abundance file
     abundance_dic = abundance.parse_abundance_file(args.abundance)
-    with open(args.genomes, 'r') as f:
-        fasta_file = SeqIO.parse(f, 'fasta')
-        for record in fasta_file:
-            species_abundance = abundance_dic[record.id]
-            genome_size = len(record.seq)
-            coverage = abundance.to_coverage(
-                args.n_reads,
-                species_abundance,
-                err_mod.read_length,
-                genome_size
-                )
 
-            read_gen = generator.reads(
-                record,
-                coverage,
-                err_mod
-                )
+    try:  # read genomes and generate reads
+        f = open(args.genomes, 'r')
+    except IOError as e:
+        print('Error', e)
+    else:
+        with f:
+            fasta_file = SeqIO.parse(f, 'fasta')
+            for record in fasta_file:
+                species_abundance = abundance_dic[record.id]
+                genome_size = len(record.seq)
+                coverage = abundance.to_coverage(
+                    args.n_reads,
+                    species_abundance,
+                    err_mod.read_length,
+                    genome_size
+                    )
 
-            generator.to_fastq(read_gen, args.output)
+                read_gen = generator.reads(
+                    record,
+                    coverage,
+                    err_mod
+                    )
+
+                generator.to_fastq(read_gen, args.output)
 
 
 def model_from_bam(args):
