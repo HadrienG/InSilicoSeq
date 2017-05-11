@@ -19,7 +19,7 @@ def generate_reads(args):
             from iss.error_models import kde
             npz = args.model_file
             err_mod = kde.KDErrorModel(npz)
-        elif args.model is None:
+        elif args.model == 'basic':
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
@@ -80,11 +80,11 @@ def model_from_bam(args):
 def main():
     parser = argparse.ArgumentParser(
         prog='InSilicoSeq',
-        usage='iss [options]',
+        usage='iss [subcammand] [options]',
         description='InSilicoSeq: A sequencing simulator'
     )
     subparsers = parser.add_subparsers(
-            title='available commands',
+            title='available subcommands',
             metavar=''
     )
 
@@ -127,10 +127,10 @@ def main():
         '--model',
         '-m',
         metavar='[\'cdf\', \'kde\']',
-        choices=['cdf', 'kde', None],
-        default=None,
-        help='Error model. If not specified, using a basic \
-        error model instead (default: %(default)s). Can be \'kde\' or \'cdf\''
+        choices=['cdf', 'kde', 'basic'],
+        default='kde',
+        help='Error model. If not specified, using kernel density estimation \
+        (default: %(default)s). Can be \'kde\', \'cdf\' or \'basic\''
     )
     parser_gen.add_argument(
         '--model_file',
@@ -163,14 +163,14 @@ def main():
         '-m',
         metavar='[\'cdf\', \'kde\']',
         choices=['cdf', 'kde'],
-        default='cdf',
+        default='kde',
         help='Error model to generate. (default: %(default)s). \
         Can be \'kde\' or \'cdf\''
     )
     parser_mod.add_argument(
         '--output',
         '-o',
-        metavar='<npy>',
+        metavar='<npz>',
         help='Output file prefix (Required)',
         required=True
     )
@@ -178,4 +178,7 @@ def main():
     parser_mod.set_defaults(func=model_from_bam)
 
     args = parser.parse_args()
-    args.func(args)
+    try:
+        args.func(args)
+    except AttributeError:
+        parser.print_help()
