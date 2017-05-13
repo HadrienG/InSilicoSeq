@@ -20,20 +20,15 @@ class BasicErrorModel(ErrorModel):
         super().__init__()
         self.read_length = 125
         self.insert_size = 200
-        self.quality = 30
+        self.quality_forward = 30
+        self.quality_reverse = 30
 
     def gen_phred_scores(self, mean_quality):
         """Generate a normal distribution, transform to phred scores"""
         norm = [min(q, 0.9999) for q in np.random.normal(
-            mean_quality, 0.01, self.read_length)]
+            util.phred_to_prob(mean_quality), 0.01, self.read_length)]
         phred = [util.prob_to_phred(p) for p in norm]
         return phred
-
-    def introduce_error_scores(self, record, orientation):
-        """Add phred scores to a SeqRecord"""
-        record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-            util.phred_to_prob(self.quality))
-        return record
 
     def mut_sequence(self, record, orientation):
         """modify the nucleotides of a SeqRecord according to the phred scores.

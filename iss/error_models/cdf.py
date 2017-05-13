@@ -28,16 +28,11 @@ class CDFErrorModel(ErrorModel):
         self.read_length = self.error_profile['read_length']
         self.insert_size = self.error_profile['insert_size']
 
-        self.quality_hist_for = self.error_profile['quality_hist_forward']
-        self.quality_hist_rev = self.error_profile['quality_hist_reverse']
+        self.quality_forward = self.error_profile['quality_hist_forward']
+        self.quality_reverse = self.error_profile['quality_hist_reverse']
 
         self.subst_choices_for = self.error_profile['subst_choices_forward']
         self.subst_choices_rev = self.error_profile['subst_choices_forward']
-
-    def load_npz(self, npz_path):
-        """load the error profile npz file"""
-        error_profile = np.load(npz_path)
-        return error_profile
 
     def gen_phred_scores(self, histograms):
         """Generate a list of phred scores based on real datasets"""
@@ -48,19 +43,6 @@ class CDFErrorModel(ErrorModel):
             )
             phred_list.append(round(random_quality))
         return phred_list
-
-    def introduce_error_scores(self, record, orientation):
-        """Add phred scores to a SeqRecord according to the error_model"""
-        if orientation == 'forward':
-            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_hist_for)
-        elif orientation == 'reverse':
-            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_hist_rev)
-        else:
-            print('bad orientation. Fatal')  # add an exit here
-
-        return record
 
     def mut_sequence(self, record, orientation):
         # TODO

@@ -29,8 +29,8 @@ class KDErrorModel(ErrorModel):
         self.read_length = self.error_profile['read_length']
         self.insert_size = self.error_profile['insert_size']
 
-        self.quality_hist_for = self.error_profile['quality_hist_forward']
-        self.quality_hist_rev = self.error_profile['quality_hist_reverse']
+        self.quality_forward = self.error_profile['quality_hist_forward']
+        self.quality_reverse = self.error_profile['quality_hist_reverse']
 
         self.subst_choices_for = self.error_profile['subst_choices_forward']
         self.subst_choices_rev = self.error_profile['subst_choices_reverse']
@@ -39,11 +39,6 @@ class KDErrorModel(ErrorModel):
         self.ins_rev = self.error_profile['ins_reverse']
         self.del_for = self.error_profile['del_forward']
         self.del_rev = self.error_profile['del_reverse']
-
-    def load_npz(self, npz_path):
-        """load the error profile npz file"""
-        error_profile = np.load(npz_path)
-        return error_profile
 
     def gen_phred_scores(self, cdfs):
         """Generate a list of phred scores based on real datasets"""
@@ -98,19 +93,6 @@ class KDErrorModel(ErrorModel):
                     )
                     mutable_seq.append(nucl_to_add)
             return mutable_seq.toseq()
-
-    def introduce_error_scores(self, record, orientation):
-        """Add phred scores to a SeqRecord according to the error_model"""
-        if orientation == 'forward':
-            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_hist_for)
-        elif orientation == 'reverse':
-            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_hist_rev)
-        else:
-            print('bad orientation. Fatal')  # add an exit here
-
-        return record
 
     def mut_sequence(self, record, orientation):
         """modify the nucleotides of a SeqRecord according to the phred scores.
