@@ -16,6 +16,7 @@ def parse_abundance_file(abundance_file):
         f = open(abundance_file, 'r')
     except IOError as e:
         print('Error:', e)
+        print('Couldn\'t read abundance file')
         sys.exit(1)
     else:
         with f:

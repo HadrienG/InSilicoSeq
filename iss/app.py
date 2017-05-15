@@ -25,9 +25,11 @@ def generate_reads(args):
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
         print('Error:', e)
+        print('Couldn\' import error model')
         sys.exit(1)
     except FileNotFoundError as e:
         print('Error:', e)
+        print('Error model file not found')
         sys.exit(1)
 
     # read the abundance file
@@ -37,6 +39,7 @@ def generate_reads(args):
         f = open(args.genomes, 'r')
     except IOError as e:
         print('Error', e)
+        print('Couldn\'t read genomes file')
         sys.exit(1)
     else:
         with f:
@@ -46,6 +49,7 @@ def generate_reads(args):
                     species_abundance = abundance_dic[record.id]
                 except KeyError as e:
                     print('Error:', e)
+                    print('Are all your genomes in your abundance file?')
                     sys.exit(1)
                 else:
                     genome_size = len(record.seq)
