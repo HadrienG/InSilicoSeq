@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
 
 def parse_abundance_file(abundance_file):
     """Parse an abundance file and return a dictionnary. The abundance file
@@ -10,11 +12,17 @@ def parse_abundance_file(abundance_file):
     abundance_file -- the path to the abundance file
     """
     abundance_dic = {}
-    with open(abundance_file, 'r') as f:
-        for line in f:
-            genome_id = line.split()[0]
-            abundance = float(line.split()[1])
-            abundance_dic[genome_id] = abundance
+    try:
+        f = open(abundance_file, 'r')
+    except IOError as e:
+        print('Error:', e)
+        sys.exit(1)
+    else:
+        with f:
+            for line in f:
+                genome_id = line.split()[0]
+                abundance = float(line.split()[1])
+                abundance_dic[genome_id] = abundance
     return abundance_dic
 
 

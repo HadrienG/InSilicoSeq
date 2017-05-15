@@ -59,8 +59,6 @@ class KDErrorModel(ErrorModel):
         elif orientation == 'reverse':
             insertions = self.ins_rev
             deletions = self.del_rev
-        else:
-            print('this is bad')  # TODO error message and proper logging
 
         mutable_seq = record.seq.tomutable()
         position = 0

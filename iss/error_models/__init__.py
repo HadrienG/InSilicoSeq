@@ -27,8 +27,6 @@ class ErrorModel(object):
         elif orientation == 'reverse':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
                 self.quality_reverse)
-        else:
-            print('bad orientation. Fatal')  # add an exit here
         return record
 
     def mut_sequence(self, record, orientation):
@@ -40,8 +38,6 @@ class ErrorModel(object):
             nucl_choices = self.subst_choices_for
         elif orientation == 'reverse':
             nucl_choices = self.subst_choices_rev
-        else:
-            print('this is bad')  # TODO error message and proper logging
 
         mutable_seq = record.seq.tomutable()
         quality_list = record.letter_annotations["phred_quality"]
