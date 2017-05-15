@@ -17,10 +17,10 @@ class ErrorModel(object):
         """load the error profile npz file"""
         try:
             error_profile = np.load(npz_path)
-            assert error_profile == model
+            assert error_profile['model'] == model
         except OSError as e:
             print('Error:', e)
-            Print('Your Error model file couldn\'t be read by Numpy')
+            print('Your Error model file couldn\'t be read by Numpy')
             sys.exit(1)
         except AssertionError as e:
             print('Error:', e)
@@ -62,7 +62,7 @@ class ErrorModel(object):
     def adjust_seq_length(self, mut_seq, orientation, full_sequence, bounds):
         """take a mutable sequence after indel treatment. Return a seq of
         the correct read length"""
-        full_sequence_start, full_sequence_end = bounds
+        read_start, read_end = bounds
         if len(mut_seq) == self.read_length:
             return mut_seq.toseq()
         elif len(mut_seq) > self.read_length:
@@ -73,12 +73,12 @@ class ErrorModel(object):
             to_add = self.read_length - len(mut_seq)
             if orientation == 'forward':
                 for i in range(to_add):
-                    nucl_to_add = full_sequence[full_sequence_end + i]
+                    nucl_to_add = str(full_sequence[read_end + i])
                     mut_seq.append(nucl_to_add)
             elif orientation == 'reverse':
                 for i in range(to_add):
                     nucl_to_add = util.rev_comp(
-                        full_sequence[full_sequence_start - i]
+                        full_sequence[read_end + i]
                     )
                     mut_seq.append(nucl_to_add)
             return mut_seq.toseq()
@@ -97,12 +97,12 @@ class ErrorModel(object):
 
         mutable_seq = record.seq.tomutable()
         position = 0
-        for nucl in mutable_seq:
+        for nucl in range(self.read_length - 1):
             for nucl_to_insert, prob in insertions[position].items():  # ins
                 if random.random() < prob:
                     # we want to insert after the base read, hence position + 1
                     mutable_seq.insert(position + 1, nucl_to_insert)
-            if random.random() < deletions[position][nucl]:  # del
+            if random.random() < deletions[position][mutable_seq[nucl]]:  # del
                 mutable_seq.pop(position)
             position += 1
 

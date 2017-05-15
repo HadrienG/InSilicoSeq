@@ -7,6 +7,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
 
+import sys
 import random
 
 
@@ -31,7 +32,13 @@ def reads(record, coverage, ErrorModel):
 
     for i in range(n_pairs):
         # generate the forward read
-        forward_start = random.randrange(0, len(sequence) - read_length)
+        try:
+            forward_start = random.randrange(
+                0, len(sequence) - (2 * read_length + insert_size))
+        except ValueError as e:
+            print('Error', e)
+            print('The input genome is too small for this error model')
+            sys.exit(1)
         forward_end = forward_start + read_length
         bounds = (forward_start, forward_end)
         forward = SeqRecord(
@@ -48,11 +55,11 @@ def reads(record, coverage, ErrorModel):
         forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
         # generate the reverse read
-        reverse_start = forward_start + insert_size
+        reverse_start = forward_end + insert_size
         reverse_end = reverse_start + read_length
         bounds = (reverse_start, reverse_end)
         reverse = SeqRecord(
-            Seq(rev_comp(str(sequence[forward_start:forward_end])),
+            Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
                 IUPAC.unambiguous_dna
                 ),
             id='%s_%s_2' % (header, i),
