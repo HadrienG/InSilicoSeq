@@ -52,3 +52,54 @@ class ErrorModel(object):
                     p=nucl_choices[position][nucl][1])
             position += 1
         return mutable_seq.toseq()
+
+    def adjust_seq_length(self, mut_seq, orientation, full_sequence, bounds):
+        """take a mutable sequence after indel treatment. Return a seq of
+        the correct read length"""
+        full_sequence_start, full_sequence_end = bounds
+        if len(mut_seq) == self.read_length:
+            return mut_seq.toseq()
+        elif len(mut_seq) > self.read_length:
+            while len(mut_seq) > self.read_length:
+                mut_seq.pop()
+            return mut_seq.toseq()
+        else:  # len smaller
+            to_add = self.read_length - len(mut_seq)
+            if orientation == 'forward':
+                for i in range(to_add):
+                    nucl_to_add = full_sequence[full_sequence_end + i]
+                    mut_seq.append(nucl_to_add)
+            elif orientation == 'reverse':
+                for i in range(to_add):
+                    nucl_to_add = util.rev_comp(
+                        full_sequence[full_sequence_start - i]
+                    )
+                    mut_seq.append(nucl_to_add)
+            return mut_seq.toseq()
+
+    def introduce_indels(self, record, orientation, full_seq, bounds):
+        """Introduce insertions or deletions in a sequence.
+        Return a sequence"""
+
+        # get the right indel arrays
+        if orientation == 'forward':
+            insertions = self.ins_for
+            deletions = self.del_for
+        elif orientation == 'reverse':
+            insertions = self.ins_rev
+            deletions = self.del_rev
+
+        mutable_seq = record.seq.tomutable()
+        position = 0
+        for nucl in mutable_seq:
+            for nucl_to_insert, prob in insertions[position].items():  # ins
+                if random.random() < prob:
+                    # we want to insert after the base read, hence position + 1
+                    mutable_seq.insert(position + 1, nucl_to_insert)
+            if random.random() < deletions[position][nucl]:  # del
+                mutable_seq.pop(position)
+            position += 1
+
+        seq = self.adjust_seq_length(
+            mutable_seq, orientation, full_seq, bounds)
+        return seq
