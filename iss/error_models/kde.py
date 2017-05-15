@@ -8,6 +8,7 @@ from Bio.SeqRecord import SeqRecord
 from scipy import stats
 
 import random
+import numpy as np
 
 
 class KDErrorModel(ErrorModel):

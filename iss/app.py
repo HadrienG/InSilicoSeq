@@ -42,22 +42,27 @@ def generate_reads(args):
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
             for record in fasta_file:
-                species_abundance = abundance_dic[record.id]
-                genome_size = len(record.seq)
-                coverage = abundance.to_coverage(
-                    args.n_reads,
-                    species_abundance,
-                    err_mod.read_length,
-                    genome_size
-                    )
+                try:
+                    species_abundance = abundance_dic[record.id]
+                except KeyError as e:
+                    print('Error:', e)
+                    sys.exit(1)
+                else:
+                    genome_size = len(record.seq)
+                    coverage = abundance.to_coverage(
+                        args.n_reads,
+                        species_abundance,
+                        err_mod.read_length,
+                        genome_size
+                        )
 
-                read_gen = generator.reads(
-                    record,
-                    coverage,
-                    err_mod
-                    )
+                    read_gen = generator.reads(
+                        record,
+                        coverage,
+                        err_mod
+                        )
 
-                generator.to_fastq(read_gen, args.output)
+                    generator.to_fastq(read_gen, args.output)
 
 
 def model_from_bam(args):

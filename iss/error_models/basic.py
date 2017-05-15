@@ -7,6 +7,7 @@ from Bio.Seq import MutableSeq
 from Bio.SeqRecord import SeqRecord
 
 import random
+import numpy as np
 
 
 class BasicErrorModel(ErrorModel):

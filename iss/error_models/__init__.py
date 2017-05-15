@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
+from iss import util
+
 import sys
+import random
+import numpy as np
 
 
 class ErrorModel(object):
