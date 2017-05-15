@@ -43,27 +43,3 @@ class CDFErrorModel(ErrorModel):
             )
             phred_list.append(round(random_quality))
         return phred_list
-
-    def mut_sequence(self, record, orientation):
-        # TODO
-        """modify the nucleotides of a SeqRecord according to the phred scores.
-        Return a sequence"""
-
-        # get the right subst_matrix
-        if orientation == 'forward':
-            nucl_choices = self.subst_choices_for
-        elif orientation == 'reverse':
-            nucl_choices = self.subst_choices_rev
-        else:
-            print('this is bad')  # TODO error message and proper logging
-
-        mutable_seq = record.seq.tomutable()
-        quality_list = record.letter_annotations["phred_quality"]
-        position = 0
-        for nucl, qual in zip(mutable_seq, quality_list):
-            if random.random() > util.phred_to_prob(qual):
-                mutable_seq[position] = np.random.choice(
-                    nucl_choices[position][nucl][0],
-                    p=nucl_choices[position][nucl][1])
-            position += 1
-        return mutable_seq.toseq()

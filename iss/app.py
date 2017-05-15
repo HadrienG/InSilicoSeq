@@ -7,6 +7,7 @@ from iss import generator
 from Bio import SeqIO
 
 import argparse
+import sys
 
 
 def generate_reads(args):
@@ -24,8 +25,10 @@ def generate_reads(args):
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
         print('Error:', e)
+        sys.exit(1)
     except FileNotFoundError as e:
         print('Error:', e)
+        sys.exit(1)
 
     # read the abundance file
     abundance_dic = abundance.parse_abundance_file(args.abundance)
@@ -34,6 +37,7 @@ def generate_reads(args):
         f = open(args.genomes, 'r')
     except IOError as e:
         print('Error', e)
+        sys.exit(1)
     else:
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
@@ -126,7 +130,7 @@ def main():
     parser_gen.add_argument(
         '--model',
         '-m',
-        metavar='[\'cdf\', \'kde\']',
+        metavar='[\'cdf\', \'kde\', \'basic\']',
         choices=['cdf', 'kde', 'basic'],
         default='kde',
         help='Error model. If not specified, using kernel density estimation \

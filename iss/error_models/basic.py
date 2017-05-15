@@ -7,7 +7,6 @@ from Bio.Seq import MutableSeq
 from Bio.SeqRecord import SeqRecord
 
 import random
-import numpy as np
 
 
 class BasicErrorModel(ErrorModel):
@@ -20,8 +19,13 @@ class BasicErrorModel(ErrorModel):
         super().__init__()
         self.read_length = 125
         self.insert_size = 200
-        self.quality_forward = 30
-        self.quality_reverse = 30
+        self.quality_forward, self.quality_reverse = 30
+        self.subst_choices_for, self.subst_choices_rev = [{
+            'A': (['T', 'C', 'G'], [1/3, 1/3, 1/3]),
+            'T': (['A', 'C', 'G'], [1/3, 1/3, 1/3]),
+            'C': (['A', 'T', 'G'], [1/3, 1/3, 1/3]),
+            'G': (['A', 'T', 'C'], [1/3, 1/3, 1/3])
+        } for _ in range(125)]
 
     def gen_phred_scores(self, mean_quality):
         """Generate a normal distribution, transform to phred scores"""
@@ -29,21 +33,3 @@ class BasicErrorModel(ErrorModel):
             util.phred_to_prob(mean_quality), 0.01, self.read_length)]
         phred = [util.prob_to_phred(p) for p in norm]
         return phred
-
-    def mut_sequence(self, record, orientation):
-        """modify the nucleotides of a SeqRecord according to the phred scores.
-        Return a sequence"""
-        nucl_choices = {
-            'A': ['T', 'C', 'G'],
-            'T': ['A', 'C', 'G'],
-            'C': ['A', 'T', 'G'],
-            'G': ['A', 'T', 'C']
-            }
-        mutable_seq = record.seq.tomutable()
-        quality_list = record.letter_annotations["phred_quality"]
-        position = 0
-        for nucl, qual in zip(mutable_seq, quality_list):
-            if random.random() > util.phred_to_prob(qual):
-                mutable_seq[position] = random.choice(nucl_choices[nucl])
-            position += 1
-        return mutable_seq.toseq()
