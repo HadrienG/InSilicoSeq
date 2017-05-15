@@ -28,6 +28,10 @@ class BasicErrorModel(ErrorModel):
             'G': (['A', 'T', 'C'], [1/3, 1/3, 1/3])
         } for _ in range(125)]
 
+        self.ins_for, self.ins_rev, self.del_for, self.del_rev = [{
+            'A': 0.0, 'T': 0.0, 'C': 0.0, 'G': 0.0
+        } for _ in range(125)]
+
     def gen_phred_scores(self, mean_quality):
         """Generate a normal distribution, transform to phred scores"""
         norm = [min(q, 0.9999) for q in np.random.normal(
