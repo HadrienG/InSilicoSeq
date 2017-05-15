@@ -266,11 +266,12 @@ def get_insert_size(bam_file):
     return int(i_size)
 
 
-def write_to_file(read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
+def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
                   ins_r, del_f, del_r, i_size, output):
     """write variables to a .npz file"""
     np.savez_compressed(
         output,
+        model=model,
         read_length=read_length,
         insert_size=i_size,
         quality_hist_forward=hist_f,

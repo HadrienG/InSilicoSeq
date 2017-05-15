@@ -13,12 +13,18 @@ class ErrorModel(object):
 
     This class is used to create inheriting classes
     """
-    def load_npz(self, npz_path):
+    def load_npz(self, npz_path, model):
         """load the error profile npz file"""
         try:
             error_profile = np.load(npz_path)
+            assert error_profile == model
         except OSError as e:
             print('Error:', e)
+            Print('Your Error model file couldn\'t be read by Numpy')
+            sys.exit(1)
+        except AssertionError as e:
+            print('Error:', e)
+            print('The loaded profile doesn\'t have the correct error model')
             sys.exit(1)
         return error_profile
 

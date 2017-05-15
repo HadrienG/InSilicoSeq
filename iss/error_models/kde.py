@@ -7,6 +7,7 @@ from Bio.Seq import MutableSeq
 from Bio.SeqRecord import SeqRecord
 from scipy import stats
 
+import sys
 import random
 import numpy as np
 
@@ -24,7 +25,7 @@ class KDErrorModel(ErrorModel):
     def __init__(self, npz_path):
         super().__init__()
         self.npz_path = npz_path
-        self.error_profile = self.load_npz(npz_path)
+        self.error_profile = self.load_npz(npz_path, 'kde')
 
         self.read_length = self.error_profile['read_length']
         self.insert_size = self.error_profile['insert_size']

@@ -73,6 +73,7 @@ def model_from_bam(args):
         ins_reverse, del_forward, del_reverse = \
         bam.get_mismatches(args.bam, read_length)
     bam.write_to_file(
+        args.model,
         read_length,
         hist_forward,
         hist_reverse,
