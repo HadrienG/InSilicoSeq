@@ -2,6 +2,7 @@
 *.fastq
 *.bam
 *.bam.bai
+*.bt2
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -17,6 +18,10 @@ __pycache__/
 # files needed for tests
 !SRR1660402_mapped.bam
 !SRR1660402_mapped.bam.bai
+!ecoli.fasta
+!ecoli_R*.fastq
+!ecoli.bam
+!ecoli.bam.bai
 
 # virtualenv
 venv_iss/
