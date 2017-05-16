@@ -38,22 +38,20 @@ def raw_qualities_to_histogram(qualities, model):
         return cdfs_list
 
 
-def get_mismatches(alignment):
-    """Get substitution and indel rate for reads mapped to a reference genome.
+def dispatch_subst(base, read, read_has_indels):
+    """Return the x and y position of a substitution to be inserted in the
+    subst matrix.
 
     Arguments:
-        bam_file (:obj:`str`): input bam file
-        read_length (:obj"`int`): length of the mapped reads
+        base (:obj"`tuple`): one base from an aligmnent. alignment is a list of
+            tuples: aligned read (query) and reference positions. the parameter
+            with_seq adds the ref sequence as the 3rd element of the tuples.
+            substitutions are lower-case.
     Returns:
-        dict: for each nucleotide (keys) the values are a tuple containing the
-        choices and probabilties of transiting to another nucleotide.
+        tuple: x and y position for incrementing the substitution matrix. and a
+        third element: True if an indel has been detected, False otherwise
     """
-    subst_array_f = np.zeros([read_length, 16])
-    subst_array_r = np.zeros([read_length, 16])
-    indel_array_f = np.zeros([read_length, 9])
-    indel_array_r = np.zeros([read_length, 9])
-
-    dispatch_subst = {
+    dispatch_dict = {
         'AA': 0,
         'aT': 1,
         'aG': 2,
@@ -72,21 +70,103 @@ def get_mismatches(alignment):
         'gC': 15
     }
 
-    has_indels = False
-    for base in alignment:
-        if read.seq[base[0]] != 'N':  # let's not deal with Ns
-            query_pos = base[0]
-            query_base = read.seq[query_pos]
-            ref_base = base[2]
-            dispatch_key = ref_base + query_base
-            if dispatch_key not in dispatch_subst:
-                # flag reads that have one or more indels
-                has_indels = True
-            if read.is_read1 and has_indels is False:
-                subst_array_f[
-                    query_pos,
-                    dispatch_subst[dispatch_key]] += 1
-            elif read.is_read2 and has_indels is False:
-                subst_array_r[
-                    query_pos,
-                    dispatch_subst[dispatch_key]] += 1
+    query_pos = base[0]
+    query_base = read.seq[query_pos]
+    ref_base = base[2]
+    dispatch_key = ref_base + query_base
+    if dispatch_key not in dispatch_dict:
+        # flag reads that have one or more indels
+        read_has_indels = True  # flag the read for later indel treatment
+        substitution = None  # flag this base to skip substitution treatment
+    else:
+        substitution = dispatch_dict[dispatch_key]
+    return (query_pos, substitution, read_has_indels)
+
+
+def subst_matrix_to_choices(substitution_matrix, read_length):
+    """from the raw mismatches at one position, returns nucleotides
+    and probabilties of state change (substitutions)"""
+    nucl_choices_list = []
+    for pos in range(read_length):
+        sums = {
+            'A': np.sum(substitution_matrix[pos][1:4]),
+            'T': np.sum(substitution_matrix[pos][5:8]),
+            'C': np.sum(substitution_matrix[pos][9:12]),
+            'G': np.sum(substitution_matrix[pos][13:])
+        }
+        nucl_choices = {
+            'A': (
+                ['T', 'C', 'G'],
+                [count / sums['A'] for count in substitution_matrix[pos][1:4]]
+                ),
+            'T': (
+                ['A', 'C', 'G'],
+                [count / sums['T'] for count in substitution_matrix[pos][5:8]]
+                ),
+            'C': (
+                ['A', 'T', 'G'],
+                [count / sums['C'] for count in substitution_matrix[pos][9:12]]
+                ),
+            'G': (
+                ['A', 'T', 'C'],
+                [count / sums['G'] for count in substitution_matrix[pos][13:]]
+                )
+        }
+        nucl_choices_list.append(nucl_choices)
+    return nucl_choices_list
+
+
+def dispatch_indels(read):
+    dispatch_indels = {
+        0: 0,
+        'A1': 1,
+        'T1': 2,
+        'C1': 3,
+        'G1': 4,
+        'A2': 5,
+        'T2': 6,
+        'C2': 7,
+        'G2': 8
+    }
+
+    position = 0
+    for (cigar_type, cigar_length) in read.cigartuples:
+        if cigar_type == 0:  # match
+            position += cigar_length
+            continue
+        elif cigar_type == 1:  # insertion
+            query_base = read.query_sequence[position]
+            insertion = query_base.upper() + '1'
+            indel = dispatch_indels[insertion]
+            dispatch_tuple = (position, indel)
+            position += cigar_length
+        elif cigar_type == 2:  # deletion
+            ref_base = read.query_alignment_sequence[position]
+            deletion = ref_base.upper() + '2'
+            indel = dispatch_indels[deletion]
+            dispatch_tuple = (position, indel)
+            position -= cigar_length
+        yield dispatch_tuple
+
+
+def indel_matrix_to_choices(indel_matrix, read_length):
+    """from the raw deletion rates at one position, returns nucleotides
+    and probabilties of deletion"""
+    ins_choices = []
+    del_choices = []
+    for pos in range(read_length):
+        insertions = {
+            'A': indel_matrix[pos][1] / indel_matrix[pos][0],
+            'T': indel_matrix[pos][2] / indel_matrix[pos][0],
+            'C': indel_matrix[pos][3] / indel_matrix[pos][0],
+            'G': indel_matrix[pos][4] / indel_matrix[pos][0]
+        }
+        deletions = {
+            'A': indel_matrix[pos][5] / indel_matrix[pos][0],
+            'T': indel_matrix[pos][6] / indel_matrix[pos][0],
+            'C': indel_matrix[pos][7] / indel_matrix[pos][0],
+            'G': indel_matrix[pos][8] / indel_matrix[pos][0]
+        }
+        ins_choices.append(insertions)
+        del_choices.append(deletions)
+    return (ins_choices, del_choices)

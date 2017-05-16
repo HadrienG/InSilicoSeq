@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from iss import modeller
 from scipy import stats
 
 import sys
@@ -23,60 +24,8 @@ def read_bam(bam_file):
     else:
         with bam:
             for read in bam.fetch():
-                if not read.is_unmapped():
+                if not read.is_unmapped:
                     yield read
-
-
-def to_model(bam_path, model):
-    """from a bam file, return all variables needed for modelling reads"""
-    insert_size_dist = []
-    qualities_forward = []
-    qualities_reverse = []
-    subst_array_f = np.zeros([read_length, 16])
-    subst_array_r = np.zeros([read_length, 16])
-    indel_array_f = np.zeros([read_length, 9])
-    indel_array_r = np.zeros([read_length, 9])
-
-    for read in read_bam(bam_path):
-        # get insert size distribution
-        if read.is_proper_pair:
-            template_length = abs(read.template_length)
-            i_size = template_length - (2 * len(read.seq))
-            insert_size_dist.append(i_size)
-
-        # get qualities
-        if read.is_read1:
-            qualities_forward.append(read.query_qualities)
-        elif read.is_read2:
-            qualities_reverse.append(read.query_qualities)
-
-        # get mismatches
-        alignment = read.get_aligned_pairs(
-            matches_only=True,
-            with_seq=True
-            )
-        has_indels = False
-        for base in alignment:
-            query_pos = base[0]
-            query_base = read.seq[query_pos]
-            ref_base = base[2]
-            dispatch_key = ref_base + query_base
-            if dispatch_key not in dispatch_subst:
-                # flag reads that have one or more indels
-                has_indels = True
-            if read.is_read1 and has_indels is False:
-                subst_array_f[
-                    query_pos,
-                    dispatch_subst[dispatch_key]] += 1
-            elif read.is_read2 and has_indels is False:
-                subst_array_r[
-                    query_pos,
-                    dispatch_subst[dispatch_key]] += 1
-
-    insert_size = int(np.mean(i_size_dist))
-    hist_f = raw_qualities_to_histogram(qualities_forward, model)
-    hist_r = raw_qualities_to_histogram(qualities_reverse, model)
-    read_length = len(hist_f)
 
 
 def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
@@ -96,3 +45,86 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
         del_forward=del_f,
         del_reverse=del_r
     )
+
+
+def to_model(bam_path, model, output):
+    """from a bam file, write all variables needed for modelling reads in
+    a .npz model file"""
+    insert_size_dist = []
+    qualities_forward = []
+    qualities_reverse = []
+    subst_matrix_f = np.zeros([301, 16])  # we do no know the len of the reads
+    subst_matrix_r = np.zeros([301, 16])  # yet
+    indel_matrix_f = np.zeros([301, 9])
+    indel_matrix_r = np.zeros([301, 9])
+
+    for read in read_bam(bam_path):
+        # get insert size distribution
+        if read.is_proper_pair:
+            template_length = abs(read.template_length)
+            i_size = template_length - (2 * len(read.seq))
+            insert_size_dist.append(i_size)
+
+        # get qualities
+        if read.is_read1:
+            qualities_forward.append(read.query_qualities)
+        elif read.is_read2:
+            qualities_reverse.append(read.query_qualities)
+
+        # get mismatches
+        alignment = read.get_aligned_pairs(
+            matches_only=True,
+            with_seq=True
+            )
+        read_has_indels = False
+        for base in alignment:
+            pos, subst, read_has_indels = modeller.dispatch_subst(
+                base, read, read_has_indels)
+            if read.is_read1 and subst is not None:
+                subst_matrix_f[pos, subst] += 1
+            elif read.is_read2 and subst is not None:
+                subst_matrix_r[pos, subst] += 1
+        if read_has_indels:
+            for pos, indel in modeller.dispatch_indels(read):
+                if read.is_read1:
+                    indel_matrix_f[pos, indel] += 1
+                elif read.is_read2:
+                    indel_matrix_r[pos, indel] += 1
+
+    insert_size = int(np.mean(insert_size_dist))
+    hist_f = modeller.raw_qualities_to_histogram(qualities_forward, model)
+    hist_r = modeller.raw_qualities_to_histogram(qualities_reverse, model)
+    read_length = len(hist_f)
+    # now we can resize the substitution and indel matrices before
+    # doing operations on them
+    subst_matrix_f.resize([read_length, 16])
+    subst_matrix_r.resize([read_length, 16])
+    indel_matrix_f.resize([read_length, 9])
+    indel_matrix_r.resize([read_length, 9])
+
+    subst_f = modeller.subst_matrix_to_choices(subst_matrix_f, read_length)
+    subst_r = modeller.subst_matrix_to_choices(subst_matrix_r, read_length)
+
+    # update the base count in indel matrices
+    for position in range(read_length):
+        indel_matrix_f[position][0] = sum(subst_matrix_f[position][::4])
+        indel_matrix_r[position][0] = sum(subst_matrix_r[position][::4])
+
+    ins_f, del_f = modeller.indel_matrix_to_choices(
+        indel_matrix_f, read_length)
+    ins_r, del_r = modeller.indel_matrix_to_choices(
+        indel_matrix_r, read_length)
+
+    write_to_file(
+        model,
+        read_length,
+        hist_f,
+        hist_r,
+        subst_f,
+        subst_r,
+        ins_f,
+        ins_r,
+        del_f,
+        del_r,
+        insert_size,
+        output + '.npz')

@@ -47,7 +47,7 @@ def generate_reads(args):
             for record in fasta_file:
                 try:
                     species_abundance = abundance_dic[record.id]
-                except KeyError as e:
+                except ImportError as e:
                     print('Error:', e)
                     print('Are all your genomes in your abundance file?')
                     sys.exit(1)
@@ -70,25 +70,14 @@ def generate_reads(args):
 
 
 def model_from_bam(args):
-    i_size = bam.get_insert_size(args.bam)
-    hist_forward, hist_reverse = bam.quality_distribution(args.model, args.bam)
-    read_length = len(hist_forward)
-    sub_forward, sub_reverse, ins_forward, \
-        ins_reverse, del_forward, del_reverse = \
-        bam.get_mismatches(args.bam, read_length)
-    bam.write_to_file(
-        args.model,
-        read_length,
-        hist_forward,
-        hist_reverse,
-        sub_forward,
-        sub_reverse,
-        ins_forward,
-        ins_reverse,
-        del_forward,
-        del_reverse,
-        i_size,
-        args.output + '.npz')
+    try:
+        from iss import bam
+    except ImportError as e:
+        print('Error:', e)
+        print('Couldn\' import bam parsing module')
+        sys.exit(1)
+    else:
+        bam.to_model(args.bam, args.model, args.output)
 
 
 def main():
@@ -194,5 +183,6 @@ def main():
     args = parser.parse_args()
     try:
         args.func(args)
-    except AttributeError:
+    except AttributeError as e:
+        print(e)
         parser.print_help()
