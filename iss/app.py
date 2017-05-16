@@ -128,6 +128,20 @@ def main():
 
     # arguments form the read generator module
     parser_gen.add_argument(
+        '--quiet',
+        '-q',
+        action='store_true',
+        default=False,
+        help='Disable info logging. (default: %(default)s).'
+    )
+    parser_gen.add_argument(
+        '--debug',
+        '-d',
+        action='store_true',
+        default=False,
+        help='Enable debug logging. (default: %(default)s).'
+    )
+    parser_gen.add_argument(
         '--genomes',
         '-g',
         metavar='<fasta>',
@@ -177,6 +191,20 @@ def main():
 
     # arguments for the error model module
     parser_mod.add_argument(
+        '--quiet',
+        '-q',
+        action='store_true',
+        default=False,
+        help='Disable info logging. (default: %(default)s).'
+    )
+    parser_mod.add_argument(
+        '--debug',
+        '-d',
+        action='store_true',
+        default=False,
+        help='Enable debug logging. (default: %(default)s).'
+    )
+    parser_mod.add_argument(
         '--bam',
         '-b',
         metavar='<bam>',
@@ -204,11 +232,22 @@ def main():
     args = parser.parse_args()
 
     # set logger
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
-
     try:
+        if args.quiet:
+            logging.basicConfig(level=logging.ERROR)
+        elif args.debug:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
+
         args.func(args)
     except AttributeError as e:
+        logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
+
+    # try:
+    #     args.func(args)
+    # except AttributeError as e:
+    #     logger.debug(e)
+    #     parser.print_help()
