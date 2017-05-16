@@ -31,20 +31,25 @@ def read_bam(bam_file):
 def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
                   ins_r, del_f, del_r, i_size, output):
     """write variables to a .npz file"""
-    np.savez_compressed(
-        output,
-        model=model,
-        read_length=read_length,
-        insert_size=i_size,
-        quality_hist_forward=hist_f,
-        quality_hist_reverse=hist_r,
-        subst_choices_forward=sub_f,
-        subst_choices_reverse=sub_r,
-        ins_forward=ins_f,
-        ins_reverse=ins_r,
-        del_forward=del_f,
-        del_reverse=del_r
-    )
+    try:
+        np.savez_compressed(
+            output,
+            model=model,
+            read_length=read_length,
+            insert_size=i_size,
+            quality_hist_forward=hist_f,
+            quality_hist_reverse=hist_r,
+            subst_choices_forward=sub_f,
+            subst_choices_reverse=sub_r,
+            ins_forward=ins_f,
+            ins_reverse=ins_r,
+            del_forward=del_f,
+            del_reverse=del_r
+        )
+    except PermissionError as e:
+        print('Error:', e)
+        print('Permission denied')
+        sys.exit(1)
 
 
 def to_model(bam_path, model, output):
