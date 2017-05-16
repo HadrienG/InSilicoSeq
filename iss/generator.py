@@ -9,6 +9,7 @@ from Bio.Alphabet import IUPAC
 
 import sys
 import random
+import logging
 
 
 def reads(record, coverage, ErrorModel):
@@ -22,6 +23,7 @@ def reads(record, coverage, ErrorModel):
     coverage -- desired coverage of the genome
     ErrorModel -- an ErrorModel class
     """
+    logger = logging.getLogger(__name__)
     header = record.id
     sequence = record.seq
 
@@ -36,8 +38,8 @@ def reads(record, coverage, ErrorModel):
             forward_start = random.randrange(
                 0, len(sequence) - (2 * read_length + insert_size))
         except ValueError as e:
-            print('Error', e)
-            print('The input genome is too small for this error model')
+            logger.error(
+                '%s too small for this ErrorModel:%s' % (record.id, e))
             sys.exit(1)
 
         forward_end = forward_start + read_length
@@ -77,6 +79,7 @@ def reads(record, coverage, ErrorModel):
 
 def to_fastq(generator, output):
     """Take a generator and write to a file in fastq format"""
+    logger = logging.getLogger(__name__)
     # define name of output files
     output_forward = output + '_R1.fastq'
     output_reverse = output + '_R2.fastq'
@@ -85,8 +88,7 @@ def to_fastq(generator, output):
         f = open(output_forward, 'a')
         r = open(output_reverse, 'a')
     except PermissionError as e:
-        print('Error:', e)
-        print('Permission Denied')
+        logger.error('Failed to open output file(s): %s' % e)
         sys.exit(1)
     else:
         with f, r:

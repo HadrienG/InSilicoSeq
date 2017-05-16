@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
+import logging
 
 
 def parse_abundance_file(abundance_file):
@@ -11,19 +13,27 @@ def parse_abundance_file(abundance_file):
     Arguments:
     abundance_file -- the path to the abundance file
     """
+    logger = logging.getLogger(__name__)
     abundance_dic = {}
     try:
+        assert os.stat(abundance_file).st_size != 0
         f = open(abundance_file, 'r')
     except IOError as e:
-        print('Error:', e)
-        print('Couldn\'t read abundance file')
+        logger.error('Failed to open abundance file:%s' % e)
+        sys.exit(1)
+    except AssertionError as e:
+        logger.error('Abundance file seems empty: %s' % abundance_file)
         sys.exit(1)
     else:
         with f:
             for line in f:
-                genome_id = line.split()[0]
-                abundance = float(line.split()[1])
-                abundance_dic[genome_id] = abundance
+                try:
+                    genome_id = line.split()[0]
+                    abundance = float(line.split()[1])
+                except IndexError as e:
+                    logger.error('Failed to read abundance file: %s' % e)
+                else:
+                    abundance_dic[genome_id] = abundance
     return abundance_dic
 
 

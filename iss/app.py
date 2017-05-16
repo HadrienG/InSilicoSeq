@@ -6,11 +6,15 @@ from iss import abundance
 from iss import generator
 from Bio import SeqIO
 
-import argparse
+import os
 import sys
+import logging
+import argparse
 
 
 def generate_reads(args):
+    logger = logging.getLogger(__name__)
+
     try:  # try to load the correct error model
         if args.model == 'cdf':
             from iss.error_models import cdf
@@ -24,32 +28,32 @@ def generate_reads(args):
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
-        print('Error:', e)
-        print('Couldn\' import error model')
-        sys.exit(1)
-    except FileNotFoundError as e:
-        print('Error:', e)
-        print('Error model file not found')
+        logger.error('Failed to import ErrorModel module: %s' % e)
         sys.exit(1)
 
     # read the abundance file
     abundance_dic = abundance.parse_abundance_file(args.abundance)
 
     try:  # read genomes and generate reads
+        assert os.stat(args.genomes).st_size != 0
         f = open(args.genomes, 'r')
     except IOError as e:
-        print('Error', e)
-        print('Couldn\'t read genomes file')
+        logger.error('Failed to open genome(s) file:%s' % e)
+        sys.exit(1)
+    except AssertionError as e:
+        logger.error('Genome(s) file seems empty: %s' % args.genomes)
         sys.exit(1)
     else:
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
+            n_records = 0
             for record in fasta_file:
                 try:
+                    n_records += 1
                     species_abundance = abundance_dic[record.id]
-                except ImportError as e:
-                    print('Error:', e)
-                    print('Are all your genomes in your abundance file?')
+                except KeyError as e:
+                    logger.error(
+                        'Fasta record not found in abundance file: %s' % e)
                     sys.exit(1)
                 else:
                     genome_size = len(record.seq)
@@ -67,6 +71,17 @@ def generate_reads(args):
                         )
 
                     generator.to_fastq(read_gen, args.output)
+
+            # check if at least one record was in fasta file
+            try:
+                assert n_records != 0
+            except AssertionError as e:
+                logger.error(
+                    'Failed to find records in genome(s) file:%s'
+                    % args.genomes)
+                sys.exit(1)
+            else:
+                logger.info('Read Generatiom Complete')
 
 
 def model_from_bam(args):
@@ -179,10 +194,14 @@ def main():
     )
     parser_mod._optionals.title = 'arguments'
     parser_mod.set_defaults(func=model_from_bam)
-
     args = parser.parse_args()
+
+    # set logger
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
     try:
         args.func(args)
     except AttributeError as e:
-        print(e)
+        logger.debug(e)
         parser.print_help()

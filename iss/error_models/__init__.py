@@ -4,6 +4,7 @@
 from iss import util
 
 import sys
+import logging
 import random
 import numpy as np
 
@@ -13,18 +14,21 @@ class ErrorModel(object):
 
     This class is used to create inheriting classes
     """
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
     def load_npz(self, npz_path, model):
         """load the error profile npz file"""
         try:
             error_profile = np.load(npz_path)
             assert error_profile['model'] == model
         except OSError as e:
-            print('Error:', e)
-            print('Your Error model file couldn\'t be read by Numpy')
+            self.logger.error('Failed to read ErrorModel file: %s' % e)
             sys.exit(1)
         except AssertionError as e:
-            print('Error:', e)
-            print('The loaded profile doesn\'t have the correct error model')
+            self.logger.error(
+                'Trying to load a %s ErrorModel in %s mode' % (
+                    error_profile['model'], model))
             sys.exit(1)
         return error_profile
 
