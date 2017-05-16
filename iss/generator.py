@@ -39,6 +39,7 @@ def reads(record, coverage, ErrorModel):
             print('Error', e)
             print('The input genome is too small for this error model')
             sys.exit(1)
+
         forward_end = forward_start + read_length
         bounds = (forward_start, forward_end)
         forward = SeqRecord(
@@ -80,7 +81,15 @@ def to_fastq(generator, output):
     output_forward = output + '_R1.fastq'
     output_reverse = output + '_R2.fastq'
 
-    with open(output_forward, 'a') as f, open(output_reverse, 'a') as r:
-        for read_tuple in generator:
-            SeqIO.write(read_tuple[0], f, 'fastq-sanger')
-            SeqIO.write(read_tuple[1], r, 'fastq-sanger')
+    try:
+        f = open(output_forward, 'a')
+        r = open(output_reverse, 'a')
+    except PermissionError as e:
+        print('Error:', e)
+        print('Permission Denied')
+        sys.exit(1)
+    else:
+        with f, r:
+            for read_tuple in generator:
+                SeqIO.write(read_tuple[0], f, 'fastq-sanger')
+                SeqIO.write(read_tuple[1], r, 'fastq-sanger')
