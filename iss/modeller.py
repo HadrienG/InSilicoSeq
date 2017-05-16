@@ -3,6 +3,7 @@
 
 from scipy import stats
 
+import logging
 import numpy as np
 
 
@@ -117,6 +118,8 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
 
 
 def dispatch_indels(read):
+    logger = logging.getLogger(__name__)
+
     dispatch_indels = {
         0: 0,
         'A1': 1,
@@ -137,15 +140,27 @@ def dispatch_indels(read):
         elif cigar_type == 1:  # insertion
             query_base = read.query_sequence[position]
             insertion = query_base.upper() + '1'
-            indel = dispatch_indels[insertion]
-            dispatch_tuple = (position, indel)
-            position += cigar_length
+            try:
+                indel = dispatch_indels[insertion]
+                dispatch_tuple = (position, indel)
+                position += cigar_length
+            except KeyError as e:
+                logger.debug(
+                    '%s not in dispatch: %s' % (insertion, e), exc_info=True)
+                position += cigar_length
+                continue
         elif cigar_type == 2:  # deletion
             ref_base = read.query_alignment_sequence[position]
             deletion = ref_base.upper() + '2'
-            indel = dispatch_indels[deletion]
-            dispatch_tuple = (position, indel)
-            position -= cigar_length
+            try:
+                indel = dispatch_indels[deletion]
+                dispatch_tuple = (position, indel)
+                position -= cigar_length
+            except KeyError as e:
+                logger.debug(
+                    '%s not in dispatch: %s' % (deletion, e), exc_info=True)
+                position -= cigar_length
+                continue
         yield dispatch_tuple
 
 

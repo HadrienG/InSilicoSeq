@@ -14,6 +14,7 @@ import argparse
 
 def generate_reads(args):
     logger = logging.getLogger(__name__)
+    logger.debug('Using verbose logger')
 
     try:  # try to load the correct error model
         logger.info('Starting iss generate')
@@ -89,6 +90,7 @@ def generate_reads(args):
 
 def model_from_bam(args):
     logger = logging.getLogger(__name__)
+    logger.debug('Using verbose logger')
 
     try:
         logger.info('Starting iss model')
@@ -245,9 +247,3 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-
-    # try:
-    #     args.func(args)
-    # except AttributeError as e:
-    #     logger.debug(e)
-    #     parser.print_help()
