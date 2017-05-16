@@ -84,19 +84,22 @@ def generate_reads(args):
                     % args.genomes)
                 sys.exit(1)
             else:
-                logger.info('Read Generation Complete')
+                logger.info('Read generation complete')
 
 
 def model_from_bam(args):
     logger = logging.getLogger(__name__)
 
     try:
+        logger.info('Starting iss model')
         from iss import bam
     except ImportError as e:
         logger.error('Failed to import bam module: %s' % e)
         sys.exit(1)
     else:
+        logger.info('Using %s ErrorModel' % args.model)
         bam.to_model(args.bam, args.model, args.output)
+        logger.info('Model generation complete')
 
 
 def main():

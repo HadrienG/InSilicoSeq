@@ -23,6 +23,7 @@ def read_bam(bam_file):
         logger.error('Failed to read bam file: %s' % e)
         sys.exit(1)
     else:
+        logger.info('Reading bam file: %s' % bam_file)
         with bam:
             for read in bam.fetch():
                 if not read.is_unmapped:
@@ -35,6 +36,7 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
     logger = logging.getLogger(__name__)
 
     try:
+        logger.info('Writing model to file: %s' % output)
         np.savez_compressed(
             output,
             model=model,
@@ -57,6 +59,8 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
 def to_model(bam_path, model, output):
     """from a bam file, write all variables needed for modelling reads in
     a .npz model file"""
+    logger = logging.getLogger(__name__)
+
     insert_size_dist = []
     qualities_forward = []
     qualities_reverse = []
@@ -98,7 +102,9 @@ def to_model(bam_path, model, output):
                 elif read.is_read2:
                     indel_matrix_r[pos, indel] += 1
 
+    logger.info('Calculating mean insert size')
     insert_size = int(np.mean(insert_size_dist))
+    logger.info('Calculating base quality distribution')
     hist_f = modeller.raw_qualities_to_histogram(qualities_forward, model)
     hist_r = modeller.raw_qualities_to_histogram(qualities_reverse, model)
     read_length = len(hist_f)
@@ -109,10 +115,12 @@ def to_model(bam_path, model, output):
     indel_matrix_f.resize([read_length, 9])
     indel_matrix_r.resize([read_length, 9])
 
+    logger.info('Calculating substitution rate')
     subst_f = modeller.subst_matrix_to_choices(subst_matrix_f, read_length)
     subst_r = modeller.subst_matrix_to_choices(subst_matrix_r, read_length)
 
     # update the base count in indel matrices
+    logger.info('Calculating indel rate')
     for position in range(read_length):
         indel_matrix_f[position][0] = sum(subst_matrix_f[position][::4])
         indel_matrix_r[position][0] = sum(subst_matrix_r[position][::4])
