@@ -6,20 +6,21 @@ from scipy import stats
 
 import sys
 import pysam
+import logging
 import numpy as np
 
 
 def read_bam(bam_file):
     """read a bam file and yield read"""
+    logger = logging.getLogger(__name__)
+
     try:
-        bam = pysam.AlignmentFile(bam_file, "rb")
-    except OSError as e:
-        print('Error:', e)
-        print('Couldn\'t read bam file')
+        bam = pysam.AlignmentFile(bam_file, 'rb')
+    except IOError as e:
+        logger.error('Failed to open bam file:%s' % e)
         sys.exit(1)
     except ValueError as e:
-        print('Error:', e)
-        print('Bad bam file')
+        logger.error('Failed to read bam file: %s' % e)
         sys.exit(1)
     else:
         with bam:
@@ -31,6 +32,8 @@ def read_bam(bam_file):
 def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
                   ins_r, del_f, del_r, i_size, output):
     """write variables to a .npz file"""
+    logger = logging.getLogger(__name__)
+
     try:
         np.savez_compressed(
             output,
@@ -47,8 +50,7 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
             del_reverse=del_r
         )
     except PermissionError as e:
-        print('Error:', e)
-        print('Permission denied')
+        logger.error('Failed to open output file(s): %s' % e)
         sys.exit(1)
 
 

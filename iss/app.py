@@ -85,11 +85,12 @@ def generate_reads(args):
 
 
 def model_from_bam(args):
+    logger = logging.getLogger(__name__)
+
     try:
         from iss import bam
     except ImportError as e:
-        print('Error:', e)
-        print('Couldn\' import bam parsing module')
+        logger.error('Failed to import bam module: %s' % e)
         sys.exit(1)
     else:
         bam.to_model(args.bam, args.model, args.output)
