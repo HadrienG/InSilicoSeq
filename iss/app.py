@@ -16,6 +16,8 @@ def generate_reads(args):
     logger = logging.getLogger(__name__)
 
     try:  # try to load the correct error model
+        logger.info('Starting iss generate')
+        logger.info('Using %s ErrorModel' % args.model)
         if args.model == 'cdf':
             from iss.error_models import cdf
             npz = args.model_file
@@ -56,6 +58,7 @@ def generate_reads(args):
                         'Fasta record not found in abundance file: %s' % e)
                     sys.exit(1)
                 else:
+                    logger.info('Generating reads for record: %s' % record.id)
                     genome_size = len(record.seq)
                     coverage = abundance.to_coverage(
                         args.n_reads,
@@ -81,7 +84,7 @@ def generate_reads(args):
                     % args.genomes)
                 sys.exit(1)
             else:
-                logger.info('Read Generatiom Complete')
+                logger.info('Read Generation Complete')
 
 
 def model_from_bam(args):

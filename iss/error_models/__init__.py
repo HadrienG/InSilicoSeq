@@ -30,6 +30,8 @@ class ErrorModel(object):
                 'Trying to load a %s ErrorModel in %s mode' % (
                     error_profile['model'], model))
             sys.exit(1)
+        else:
+            self.logger.info('Loaded ErrorProfile: %s' % npz_path)
         return error_profile
 
     def introduce_error_scores(self, record, orientation):

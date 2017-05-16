@@ -34,6 +34,7 @@ def parse_abundance_file(abundance_file):
                     logger.error('Failed to read abundance file: %s' % e)
                 else:
                     abundance_dic[genome_id] = abundance
+    logger.info('Loaded abundance file: %s' % abundance_file)
     return abundance_dic
 
 
