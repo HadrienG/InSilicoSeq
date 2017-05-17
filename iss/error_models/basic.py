@@ -20,15 +20,15 @@ class BasicErrorModel(ErrorModel):
         super().__init__()
         self.read_length = 125
         self.insert_size = 200
-        self.quality_forward, self.quality_reverse = 30
-        self.subst_choices_for, self.subst_choices_rev = [{
+        self.quality_forward = self.quality_reverse = 30
+        self.subst_choices_for = self.subst_choices_rev = [{
             'A': (['T', 'C', 'G'], [1/3, 1/3, 1/3]),
             'T': (['A', 'C', 'G'], [1/3, 1/3, 1/3]),
             'C': (['A', 'T', 'G'], [1/3, 1/3, 1/3]),
             'G': (['A', 'T', 'C'], [1/3, 1/3, 1/3])
-        } for _ in range(125)]
+        } for _ in range(self.read_length)]
 
-        self.ins_for, self.ins_rev, self.del_for, self.del_rev = [{
+        self.ins_for = self.ins_rev = self.del_for = self.del_rev = [{
             'A': 0.0, 'T': 0.0, 'C': 0.0, 'G': 0.0
         } for _ in range(125)]
 
