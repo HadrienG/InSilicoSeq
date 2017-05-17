@@ -8,15 +8,25 @@ import numpy as np
 
 
 def raw_qualities_to_histogram(qualities, model):
-    """Generate numpy histograms for each position of the input mapped reads.
-    A histogram contains the distribution of the phred scores for one position
-    in all the reads. Returns a numpy array of the histograms for each position
+    """Calculate probabilities of each phred score at each position of the read
 
-    Arguments:
-        bam_file (:obj:`str`): input bam file
+    Generate numpy histograms (in cdf mode) or cumulative distribution
+    functions (in kde mode)
+
+    Both contains the distribution/probabilities of the phred scores for
+    one position in all the reads. Returns a list of numpy arrays for each
+    position
+
+    Args:
+        qualities (list): raw count of all phred scores
+        model (string): error model. Can be 'cdf' or 'kde'
 
     Returns:
-        tuple: (histograms_forward, histograms_reverse)
+        weights_list (list): list of tuples. Tuples are (weights, indices)
+            representing an histogram. One tuple per base. The list has the
+            size of the read length
+        cdfs_list (list): list of cumulative distribution functions. One cdf
+            per base. The list has the size of the read length
     """
     if model == 'cdf':
         histograms = [np.histogram(
@@ -41,16 +51,30 @@ def raw_qualities_to_histogram(qualities, model):
 
 def dispatch_subst(base, read, read_has_indels):
     """Return the x and y position of a substitution to be inserted in the
-    subst matrix.
+    substitution matrix.
 
-    Arguments:
-        base (:obj"`tuple`): one base from an aligmnent. alignment is a list of
-            tuples: aligned read (query) and reference positions. the parameter
-            with_seq adds the ref sequence as the 3rd element of the tuples.
+    The substitution matrix is a 2D array of size 301 * 16
+    The x axis (301) corresponds to the position in the read, while
+    the y axis (16) represents the match or substitution (see the dispatch
+    dict in the function). Positions 0, 4, 8 and 12 are matches, other
+    positions are substitutions
+
+    The size of x axis is 301 because we haven't calculated the read length yet
+
+    Args:
+        base (tuple): one base from an aligmnent object. According to the
+            pysam documentation: an alignment is a list of tuples: aligned read
+            (query) and reference positions. the parameter with_seq adds the
+            ref sequence as the 3rd element of the tuples.
             substitutions are lower-case.
+        read (read): a read object, from which the alignment comes from
+        read_has_indels (bool): a boolean flag to keep track if the read has
+            an indel or not
+
     Returns:
-        tuple: x and y position for incrementing the substitution matrix. and a
-        third element: True if an indel has been detected, False otherwise
+        query_pos, substitution, read_has_indels (tuple): x and y position for
+        incrementing the substitution matrix. and a third element: True if an
+        indel has been detected, False otherwise
     """
     dispatch_dict = {
         'AA': 0,
@@ -85,8 +109,24 @@ def dispatch_subst(base, read, read_has_indels):
 
 
 def subst_matrix_to_choices(substitution_matrix, read_length):
-    """from the raw mismatches at one position, returns nucleotides
-    and probabilties of state change (substitutions)"""
+    """Transform a substitution matrix into probabilties of substitutions for
+    each base and at every position
+
+    From the raw mismatches at one position, returns a dictionary with
+    probabilties of substitutions
+
+    Args:
+    substitution_matrix (np.array): the substitution matrix is a 2D array of
+        size read_length * 16. fhe x axis (read_length) corresponds to the
+        position in the read, while the y axis (16) represents the match or
+        substitution. Positions 0, 4, 8 and 12 are matches, other positions
+        are substitutions
+    read_length (int): read length
+
+    Returns:
+    nucl_choices_list (list): list of dictionaries representing
+        the substitution probabilities for a collection of reads
+    """
     logger = logging.getLogger(__name__)
 
     nucl_choices_list = []
@@ -141,6 +181,24 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
 
 
 def dispatch_indels(read):
+    """Return the x and y position of a insertion or deletion to be inserted in
+    the indel matrix.
+
+    The substitution matrix is a 2D array of size 301 * 9
+    The x axis (301) corresponds to the position in the read, while
+    the y axis (9) represents the match or indel (see the dispatch
+    dict in the function). Positions 0 is match or substitution, other
+    positions in 'N1' are insertions, 'N2 are deletions'
+
+    The size of x axis is 301 because we haven't calculated the read length yet
+
+    Args:
+        read (read): an aligned read object
+
+    Yields:
+        dispatch_tuple (tuple): a tuple with the x, y position for dispatching
+            the indel in the indel matrix
+    """
     logger = logging.getLogger(__name__)
 
     dispatch_indels = {
@@ -188,8 +246,25 @@ def dispatch_indels(read):
 
 
 def indel_matrix_to_choices(indel_matrix, read_length):
-    """from the raw deletion rates at one position, returns nucleotides
-    and probabilties of deletion"""
+    """Transform an indel matrix into probabilties of indels for
+    at every position
+
+    From the raw indel count at one position, returns a dictionary with
+    probabilties of indel
+
+    Args:
+    indel_matrix (np.array): the substitution matrix is a 2D array of
+        size read_length * 16. fhe x axis (read_length) corresponds to the
+        position in the read, while the y axis (9) represents the match or
+        indel. Positions 0 is match or substitution, other positions in 'N1'
+        are insertions, 'N2 are deletions'
+    read_length (int): read length
+
+    Returns:
+    (ins_choices, del_choices) (tuple): tuple containing two lists of
+        dictionaries representing the insertion or deletion probabilities
+        for a collection of reads
+    """
     ins_choices = []
     del_choices = []
     for pos in range(read_length):

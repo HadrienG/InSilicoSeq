@@ -12,13 +12,23 @@ import numpy as np
 class ErrorModel(object):
     """Main ErrorModel Class
 
-    This class is used to create inheriting classes
+    This class is used to create inheriting classes and contains all
+    the functions that are shared by all ErrorModel
     """
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
     def load_npz(self, npz_path, model):
-        """load the error profile npz file"""
+        """load the error profile .npz file
+
+        Args:
+        npz_path (string): path to the npz file
+        model (string): type of model. Can be 'cdf' or 'kde'
+
+        Returns:
+        error_profile (ndarray): numpy object containg variables necessary for
+            error model construction
+        """
         try:
             error_profile = np.load(npz_path)
             assert error_profile['model'] == model
@@ -35,7 +45,16 @@ class ErrorModel(object):
         return error_profile
 
     def introduce_error_scores(self, record, orientation):
-        """Add phred scores to a SeqRecord according to the error_model"""
+        """Add phred scores to a SeqRecord according to the error_model
+
+        Args:
+        record (SeqRecord): a read record
+        orientation (string): orientation of the read. Can be 'forward' or
+            'reverse'
+
+        Returns:
+        record (SeqRecord): a read record with error scores
+        """
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
                 self.quality_forward)
@@ -45,8 +64,18 @@ class ErrorModel(object):
         return record
 
     def mut_sequence(self, record, orientation):
-        """modify the nucleotides of a SeqRecord according to the phred scores.
-        Return a sequence"""
+        """Introduce substitution errors to a sequence
+
+        If a random probability is higher than the probability of the basecall
+        being correct, introduce a substitution error
+
+        Args:
+        record (SeqRecord): a read record with error scores
+        orientation (string): orientation of the read. Can be 'forward' or
+            'reverse'
+
+        Returns
+        mutable_seq.toseq() (Seq): a sequence"""
 
         # get the right subst_matrix
         if orientation == 'forward':
@@ -66,8 +95,26 @@ class ErrorModel(object):
         return mutable_seq.toseq()
 
     def adjust_seq_length(self, mut_seq, orientation, full_sequence, bounds):
-        """take a mutable sequence after indel treatment. Return a seq of
-        the correct read length"""
+        """Truncate or Extend reads to make them fit the read length
+
+        When insertions or deletions are introduced to the reads, their length
+        will change. This function takes a (mutable) read and a reference
+        sequence, and extend or truncate the read if it has had an insertion
+        or a deletion
+
+        Args:
+            mut_seq (MutableSeq): a mutable sequence
+            orientation (string): orientation of the read. Can be 'forward' or
+                'reverse'
+            full_sequence (Seq): the reference sequence from which mut_seq
+                comes from
+            bounds (tuple): the position of the read in the full_sequence
+
+        Returns:
+        mutable_seq.toseq() (Seq): a sequence fitting the ErrorModel
+            read_length
+
+        """
         read_start, read_end = bounds
         if len(mut_seq) == self.read_length:
             return mut_seq.toseq()
@@ -90,8 +137,23 @@ class ErrorModel(object):
             return mut_seq.toseq()
 
     def introduce_indels(self, record, orientation, full_seq, bounds):
-        """Introduce insertions or deletions in a sequence.
-        Return a sequence"""
+        """Introduce insertions or deletions in a sequence
+
+        Introduce insertion and deletion errors according to the probabilities
+        present in the indel choices list
+
+
+        Args:
+            record (SeqRecord): a sequence record
+            orientation (string): orientation of the read. Can be 'forward' or
+                'reverse'
+            full_seq (Seq): the reference sequence from which mut_seq
+                comes from
+            bounds (tuple): the position of the read in the full_sequence
+
+        Returns:
+        seq() (Seq): a sequence with (eventually) indels
+        """
 
         # get the right indel arrays
         if orientation == 'forward':

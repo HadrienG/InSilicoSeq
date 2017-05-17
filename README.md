@@ -3,14 +3,14 @@
 
 [![Build Status](https://travis-ci.org/HadrienG/InSilicoSeq.svg?branch=master)](https://travis-ci.org/HadrienG/InSilicoSeq)
 [![codecov](https://codecov.io/gh/HadrienG/InSilicoSeq/branch/master/graph/badge.svg)](https://codecov.io/gh/HadrienG/InSilicoSeq)
-[![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)]()
+[![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
 InSilicoSeq (or iss) is a sequencing simulator. iss produces
 (relatively) realistic Illumina reads, and was primarily intended for
 simulating metagenomic samples, although it can be used to produce sequencing
 data from a single genome.
 
-InSilicoSeq is written in python3, and use a kernel density estimation model to
+InSilicoSeq is written in python, and use a kernel density estimation model to
 model the read quality of real sequencing data. InSilicoSeq support
 substitution, insertion and deletion errors. If you don't have the use for
 insertion and deletion error a basic error model is provided.
@@ -21,11 +21,11 @@ To install InSilicoSeq, simply type the following in your terminal:
 
 `pip3 install git+https://github.com/HadrienG/InSilicoSeq.git@0.1.0`
 
-InSilicoSeq has been tested and works with python >= 3.5
+InSilicoSeq currently has been tested with python >= 3.5
 
 ## Usage
 
-InSilicoSeq has two modes: one to generate illumina reads, the other to create
+InSilicoSeq has two modes: one to generate Illumina reads, the other to create
 an error model from which the reads will take their characteristics.
 
 We provide pre-computed error models that should be sufficient for most use

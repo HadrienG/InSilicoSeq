@@ -13,6 +13,14 @@ import argparse
 
 
 def generate_reads(args):
+    """Main function for the `iss generate` submodule
+
+    This submodule generates reads from an ErrorModel and write them to
+        args.output + _R(1|2).fastq
+
+    Args:
+        args (object): the command-line arguments from argparse
+    """
     logger = logging.getLogger(__name__)
     logger.debug('Using verbose logger')
 
@@ -89,6 +97,14 @@ def generate_reads(args):
 
 
 def model_from_bam(args):
+    """Main function for the `iss model` submodule
+
+    This submodule write all variables necessary for building an ErrorModel
+    to args.output + .npz
+
+    Args:
+        args (object): the command-line arguments from argparse
+    """
     logger = logging.getLogger(__name__)
     logger.debug('Using verbose logger')
 

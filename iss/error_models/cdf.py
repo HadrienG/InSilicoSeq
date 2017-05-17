@@ -13,13 +13,16 @@ import numpy as np
 class CDFErrorModel(ErrorModel):
     """CDFErrorModel class.
 
-    Error model based on .npz files derived from alignment with bowtie2.
+    Error model based on an .npz files derived from read alignments.
     the npz file must contain:
 
     - the length of the reads
     - the mean insert size
-    - the distribution of qualities for each position (for R1 and R2)
-    - the substitution for each nucleotide at each position (for R1 and R2)"""
+    - the distribution of qualities for each position (for R1 and R2) in form
+        of weights and indices from a histogram
+    - the substitution for each nucleotide at each position (for R1 and R2)
+    - the insertion and deletion rates for each position (for R1 and R2)
+    """
     def __init__(self, npz_path):
         super().__init__()
         self.npz_path = npz_path
@@ -40,7 +43,15 @@ class CDFErrorModel(ErrorModel):
         self.del_rev = self.error_profile['del_reverse']
 
     def gen_phred_scores(self, histograms):
-        """Generate a list of phred scores based on real datasets"""
+        """Generate a list of phred scores based on a histogram from real data
+
+        Args:
+        histograms (ndarray): a list of weight, indices for each position of
+            the read
+
+        Returns:
+        phred_list (list): a list of phred scores
+        """
         phred_list = []
         for w in histograms:
             random_quality = np.random.choice(

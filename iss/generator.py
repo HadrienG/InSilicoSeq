@@ -13,15 +13,19 @@ import logging
 
 
 def reads(record, coverage, ErrorModel):
-    """Simulate reads from one genome (or sequence). Each read is a SeqRecord
-    object. Return a generator of tuples containing the forward and
+    """Simulate reads from one genome (or sequence) according to an ErrorModel
+
+    Each read is a SeqRecord object
+    Return a generator of tuples containing the forward and
     reverse read.
 
-    Arguments:
-    record -- sequence of reference (from where the reads will
-    originate). Must be a SeqRecord object.
-    coverage -- desired coverage of the genome
-    ErrorModel -- an ErrorModel class
+    Args:
+    record (SeqRecord): sequence or genome of reference
+    coverage (float): desired coverage of the genome
+    ErrorModel (ErrorModel): an ErrorModel class
+
+    Yields:
+    forward, reverse (tuple): tuple containg a forward read and a reverse read
     """
     logger = logging.getLogger(__name__)
     header = record.id
@@ -78,7 +82,15 @@ def reads(record, coverage, ErrorModel):
 
 
 def to_fastq(generator, output):
-    """Take a generator and write to a file in fastq format"""
+    """Write reads to fastq
+
+    Take the read generator and write read pairs in two fastq files:
+    output_R1.fastq and output_R2.fastq
+
+    Args:
+    generator (generator): the read generator
+    output (string): the output files prefix
+    """
     logger = logging.getLogger(__name__)
     # define name of output files
     output_forward = output + '_R1.fastq'

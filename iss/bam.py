@@ -11,7 +11,14 @@ import numpy as np
 
 
 def read_bam(bam_file):
-    """read a bam file and yield read"""
+    """Bam file reader
+
+    Args:
+    bam_file (string): path to a bam file
+
+    Yields:
+    read (read): a read object
+    """
     logger = logging.getLogger(__name__)
 
     try:
@@ -32,7 +39,30 @@ def read_bam(bam_file):
 
 def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
                   ins_r, del_f, del_r, i_size, output):
-    """write variables to a .npz file"""
+    """Write variables to a .npz file
+
+    Args:
+    model (string): the type of error model
+    read_length (int): read length of the dataset
+    insert_size (int): mean insert size of the aligned reads
+    quality_hist_forward (list): list of weights, indices if model is
+        cdf, list of cumulative distribution functions if model is kde
+    quality_hist_reverse (list): list of weights, indices if model is
+        cdf, list of cumulative distribution functions if model is kde
+    subst_choices_forward (list): list of dictionaries representing
+        the substitution probabilities for the forward reads
+    subst_choices_reverse (list): list of dictionaries representing
+        the substitution probabilities for the reverse reads
+    ins_forward (list): list of dictionaries representing
+        the insertion probabilities for the forward reads
+    ins_reverse (list): list of dictionaries representing
+        the insertion probabilities for the reverse reads
+    del_forward (list): list of dictionaries representing
+        the deletion probabilities for the forward reads
+    del_reverse (list): list of dictionaries representing
+        the deletion probabilities for the reverse reads
+    output (string): prefix of the output file
+    """
     logger = logging.getLogger(__name__)
 
     try:
@@ -58,7 +88,16 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
 
 def to_model(bam_path, model, output):
     """from a bam file, write all variables needed for modelling reads in
-    a .npz model file"""
+    a .npz model file
+
+    For a brief description of the variables that will be written to the
+        output file, see the bam.write_to_file function
+
+    Args:
+    bam_path (string): path to a bam file
+    model (string): model to be used. Can be 'cdf' or 'kde'
+    output (string): prefix of the output file
+    """
     logger = logging.getLogger(__name__)
 
     insert_size_dist = []
