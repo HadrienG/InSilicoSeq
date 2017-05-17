@@ -87,6 +87,8 @@ def dispatch_subst(base, read, read_has_indels):
 def subst_matrix_to_choices(substitution_matrix, read_length):
     """from the raw mismatches at one position, returns nucleotides
     and probabilties of state change (substitutions)"""
+    logger = logging.getLogger(__name__)
+
     nucl_choices_list = []
     for pos in range(read_length):
         sums = {
@@ -95,24 +97,45 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
             'C': np.sum(substitution_matrix[pos][9:12]),
             'G': np.sum(substitution_matrix[pos][13:])
         }
-        nucl_choices = {
-            'A': (
-                ['T', 'C', 'G'],
-                [count / sums['A'] for count in substitution_matrix[pos][1:4]]
-                ),
-            'T': (
-                ['A', 'C', 'G'],
-                [count / sums['T'] for count in substitution_matrix[pos][5:8]]
-                ),
-            'C': (
-                ['A', 'T', 'G'],
-                [count / sums['C'] for count in substitution_matrix[pos][9:12]]
-                ),
-            'G': (
-                ['A', 'T', 'C'],
-                [count / sums['G'] for count in substitution_matrix[pos][13:]]
-                )
-        }
+        with np.errstate(all='raise'):
+            nucl_choices = {}
+            try:
+                A = (
+                    ['T', 'C', 'G'],
+                    [count / sums['A'] for
+                        count in substitution_matrix[pos][1:4]])
+            except FloatingPointError as e:
+                logger.debug(e, exc_info=True)
+                A = (['T', 'C', 'G'], [1/3, 1/3, 1/3])
+            try:
+                T = (
+                    ['A', 'C', 'G'],
+                    [count / sums['T'] for
+                        count in substitution_matrix[pos][1:4]])
+            except FloatingPointError as e:
+                logger.debug(e, exc_info=True)
+                T = (['A', 'C', 'G'], [1/3, 1/3, 1/3])
+            try:
+                C = (
+                    ['A', 'T', 'G'],
+                    [count / sums['C'] for
+                        count in substitution_matrix[pos][1:4]])
+            except FloatingPointError as e:
+                logger.debug(e, exc_info=True)
+                C = (['A', 'T', 'G'], [1/3, 1/3, 1/3])
+            try:
+                G = (
+                    ['A', 'T', 'C'],
+                    [count / sums['G'] for
+                        count in substitution_matrix[pos][1:4]])
+            except FloatingPointError as e:
+                logger.debug(e, exc_info=True)
+                G = (['A', 'T', 'C'], [1/3, 1/3, 1/3])
+
+            nucl_choices['A'] = A
+            nucl_choices['T'] = T
+            nucl_choices['C'] = C
+            nucl_choices['G'] = G
         nucl_choices_list.append(nucl_choices)
     return nucl_choices_list
 
