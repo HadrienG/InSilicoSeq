@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from iss.error_models import ErrorModel, basic, cdf, kde
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio.Alphabet import IUPAC
 
+import random
 import numpy as np
 
 
@@ -26,3 +30,65 @@ def test_kde_phred():
     err_mod = kde.KDErrorModel('data/ecoli_kde.npz')
     distribution = err_mod.gen_phred_scores(err_mod.quality_reverse)[:10]
     assert distribution == [10, 20, 40, 40, 30, 30, 30, 40, 40, 40]
+
+
+def test_introduce_errors():
+    np.random.seed(42)
+    err_mod = basic.BasicErrorModel()
+
+    read = SeqRecord(
+        Seq(str('AATGC' * 25),
+            IUPAC.unambiguous_dna
+            ),
+        id='read_1',
+        description='test read'
+        )
+    read = err_mod.introduce_error_scores(read, 'forward')
+    qualities = read.letter_annotations["phred_quality"][:10]
+    assert qualities == [40, 26, 40, 40, 25, 25, 40, 40, 22, 40]
+
+
+def test_mut_sequence():
+    random.seed(42)
+    np.random.seed(42)
+
+    err_mod = basic.BasicErrorModel()
+
+    read = SeqRecord(
+        Seq(str('AAAAA' * 25),
+            IUPAC.unambiguous_dna
+            ),
+        id='read_1',
+        description='test read'
+        )
+    read.letter_annotations["phred_quality"] = [5] * 125
+    read.seq = err_mod.mut_sequence(read, 'forward')
+    assert str(read.seq[:10]) == 'AAAACAGAAA'
+
+
+def test_introduce_indels():
+        random.seed(42)
+        np.random.seed(42)
+
+        err_mod = basic.BasicErrorModel()
+        err_mod.ins_for[1]['G'] = 1.0
+        err_mod.del_for[0]['A'] = 1.0
+        bounds = (5, 130)
+        read = SeqRecord(
+            Seq(str('ATATA' * 25),
+                IUPAC.unambiguous_dna
+                ),
+            id='read_1',
+            description='test read'
+            )
+        ref_genome = SeqRecord(
+            Seq(str('ATATA' * 100),
+                IUPAC.unambiguous_dna
+                ),
+            id='ref_genome',
+            description='test reference'
+            )
+        read.seq = err_mod.introduce_indels(
+            read, 'forward', ref_genome, bounds)
+        assert len(read.seq) == 125
+        assert read.seq[:10] == 'ATGATAATAT'
