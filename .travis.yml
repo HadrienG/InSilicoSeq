@@ -5,7 +5,7 @@ python:
 install:
 - pip install -r requirements.txt
 - pip install codecov
-script: nosetests --with-coverage
+script: nosetests --with-coverage --cover-package=iss
 after_success:
 - codecov
 notifications:
