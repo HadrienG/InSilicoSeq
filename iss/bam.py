@@ -82,7 +82,7 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
             del_reverse=del_r
         )
     except PermissionError as e:
-        logger.error('Failed to open output file(s): %s' % e)
+        logger.error('Failed to open output file: %s' % e)
         sys.exit(1)
 
 
@@ -103,11 +103,12 @@ def to_model(bam_path, model, output):
     insert_size_dist = []
     qualities_forward = []
     qualities_reverse = []
-    subst_matrix_f = np.zeros([301, 16])  # we do no know the len of the reads
-    subst_matrix_r = np.zeros([301, 16])  # yet
-    indel_matrix_f = np.zeros([301, 9])
+    subst_matrix_f = np.zeros([301, 16])  # we dont know the len of the reads
+    subst_matrix_r = np.zeros([301, 16])  # yet. we will find out from the
+    indel_matrix_f = np.zeros([301, 9])   # len of the quality lists
     indel_matrix_r = np.zeros([301, 9])
 
+    # read the bam file and extract info needed for modelling
     for read in read_bam(bam_path):
         # get insert size distribution
         if read.is_proper_pair:
@@ -127,14 +128,14 @@ def to_model(bam_path, model, output):
             with_seq=True
             )
         read_has_indels = False
-        for base in alignment:
+        for base in alignment:  # dispatch mismatches in matrix
             pos, subst, read_has_indels = modeller.dispatch_subst(
                 base, read, read_has_indels)
             if read.is_read1 and subst is not None:
                 subst_matrix_f[pos, subst] += 1
             elif read.is_read2 and subst is not None:
                 subst_matrix_r[pos, subst] += 1
-        if read_has_indels:
+        if read_has_indels:  # dispatch indels in matrix
             for pos, indel in modeller.dispatch_indels(read):
                 if read.is_read1:
                     indel_matrix_f[pos, indel] += 1
@@ -143,6 +144,7 @@ def to_model(bam_path, model, output):
 
     logger.info('Calculating mean insert size')
     insert_size = int(np.mean(insert_size_dist))
+
     logger.info('Calculating base quality distribution')
     hist_f = modeller.raw_qualities_to_histogram(qualities_forward, model)
     hist_r = modeller.raw_qualities_to_histogram(qualities_reverse, model)
@@ -158,8 +160,8 @@ def to_model(bam_path, model, output):
     subst_f = modeller.subst_matrix_to_choices(subst_matrix_f, read_length)
     subst_r = modeller.subst_matrix_to_choices(subst_matrix_r, read_length)
 
-    # update the base count in indel matrices
     logger.info('Calculating indel rate')
+    # update the base count in indel matrices
     for position in range(read_length):
         indel_matrix_f[position][0] = sum(subst_matrix_f[position][::4])
         indel_matrix_r[position][0] = sum(subst_matrix_r[position][::4])

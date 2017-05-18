@@ -24,7 +24,7 @@ def generate_reads(args):
     logger = logging.getLogger(__name__)
     logger.debug('Using verbose logger')
 
-    try:  # try to load the correct error model
+    try:  # try to import and load the correct error model
         logger.info('Starting iss generate')
         logger.info('Using %s ErrorModel' % args.model)
         if args.model == 'cdf':
@@ -45,7 +45,7 @@ def generate_reads(args):
     # read the abundance file
     abundance_dic = abundance.parse_abundance_file(args.abundance)
 
-    try:  # read genomes and generate reads
+    try:  # try to read genomes and generate reads
         assert os.stat(args.genomes).st_size != 0
         f = open(args.genomes, 'r')
     except IOError as e:
@@ -58,7 +58,7 @@ def generate_reads(args):
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
             n_records = 0
-            for record in fasta_file:
+            for record in fasta_file:  # generate set of reads for each record
                 try:
                     n_records += 1
                     species_abundance = abundance_dic[record.id]
@@ -84,8 +84,7 @@ def generate_reads(args):
 
                     generator.to_fastq(read_gen, args.output)
 
-            # check if at least one record was in fasta file
-            try:
+            try:  # check if at least one record was in fasta file
                 assert n_records != 0
             except AssertionError as e:
                 logger.error(
@@ -108,7 +107,7 @@ def model_from_bam(args):
     logger = logging.getLogger(__name__)
     logger.debug('Using verbose logger')
 
-    try:
+    try:  # try to import bam module and write model data to file
         logger.info('Starting iss model')
         from iss import bam
     except ImportError as e:

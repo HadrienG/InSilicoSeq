@@ -28,7 +28,7 @@ def raw_qualities_to_histogram(qualities, model):
         cdfs_list (list): list of cumulative distribution functions. One cdf
             per base. The list has the size of the read length
     """
-    if model == 'cdf':
+    if model == 'cdf':  # construct a histogram for each pos, extract w and i
         histograms = [np.histogram(
             i, bins=range(0, 41)) for i in zip(*qualities)]
         weights_list = []
@@ -37,7 +37,7 @@ def raw_qualities_to_histogram(qualities, model):
             weights = values / np.sum(values)
             weights_list.append((indices, weights))
         return weights_list
-    elif model == 'kde':
+    elif model == 'kde':  # construct a cdf for each pos
         quals = [i for i in zip(*qualities)]
         cdfs_list = []
         for q in quals:
@@ -137,6 +137,9 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
             'C': np.sum(substitution_matrix[pos][9:12]),
             'G': np.sum(substitution_matrix[pos][13:])
         }
+        # we want to avoid 'na' in the data so we raise FloatingPointError
+        # if we try to divide by 0 (no count data for that nucl at that pos)
+        # we assume equal rate of substitution
         with np.errstate(all='raise'):
             nucl_choices = {}
             try:
@@ -225,7 +228,7 @@ def dispatch_indels(read):
                 indel = dispatch_indels[insertion]
                 dispatch_tuple = (position, indel)
                 position += cigar_length
-            except KeyError as e:
+            except KeyError as e:  # we avoid ambiguous bases
                 logger.debug(
                     '%s not in dispatch: %s' % (insertion, e), exc_info=True)
                 position += cigar_length
@@ -237,7 +240,7 @@ def dispatch_indels(read):
                 indel = dispatch_indels[deletion]
                 dispatch_tuple = (position, indel)
                 position -= cigar_length
-            except KeyError as e:
+            except KeyError as e:  # we avoid ambiguous bases
                 logger.debug(
                     '%s not in dispatch: %s' % (deletion, e), exc_info=True)
                 position -= cigar_length

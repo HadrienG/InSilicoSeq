@@ -38,7 +38,7 @@ def reads(record, coverage, ErrorModel):
 
     for i in range(n_pairs):
         # generate the forward read
-        try:
+        try:  # a ref sequence has to be longer than 2 * read_length + i_size
             forward_start = random.randrange(
                 0, len(sequence) - (2 * read_length + insert_size))
         except ValueError as e:
@@ -48,6 +48,7 @@ def reads(record, coverage, ErrorModel):
 
         forward_end = forward_start + read_length
         bounds = (forward_start, forward_end)
+        # create a perfect read
         forward = SeqRecord(
             Seq(str(sequence[forward_start:forward_end]),
                 IUPAC.unambiguous_dna
@@ -65,6 +66,7 @@ def reads(record, coverage, ErrorModel):
         reverse_start = forward_end + insert_size
         reverse_end = reverse_start + read_length
         bounds = (reverse_start, reverse_end)
+        # create a perfect read
         reverse = SeqRecord(
             Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
                 IUPAC.unambiguous_dna
