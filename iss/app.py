@@ -122,7 +122,7 @@ def model_from_bam(args):
 def main():
     parser = argparse.ArgumentParser(
         prog='InSilicoSeq',
-        usage='iss [subcammand] [options]',
+        usage='iss [subcommand] [options]',
         description='InSilicoSeq: A sequencing simulator'
     )
     subparsers = parser.add_subparsers(

@@ -21,7 +21,12 @@ To install InSilicoSeq, simply type the following in your terminal:
 
 `pip3 install git+https://github.com/HadrienG/InSilicoSeq.git@0.1.0`
 
-InSilicoSeq currently has been tested with python >= 3.5
+Alternatively, with docker:
+
+```shell
+docker pull hadrieng/insilicoseq:0.1.0
+docker run -it --rm hadrieng/insilicoseq:0.1.0 iss
+```
 
 ## Usage
 
