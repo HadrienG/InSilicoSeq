@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division
+from __future__ import division, unicode_literals
 from builtins import range
 
 from iss.util import rev_comp

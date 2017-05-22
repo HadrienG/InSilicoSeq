@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from builtins import next
+
 from iss import bam
 from iss import modeller
 from nose.tools import assert_almost_equals
 
+import sys
 import numpy as np
 
 
@@ -50,9 +53,14 @@ def test_substitutions():
     subst_matrix = np.zeros([20, 16])
     bam_file = 'data/ecoli.bam'
     bam_reader = bam.read_bam(bam_file)
-    for _ in range(2):
-        bam_reader.__next__()
-    read = bam_reader.__next__()  # read_1_2
+    if sys.version_info > (3,):
+        for _ in range(2):
+            bam_reader.__next__()
+        read = bam_reader.__next__()  # read_1_2
+    else:
+        for _ in range(2):
+            bam_reader.next()
+        read = bam_reader.next()  # read_1_2
     alignment = read.get_aligned_pairs(matches_only=True, with_seq=True)
     read_has_indels = False
     for base in alignment:
@@ -69,9 +77,14 @@ def test_indels():
     indel_matrix = np.zeros([20, 9])
     bam_file = 'data/ecoli.bam'
     bam_reader = bam.read_bam(bam_file)
-    for _ in range(8):
-        bam_reader.__next__()
-    read = bam_reader.__next__()  # read_4_1
+    if sys.version_info > (3,):
+        for _ in range(8):
+            bam_reader.__next__()
+        read = bam_reader.__next__()  # read_4_1
+    else:
+        for _ in range(8):
+            bam_reader.next()
+        read = bam_reader.next()  # read_4_1
     for pos, indel in modeller.dispatch_indels(read):
         indel_matrix[pos, indel] += 1
     for position in range(20):

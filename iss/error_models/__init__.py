@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
 from builtins import dict, range, zip
 
 from iss import util
@@ -90,9 +91,9 @@ class ErrorModel(object):
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
             if random.random() > util.phred_to_prob(qual):
-                mutable_seq[position] = np.random.choice(
+                mutable_seq[position] = str(np.random.choice(
                     nucl_choices[position][nucl][0],
-                    p=nucl_choices[position][nucl][1])
+                    p=nucl_choices[position][nucl][1]))
             position += 1
         return mutable_seq.toseq()
 
