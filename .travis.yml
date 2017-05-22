@@ -4,9 +4,10 @@ python:
 - '3.5'
 - '3.6'
 install:
-- python setup.py install
-- pip install nose
-- pip install codecov
+- pip install --upgrade pip setuptools wheel
+- pip install --only-binary=numpy,scipy numpy scipy
+- pip install .
+- pip install nose codecov
 script: nosetests --with-coverage --cover-package=iss
 after_success:
 - codecov
