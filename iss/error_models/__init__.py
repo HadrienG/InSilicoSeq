@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from builtins import dict, range, zip
+
 from iss import util
 
 import sys

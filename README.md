@@ -19,7 +19,7 @@ insertion and deletion error a basic error model is provided.
 
 To install InSilicoSeq, simply type the following in your terminal:
 
-`pip3 install git+https://github.com/HadrienG/InSilicoSeq.git@0.1.0`
+`pip install git+https://github.com/HadrienG/InSilicoSeq.git`
 
 Alternatively, with docker:
 

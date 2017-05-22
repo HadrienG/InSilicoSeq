@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+from builtins import dict, range, super
+
 from iss import util
 from iss.error_models import ErrorModel
 from Bio.Seq import MutableSeq

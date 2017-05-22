@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+from builtins import range
+
 from iss.util import rev_comp
 from Bio import SeqIO
 from Bio.Seq import Seq

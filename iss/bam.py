@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from builtins import int, dict, range
+
 from iss import modeller
 from scipy import stats
 
