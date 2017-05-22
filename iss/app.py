@@ -33,7 +33,12 @@ def generate_reads(args):
             err_mod = cdf.CDFErrorModel(npz)
         elif args.model == 'kde':
             from iss.error_models import kde
-            npz = args.model_file
+            if args.model_file == 'HiSeq2500':
+                npz = os.path.join(
+                    os.path.dirname(__file__),
+                    'profiles/HiSeq2500')
+            else:
+                npz = args.model_file
             err_mod = kde.KDErrorModel(npz)
         elif args.model == 'basic':
             from iss.error_models import basic
@@ -194,7 +199,9 @@ def main():
         metavar='<npz>',
         default=None,
         help='Error model file. If not specified, using a basic \
-        error model instead (default: %(default)s)'
+        error model instead (default: %(default)s). Use \'HiSeq2500\' for \
+        a pre-computed error model provided with the software (require \
+        --model kde)'
     )
     parser_gen.add_argument(
         '--output',
