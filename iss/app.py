@@ -37,6 +37,10 @@ def generate_reads(args):
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/HiSeq2500')
+            elif args.model_file == 'MiSeq':
+                npz = os.path.join(
+                    os.path.dirname(__file__),
+                    'profiles/MiSeq')
             else:
                 npz = args.model_file
             err_mod = kde.KDErrorModel(npz)
@@ -199,9 +203,9 @@ def main():
         metavar='<npz>',
         default=None,
         help='Error model file. If not specified, using a basic \
-        error model instead (default: %(default)s). Use \'HiSeq2500\' for \
-        a pre-computed error model provided with the software (require \
-        --model kde)'
+        error model instead (default: %(default)s). Use \'HiSeq2500\' or \
+        \'MiSeq\'for a pre-computed error model provided with the software \
+        (require --model kde)'
     )
     parser_gen.add_argument(
         '--output',
