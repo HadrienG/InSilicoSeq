@@ -18,7 +18,7 @@ setup(
     packages=find_packages(),
 
     tests_require=['nose'],
-    install_requires=['numpy', 'scipy', 'biopython', 'pysam'],
+    install_requires=['numpy', 'scipy', 'biopython', 'pysam', 'future'],
     include_package_data=True,
 
     entry_points={
