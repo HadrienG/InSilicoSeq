@@ -66,7 +66,25 @@ genome_B    0.4
 
 ### Create your own error model
 
-*TODO: Documentation coming soon!*
+If you do not wish to use the pre-computed error models provided with
+InSilicoSeq, it is possible to create your own.
+
+Align you reads against the reference:
+
+```shell
+    bowtie2-build genome.fasta genome
+    bowtie2 -x genome -1 reads_R1.fastq.gz \
+        -2 reads_R2.fastq.gz | samtools view -bS | samtools sort -o genome.bam
+    samtools index genome.bam
+```
+
+then build the model:
+
+```shell
+    iss model -b genome.bam -o genome
+```
+
+which will create a `genome.npz` file containing your newly built model
 
 ## License
 
