@@ -97,3 +97,10 @@ Found a bug or have a question? Please open an [issue](https://github.com/Hadrie
 ## Contributing
 
 *TODO: Code of conduct and instruction for Contributing coming soon!*
+
+## Citation
+
+A paper will be on its way. In the meantime if you use InSilicoSeq in your
+research, please cite the poster
+
+> Gourlé, Hadrien (2017): Simulating Illumina data with InSilicoSeq. figshare. https://doi.org/10.6084/m9.figshare.5053327.v1
