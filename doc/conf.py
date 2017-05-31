@@ -50,8 +50,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'InSilicoSeq'
-copyright = '2017, Hadrien Gourlé'
-author = 'Hadrien Gourlé'
+copyright = '2017, Hadrien Gourle'
+author = 'Hadrien Gourle'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
