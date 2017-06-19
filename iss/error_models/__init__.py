@@ -25,12 +25,12 @@ class ErrorModel(object):
         """load the error profile .npz file
 
         Args:
-        npz_path (string): path to the npz file
-        model (string): type of model. Can be 'cdf' or 'kde'
+            npz_path (string): path to the npz file
+            model (string): type of model. Can be 'cdf' or 'kde'
 
         Returns:
-        error_profile (ndarray): numpy object containg variables necessary for
-            error model construction
+            error_profile (ndarray): numpy object containg variables necessary
+                for error model construction
         """
         try:
             error_profile = np.load(npz_path)
@@ -51,12 +51,12 @@ class ErrorModel(object):
         """Add phred scores to a SeqRecord according to the error_model
 
         Args:
-        record (SeqRecord): a read record
-        orientation (string): orientation of the read. Can be 'forward' or
-            'reverse'
+            record (SeqRecord): a read record
+            orientation (string): orientation of the read. Can be 'forward' or
+                'reverse'
 
         Returns:
-        record (SeqRecord): a read record with error scores
+            record (SeqRecord): a read record with error scores
         """
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
@@ -73,12 +73,13 @@ class ErrorModel(object):
         being correct, introduce a substitution error
 
         Args:
-        record (SeqRecord): a read record with error scores
-        orientation (string): orientation of the read. Can be 'forward' or
-            'reverse'
+            record (SeqRecord): a read record with error scores
+            orientation (string): orientation of the read. Can be 'forward' or
+                'reverse'
 
-        Returns
-        mutable_seq.toseq() (Seq): a sequence"""
+        Returns:
+            mutable_seq.toseq() (Seq): a sequence
+        """
 
         # get the right subst_matrix
         if orientation == 'forward':
@@ -114,9 +115,8 @@ class ErrorModel(object):
             bounds (tuple): the position of the read in the full_sequence
 
         Returns:
-        mutable_seq.toseq() (Seq): a sequence fitting the ErrorModel
-            read_length
-
+            mutable_seq.toseq() (Seq): a sequence fitting the ErrorModel
+                read_length
         """
         read_start, read_end = bounds
         if len(mut_seq) == self.read_length:
@@ -155,7 +155,7 @@ class ErrorModel(object):
             bounds (tuple): the position of the read in the full_sequence
 
         Returns:
-        seq() (Seq): a sequence with (eventually) indels
+            seq (Seq): a sequence with (eventually) indels
         """
 
         # get the right indel arrays

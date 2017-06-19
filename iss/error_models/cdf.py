@@ -49,11 +49,11 @@ class CDFErrorModel(ErrorModel):
         """Generate a list of phred scores based on a histogram from real data
 
         Args:
-        histograms (ndarray): a list of weight, indices for each position of
-            the read
+            histograms (ndarray): a list of weight, indices for each position
+                of the read
 
         Returns:
-        phred_list (list): a list of phred scores
+            phred_list (list): a list of phred scores
         """
         phred_list = []
         for w in histograms:

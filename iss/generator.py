@@ -23,12 +23,13 @@ def reads(record, coverage, ErrorModel):
     reverse read.
 
     Args:
-    record (SeqRecord): sequence or genome of reference
-    coverage (float): desired coverage of the genome
-    ErrorModel (ErrorModel): an ErrorModel class
+        record (SeqRecord): sequence or genome of reference
+        coverage (float): desired coverage of the genome
+        ErrorModel (ErrorModel): an ErrorModel class
 
     Yields:
-    forward, reverse (tuple): tuple containg a forward read and a reverse read
+        forward, reverse (tuple): tuple containg a forward read and a reverse
+            read
     """
     logger = logging.getLogger(__name__)
     header = record.id
@@ -93,8 +94,8 @@ def to_fastq(generator, output):
     output_R1.fastq and output_R2.fastq
 
     Args:
-    generator (generator): the read generator
-    output (string): the output files prefix
+        generator (generator): the read generator
+        output (string): the output files prefix
     """
     logger = logging.getLogger(__name__)
     # define name of output files

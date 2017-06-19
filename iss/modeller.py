@@ -119,16 +119,16 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
     probabilties of substitutions
 
     Args:
-    substitution_matrix (np.array): the substitution matrix is a 2D array of
-        size read_length * 16. fhe x axis (read_length) corresponds to the
-        position in the read, while the y axis (16) represents the match or
-        substitution. Positions 0, 4, 8 and 12 are matches, other positions
-        are substitutions
-    read_length (int): read length
+        substitution_matrix (np.array): the substitution matrix is a 2D array
+            of size read_length * 16. fhe x axis (read_length) corresponds to
+            the position in the read, while the y axis (16) represents the
+            match or substitution. Positions 0, 4, 8 and 12 are matches, other
+            positions are substitutions
+        read_length (int): read length
 
     Returns:
-    nucl_choices_list (list): list of dictionaries representing
-        the substitution probabilities for a collection of reads
+        nucl_choices_list (list): list of dictionaries representing
+            the substitution probabilities for a collection of reads
     """
     logger = logging.getLogger(__name__)
 
@@ -259,17 +259,17 @@ def indel_matrix_to_choices(indel_matrix, read_length):
     probabilties of indel
 
     Args:
-    indel_matrix (np.array): the substitution matrix is a 2D array of
-        size read_length * 16. fhe x axis (read_length) corresponds to the
-        position in the read, while the y axis (9) represents the match or
-        indel. Positions 0 is match or substitution, other positions in 'N1'
-        are insertions, 'N2 are deletions'
-    read_length (int): read length
+        indel_matrix (np.array): the substitution matrix is a 2D array of
+            size read_length * 16. fhe x axis (read_length) corresponds to the
+            position in the read, while the y axis (9) represents the match or
+            indel. Positions 0 is match or substitution, other positions in
+            'N1' are insertions, 'N2 are deletions'
+        read_length (int): read length
 
     Returns:
-    (ins_choices, del_choices) (tuple): tuple containing two lists of
-        dictionaries representing the insertion or deletion probabilities
-        for a collection of reads
+        (ins_choices, del_choices) (tuple): tuple containing two lists of
+            dictionaries representing the insertion or deletion probabilities
+            for a collection of reads
     """
     ins_choices = []
     del_choices = []

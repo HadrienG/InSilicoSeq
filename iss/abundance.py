@@ -14,11 +14,11 @@ def parse_abundance_file(abundance_file):
     The abundance file is a flat file of the format "genome_id<TAB>abundance"
 
     Args:
-    abundance_file (string): the path to the abundance file
+        abundance_file (string): the path to the abundance file
 
     Returns:
-    abundance_dic (dict): dict with genome_id as keys, abundance as
-        values
+        abundance_dic (dict): dict with genome_id as keys, abundance as
+            values
     """
     logger = logging.getLogger(__name__)
     abundance_dic = {}
@@ -50,13 +50,13 @@ def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
     abundance
 
     Args:
-    total_n_reads (int): total amount of reads in the dataset
-    species_abundance (float): abundance of the species, between 0 and 1
-    read_length (int): length of the reads in the dataset
-    genome_size (int): size of the genome
+        total_n_reads (int): total amount of reads in the dataset
+        species_abundance (float): abundance of the species, between 0 and 1
+        read_length (int): length of the reads in the dataset
+        genome_size (int): size of the genome
 
     Returns:
-    coverage (float): genome coverage
+        coverage (float): genome coverage
     """
     n_reads = total_n_reads * species_abundance
     coverage = (n_reads * read_length) / genome_size
