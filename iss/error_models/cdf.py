@@ -53,7 +53,7 @@ class CDFErrorModel(ErrorModel):
                 of the read
 
         Returns:
-            phred_list (list): a list of phred scores
+            list: a list of phred scores
         """
         phred_list = []
         for w in histograms:

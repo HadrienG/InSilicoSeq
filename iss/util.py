@@ -17,7 +17,7 @@ def phred_to_prob(q):
         q (int): phred score
 
     Returns:
-        1 - p (float): probabilty of basecall being right
+        float: probabilty of basecall being right
     """
     p = 10 ** (-q / 10)
     return 1 - p
@@ -33,7 +33,7 @@ def prob_to_phred(p):
         p (int): probabilty of basecall being right
 
     Returns:
-        q (int): phred score
+        int: phred score
     """
     q = int(round(-10 * np.log10(1 - p)))
     return q
@@ -46,7 +46,7 @@ def rev_comp(s):
         s (string): a DNA sequence (IUPAC, can be ambiguous)
 
     Returns:
-        reverse_complement (list): reverse complement of the input sequence
+        list: reverse complement of the input sequence
     """
     bases = {
         "a": "t", "c": "g", "g": "c", "t": "a", "y": "r", "r": "y", "w": "w",

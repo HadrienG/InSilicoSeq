@@ -46,7 +46,7 @@ class BasicErrorModel(ErrorModel):
             mean_quality (int): mean phred score
 
         Returns:
-            phred (list): list of phred scores following a normal distribution
+            list: list of phred scores following a normal distribution
         """
         norm = [min(q, 0.9999) for q in np.random.normal(
             util.phred_to_prob(mean_quality), 0.01, self.read_length)]

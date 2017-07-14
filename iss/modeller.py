@@ -25,11 +25,11 @@ def raw_qualities_to_histogram(qualities, model):
         model (string): error model. Can be 'cdf' or 'kde'
 
     Returns:
-        weights_list (list): list of tuples. Tuples are (weights, indices)
-            representing an histogram. One tuple per base. The list has the
-            size of the read length
-        cdfs_list (list): list of cumulative distribution functions. One cdf
-            per base. The list has the size of the read length
+        list: if the mode is 'cdf', list of tuples. Tuples are (weights,
+            indices) representing an histogram. One tuple per base. If the
+            mode is 'kde', list of cumulative distribution functions.
+            One cdf per base. In both cases the list has the size of the read
+            length
     """
     if model == 'cdf':  # construct a histogram for each pos, extract w and i
         histograms = [np.histogram(
@@ -75,9 +75,8 @@ def dispatch_subst(base, read, read_has_indels):
             an indel or not
 
     Returns:
-        query_pos, substitution, read_has_indels (tuple): x and y position for
-        incrementing the substitution matrix. and a third element: True if an
-        indel has been detected, False otherwise
+        tuple: x and y position for incrementing the substitution matrix and a
+        third element: True if an indel has been detected, False otherwise
     """
     dispatch_dict = {
         'AA': 0,
@@ -127,7 +126,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
         read_length (int): read length
 
     Returns:
-        nucl_choices_list (list): list of dictionaries representing
+        list: list of dictionaries representing
             the substitution probabilities for a collection of reads
     """
     logger = logging.getLogger(__name__)
@@ -202,8 +201,8 @@ def dispatch_indels(read):
         read (read): an aligned read object
 
     Yields:
-        dispatch_tuple (tuple): a tuple with the x, y position for dispatching
-            the indel in the indel matrix
+        tuple: a tuple with the x, y position for dispatching the indel in the
+        indel matrix
     """
     logger = logging.getLogger(__name__)
 
@@ -267,9 +266,8 @@ def indel_matrix_to_choices(indel_matrix, read_length):
         read_length (int): read length
 
     Returns:
-        (ins_choices, del_choices) (tuple): tuple containing two lists of
-            dictionaries representing the insertion or deletion probabilities
-            for a collection of reads
+        tuple: tuple containing two lists of dictionaries representing the
+        insertion or deletion probabilities for a collection of reads
     """
     ins_choices = []
     del_choices = []

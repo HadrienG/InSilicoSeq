@@ -56,7 +56,7 @@ class KDErrorModel(ErrorModel):
             cdfs (ndarray): array containing the cdfs
 
         Returns:
-            phred_list (list): a list of phred scores
+            list: a list of phred scores
         """
         phred_list = []
         for cdf in cdfs:

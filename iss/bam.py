@@ -19,7 +19,7 @@ def read_bam(bam_file):
         bam_file (string): path to a bam file
 
     Yields:
-        read (read): a read object
+        read: a read object
     """
     logger = logging.getLogger(__name__)
 

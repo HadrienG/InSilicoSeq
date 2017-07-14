@@ -28,7 +28,7 @@ def reads(record, coverage, ErrorModel):
         ErrorModel (ErrorModel): an ErrorModel class
 
     Yields:
-        forward, reverse (tuple): tuple containg a forward read and a reverse
+        tuple: tuple containg a forward read and a reverse
             read
     """
     logger = logging.getLogger(__name__)

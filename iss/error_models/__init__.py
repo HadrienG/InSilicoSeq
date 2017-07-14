@@ -29,7 +29,7 @@ class ErrorModel(object):
             model (string): type of model. Can be 'cdf' or 'kde'
 
         Returns:
-            error_profile (ndarray): numpy object containg variables necessary
+            ndarray: numpy object containg variables necessary
                 for error model construction
         """
         try:
@@ -56,7 +56,7 @@ class ErrorModel(object):
                 'reverse'
 
         Returns:
-            record (SeqRecord): a read record with error scores
+            SeqRecord: a read record with error scores
         """
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
@@ -78,7 +78,7 @@ class ErrorModel(object):
                 'reverse'
 
         Returns:
-            mutable_seq.toseq() (Seq): a sequence
+            Seq: a sequence
         """
 
         # get the right subst_matrix
@@ -115,7 +115,7 @@ class ErrorModel(object):
             bounds (tuple): the position of the read in the full_sequence
 
         Returns:
-            mutable_seq.toseq() (Seq): a sequence fitting the ErrorModel
+            Seq: a sequence fitting the ErrorModel
                 read_length
         """
         read_start, read_end = bounds
@@ -155,7 +155,7 @@ class ErrorModel(object):
             bounds (tuple): the position of the read in the full_sequence
 
         Returns:
-            seq (Seq): a sequence with (eventually) indels
+            Seq: a sequence with (eventually) indels
         """
 
         # get the right indel arrays

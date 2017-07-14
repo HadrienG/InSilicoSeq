@@ -17,7 +17,7 @@ def parse_abundance_file(abundance_file):
         abundance_file (string): the path to the abundance file
 
     Returns:
-        abundance_dic (dict): dict with genome_id as keys, abundance as
+        dict: genome_id as keys, abundance as
             values
     """
     logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
         genome_size (int): size of the genome
 
     Returns:
-        coverage (float): genome coverage
+        float: genome coverage
     """
     n_reads = total_n_reads * species_abundance
     coverage = (n_reads * read_length) / genome_size
