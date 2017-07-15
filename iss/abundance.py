@@ -45,6 +45,23 @@ def parse_abundance_file(abundance_file):
     return abundance_dic
 
 
+def uniform(record_list):
+    """Generate uniform abundance distribution from a number of records
+
+    Args:
+        n_records (int): a number of genomes
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    for record in record_list:
+        abundance_dic[record] = 1 / n_records
+
+    return abundance_dic
+
+
 def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
     """Calculate the coverage of a genome in a metagenome given its size and
     abundance

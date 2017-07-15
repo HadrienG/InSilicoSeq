@@ -6,6 +6,7 @@ from builtins import dict
 
 from Bio import SeqIO
 
+import logging
 import numpy as np
 
 
@@ -62,17 +63,24 @@ def rev_comp(s):
 
 
 def count_records(fasta_file):
-    """Count the number of records in a fasta file.
+    """Count the number of records in a fasta file and return a list of
+    recods id
 
     Args:
-        fasta_file (string): a (preferably) opened file handle. SeqIO.parse
-            works with filenames, but note that we don't check if the file
-            can be opened in this function
+        fasta_file (string): the path to a fasta file
 
     Returns:
-        int: the number of sequences in the file
+        list: a list of record ids
     """
-    count = 0
+    logger = logging.getLogger(__name__)
+    record_list = []
     for record in SeqIO.parse(fasta_file, "fasta"):
-        count = count + 1
-    return count
+        record_list.append(record.id)
+    try:
+        assert len(record_list) != 0
+    except AssertionError as e:
+        logger.error(
+            'Failed to find records in genome(s) file:%s' % fasta_file)
+        sys.exit(1)
+    else:
+        return record_list

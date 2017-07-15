@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from iss import bam
+from iss import util
 from iss import abundance
 from iss import generator
 from Bio import SeqIO
@@ -37,10 +38,14 @@ def generate_reads(args):
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/HiSeq2500')
-            elif args.model_file == 'MiSeq':
+            elif args.model_file == 'MiSeq250bp':
                 npz = os.path.join(
                     os.path.dirname(__file__),
-                    'profiles/MiSeq')
+                    'profiles/MiSeq250bp')
+            elif args.model_file == 'MiSeq300bp':
+                npz = os.path.join(
+                    os.path.dirname(__file__),
+                    'profiles/MiSeq300bp')
             else:
                 npz = args.model_file
             err_mod = kde.KDErrorModel(npz)
@@ -51,12 +56,12 @@ def generate_reads(args):
         logger.error('Failed to import ErrorModel module: %s' % e)
         sys.exit(1)
 
-    # read the abundance file
-    abundance_dic = abundance.parse_abundance_file(args.abundance)
-
     try:  # try to read genomes and generate reads
         assert os.stat(args.genomes).st_size != 0
         f = open(args.genomes, 'r')
+        with f:  # count the number of records
+            record_list = util.count_records(f)
+
     except IOError as e:
         logger.error('Failed to open genome(s) file:%s' % e)
         sys.exit(1)
@@ -64,12 +69,18 @@ def generate_reads(args):
         logger.error('Genome(s) file seems empty: %s' % args.genomes)
         sys.exit(1)
     else:
+        # read the abundance file
+        if args.abundance_file:
+            abundance_dic = abundance.parse_abundance_file(args.abundance_file)
+        elif args.abundance:
+            # only got uniform for now
+            abundance_dic = abundance.uniform(record_list)
+
+        f = open(args.genomes, 'r')  # re-opens the file
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
-            n_records = 0
             for record in fasta_file:  # generate set of reads for each record
                 try:
-                    n_records += 1
                     species_abundance = abundance_dic[record.id]
                 except KeyError as e:
                     logger.error(
@@ -92,16 +103,7 @@ def generate_reads(args):
                         )
 
                     generator.to_fastq(read_gen, args.output)
-
-            try:  # check if at least one record was in fasta file
-                assert n_records != 0
-            except AssertionError as e:
-                logger.error(
-                    'Failed to find records in genome(s) file:%s'
-                    % args.genomes)
-                sys.exit(1)
-            else:
-                logger.info('Read generation complete')
+        logger.info('Read generation complete')
 
 
 def model_from_bam(args):
@@ -177,8 +179,17 @@ def main():
     parser_gen.add_argument(
         '--abundance',
         '-a',
+        choices=['uniform'],
+        metavar='[\'uniform\']',
+        help='abundance distribution. Can be \'uniform\' (more to come).'
+    )
+    parser_gen.add_argument(
+        '--abundance_file',
+        '-b',
         metavar='<txt>',
-        help='abundance file for coverage calculations (default: %(default)s)'
+        help='abundance file for coverage calculations (default: %(default)s). \
+        If both --abundance and --abundance_file, the abundance file will be \
+        used instead of the distribution.'
     )
     parser_gen.add_argument(
         '--n_reads',
