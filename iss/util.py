@@ -4,6 +4,8 @@
 from __future__ import division
 from builtins import dict
 
+from Bio import SeqIO
+
 import numpy as np
 
 
@@ -57,3 +59,20 @@ def rev_comp(s):
     complement = "".join([bases[b] for b in sequence])
     reverse_complement = complement[::-1]
     return reverse_complement
+
+
+def count_records(fasta_file):
+    """Count the number of records in a fasta file.
+
+    Args:
+        fasta_file (string): a (preferably) opened file handle. SeqIO.parse
+            works with filenames, but note that we don't check if the file
+            can be opened in this function
+
+    Returns:
+        int: the number of sequences in the file
+    """
+    count = 0
+    for record in SeqIO.parse(fasta_file, "fasta"):
+        count = count + 1
+    return count
