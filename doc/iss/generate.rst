@@ -10,13 +10,13 @@ to easily generate reads from:
 - MiSeq (250bp)
 - MiSeq (300bp)
 
-Per example generate 1 million HiSeq 2500 reads from a set of input genomes
+Per example generate 1 million MiSeq 300bp reads from a set of input genomes
 with an abundance file:
 
 .. code-block:: bash
 
     iss generate --genomes genomes.fasta --abundance abundance_file.txt \
-        --model_file HiSeq2500 --output HiSeq_reads
+        --model_file MiSeq300bp --output MiSeq_reads
 
 
 If you have created your custom model, just give the .npz file to --model_file

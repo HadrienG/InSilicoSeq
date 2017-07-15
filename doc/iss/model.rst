@@ -16,15 +16,15 @@ Align you reads against the reference:
 
 .. code-block:: bash
 
-    bowtie2-build genome.fasta genome
-    bowtie2 -x genome -1 reads_R1.fastq.gz \
-        -2 reads_R2.fastq.gz | samtools view -bS | samtools sort -o genome.bam
-    samtools index genome.bam
+    bowtie2-build genomes.fasta genomes
+    bowtie2 -x genomes -1 reads_R1.fastq.gz \
+        -2 reads_R2.fastq.gz | samtools view -bS | samtools sort -o genomes.bam
+    samtools index genomes.bam
 
 then build the model:
 
 .. code-block:: bash
 
-    iss model -b genome.bam -o genome
+    iss model -b genomes.bam -o genomes
 
-which will create a `genome.npz` file containing your newly built model
+which will create a `genomes.npz` file containing your newly built model
