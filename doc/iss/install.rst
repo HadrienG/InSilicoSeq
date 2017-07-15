@@ -12,7 +12,7 @@ To install InSilicoSeq, type the following in your terminal:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/HadrienG/InSilicoSeq.git@0.2.0
+    pip install InSilicoSeq
 
 .. _using_docker:
 
