@@ -16,7 +16,7 @@ the use for insertion and deletion error a basic error model is provided.
 
 ## Installation
 
-To install InSilicoSeq, simply type the following in your terminal:
+To install InSilicoSeq, type the following in your terminal:
 
 `pip install git+https://github.com/HadrienG/InSilicoSeq.git@0.2.0`
 
@@ -44,10 +44,15 @@ iss generate --genomes genomes.fasta --abundance abundance_file.txt \
     --model_file MiSeq300bp --output HiSeq_reads
 ```
 
-where `genomes.fasta` is a (multi-)fasta file containing the reference genome from which the simulated reads will be generated, and `abundance_file.txt` a tab-delimited file containing abundance information.
+where `genomes.fasta` is a (multi-)fasta file containing the reference genome
+from which the simulated reads will be generated, and `abundance_file.txt` a
+tab-delimited file containing abundance information.
 
 Currently InSilicoSeq comes with 3 error models: `HiSeq2500`, `MiSeq250bp` and
 `MiSeq300bp`
+
+If you have built your own model, give the `.npz` file to the `--model_file`
+argument to simulate reads from your own error model.
 
 ### Example of genomes and abundance file
 
@@ -97,7 +102,8 @@ Found a bug or have a question? Please open an [issue](https://github.com/Hadrie
 
 ## Contributing
 
-*TODO: Code of conduct and instruction for Contributing coming soon!*
+We welcome contributions from the community! See our
+[Contributing](CONTRIBUTING.md) guidelines
 
 ## Citation
 
