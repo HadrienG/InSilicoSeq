@@ -71,3 +71,13 @@ Can be 'kde', 'cdf' or 'basic'
 Error model file. If not specified, using a basic error model instead
 (default: None). Use 'HiSeq2500' or 'MiSeq' for a pre-computed error model
 provided with the software.
+
+--quiet
+^^^^^^^
+
+Disable info logging
+
+--debug
+^^^^^^^
+
+Enable debug logging

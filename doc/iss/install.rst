@@ -8,7 +8,7 @@ Installing InSilicoSeq
 Using pip
 ---------
 
-To install InSilicoSeq, simply type the following in your terminal:
+To install InSilicoSeq, type the following in your terminal:
 
 .. code-block:: bash
 
