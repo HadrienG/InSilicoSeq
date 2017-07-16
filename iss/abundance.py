@@ -7,6 +7,8 @@ import os
 import sys
 import logging
 
+from scipy import stats
+
 
 def parse_abundance_file(abundance_file):
     """Parse an abundance file
@@ -49,7 +51,7 @@ def uniform(record_list):
     """Generate uniform abundance distribution from a number of records
 
     Args:
-        n_records (int): a number of genomes
+        record_list (list): a list of record.id
 
     Returns:
         list: a list of floats
@@ -58,6 +60,26 @@ def uniform(record_list):
     n_records = len(record_list)
     for record in record_list:
         abundance_dic[record] = 1 / n_records
+
+    return abundance_dic
+
+
+def halfnormal(record_list):
+    """Generate scaled halfnormal abundance distribution from a number of
+        records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    dist = stats.halfnorm.rvs(loc=0.00, scale=1.00, size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
 
     return abundance_dic
 
