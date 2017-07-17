@@ -105,6 +105,26 @@ def exponential(record_list):
     return abundance_dic
 
 
+def lognormal(record_list):
+    """Generate scaled lognormal abundance distribution from a number of
+        records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    dist = np.random.lognormal(size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
+
+    return abundance_dic
+
+
 def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
     """Calculate the coverage of a genome in a metagenome given its size and
     abundance
