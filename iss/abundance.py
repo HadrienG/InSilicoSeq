@@ -6,6 +6,7 @@ from __future__ import division
 import os
 import sys
 import logging
+import numpy as np
 
 from scipy import stats
 
@@ -77,6 +78,26 @@ def halfnormal(record_list):
     abundance_dic = {}
     n_records = len(record_list)
     dist = stats.halfnorm.rvs(loc=0.00, scale=1.00, size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
+
+    return abundance_dic
+
+
+def exponential(record_list):
+    """Generate scaled exponential abundance distribution from a number of
+        records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    dist = np.random.exponential(size=n_records)
     dist_scaled = dist / sum(dist)
     for record, abundance in zip(record_list, dist_scaled):
         abundance_dic[record] = abundance

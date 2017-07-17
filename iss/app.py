@@ -71,11 +71,17 @@ def generate_reads(args):
     else:
         # read the abundance file
         if args.abundance_file:
+            logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
         elif args.abundance == 'uniform':
+            logger.info('Using %s abundance distribution' % args.abundance)
             abundance_dic = abundance.uniform(record_list)
         elif args.abundance == 'halfnormal':
+            logger.info('Using %s abundance distribution' % args.abundance)
             abundance_dic = abundance.halfnormal(record_list)
+        elif args.abundance == 'exponential':
+            logger.info('Using %s abundance distribution' % args.abundance)
+            abundance_dic = abundance.exponential(record_list)
 
         f = open(args.genomes, 'r')  # re-opens the file
         with f:
@@ -180,10 +186,10 @@ def main():
     parser_gen.add_argument(
         '--abundance',
         '-a',
-        choices=['uniform', 'halfnormal'],
-        metavar='[\'uniform\', \'halfnormal\']',
-        help='abundance distribution. Can be \'uniform\' or \'halfnormal\' \
-            (more to come).'
+        choices=['uniform', 'halfnormal', 'exponential'],
+        metavar='[\'uniform\', \'halfnormal\', \'exponential\']',
+        help='abundance distribution. Can be \'uniform\', \'halfnormal\' or\
+            \'exponential\' (more to come).'
     )
     parser_gen.add_argument(
         '--abundance_file',
