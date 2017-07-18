@@ -189,6 +189,22 @@ def main():
         required=True
     )
     parser_gen.add_argument(
+        '--refseq',
+        '-r',
+        choices=['bacteria', 'viruses', 'archaea', 'all'],
+        metavar='<str>',
+        help='Download input genomes from RefSeq. Requires --n_genomes/-u\
+            option. Can be bacteria, viruses, archaea or all.'
+    )
+    parser_gen.add_argument(
+        '--n_genomes',
+        '-u',
+        type=int,
+        metavar='<int>',
+        help='How many genomes will be downloaded from RefSeq. Required if\
+            --refseq/-r is set.'
+    )
+    parser_gen.add_argument(
         '--abundance',
         '-a',
         choices=['uniform', 'halfnormal',
