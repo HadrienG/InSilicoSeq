@@ -85,6 +85,12 @@ def generate_reads(args):
         elif args.abundance == 'lognormal':
             logger.info('Using %s abundance distribution' % args.abundance)
             abundance_dic = abundance.lognormal(record_list)
+        elif args.abundance == 'zero_inflated_lognormal':
+            logger.info('Using %s abundance distribution' % args.abundance)
+            abundance_dic = abundance.zero_inflated_lognormal(record_list)
+        else:
+            logger.error('Could not get abundance')
+            sys.exit(1)
 
         f = open(args.genomes, 'r')  # re-opens the file
         with f:
@@ -189,9 +195,12 @@ def main():
     parser_gen.add_argument(
         '--abundance',
         '-a',
-        choices=['uniform', 'halfnormal', 'exponential', 'lognormal'],
-        help='abundance distribution. Can be \'uniform\', \'halfnormal\', \
-            \'exponential\' or \'lognormal\' (more to come).'
+        choices=['uniform', 'halfnormal',
+                 'exponential', 'lognormal', 'zero_inflated_lognormal'],
+        metavar='<str>',
+        default='lognormal',
+        help='abundance distribution. Can be uniform, halfnormal, exponential,\
+            lognormal or zero-inflated-lognormal. (default: %(default)s).'
     )
     parser_gen.add_argument(
         '--abundance_file',

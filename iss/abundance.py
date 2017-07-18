@@ -125,6 +125,27 @@ def lognormal(record_list):
     return abundance_dic
 
 
+def zero_inflated_lognormal(record_list):
+    """Generate scaled zero-inflated lognormal abundance distribution from a
+        number of records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    zero_inflated = stats.bernoulli.rvs(p=0.2, size=n_records)
+    dist = (1 - zero_inflated) * np.random.lognormal(size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
+
+    return abundance_dic
+
+
 def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
     """Calculate the coverage of a genome in a metagenome given its size and
     abundance
