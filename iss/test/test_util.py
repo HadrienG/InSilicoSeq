@@ -21,3 +21,11 @@ def test_rev_comp():
     uppercase_seq = 'CCGATTAC'
     assert util.rev_comp(lowercase_seq) == 'atagcaat'
     assert util.rev_comp(uppercase_seq) == 'GTAATCGG'
+
+
+def test_count_records():
+    f = open('data/genomes.fasta', 'r')
+    with f:  # count the number of records
+        record_list = util.count_records(f)
+    assert record_list == [
+        'genome_A', 'genome_T', 'genome_GC', 'genome_ATCG', 'genome_TA']

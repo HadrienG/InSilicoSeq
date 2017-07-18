@@ -4,6 +4,9 @@
 from __future__ import division
 from builtins import dict
 
+from Bio import SeqIO
+
+import logging
 import numpy as np
 
 
@@ -57,3 +60,27 @@ def rev_comp(s):
     complement = "".join([bases[b] for b in sequence])
     reverse_complement = complement[::-1]
     return reverse_complement
+
+
+def count_records(fasta_file):
+    """Count the number of records in a fasta file and return a list of
+    recods id
+
+    Args:
+        fasta_file (string): the path to a fasta file
+
+    Returns:
+        list: a list of record ids
+    """
+    logger = logging.getLogger(__name__)
+    record_list = []
+    for record in SeqIO.parse(fasta_file, "fasta"):
+        record_list.append(record.id)
+    try:
+        assert len(record_list) != 0
+    except AssertionError as e:
+        logger.error(
+            'Failed to find records in genome(s) file:%s' % fasta_file)
+        sys.exit(1)
+    else:
+        return record_list

@@ -6,6 +6,9 @@ from __future__ import division
 import os
 import sys
 import logging
+import numpy as np
+
+from scipy import stats
 
 
 def parse_abundance_file(abundance_file):
@@ -42,6 +45,104 @@ def parse_abundance_file(abundance_file):
                 else:
                     abundance_dic[genome_id] = abundance
     logger.info('Loaded abundance file: %s' % abundance_file)
+    return abundance_dic
+
+
+def uniform(record_list):
+    """Generate uniform abundance distribution from a number of records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    for record in record_list:
+        abundance_dic[record] = 1 / n_records
+
+    return abundance_dic
+
+
+def halfnormal(record_list):
+    """Generate scaled halfnormal abundance distribution from a number of
+        records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    dist = stats.halfnorm.rvs(loc=0.00, scale=1.00, size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
+
+    return abundance_dic
+
+
+def exponential(record_list):
+    """Generate scaled exponential abundance distribution from a number of
+        records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    dist = np.random.exponential(size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
+
+    return abundance_dic
+
+
+def lognormal(record_list):
+    """Generate scaled lognormal abundance distribution from a number of
+        records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    dist = np.random.lognormal(size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
+
+    return abundance_dic
+
+
+def zero_inflated_lognormal(record_list):
+    """Generate scaled zero-inflated lognormal abundance distribution from a
+        number of records
+
+    Args:
+        record_list (list): a list of record.id
+
+    Returns:
+        list: a list of floats
+    """
+    abundance_dic = {}
+    n_records = len(record_list)
+    zero_inflated = stats.bernoulli.rvs(p=0.2, size=n_records)
+    dist = (1 - zero_inflated) * np.random.lognormal(size=n_records)
+    dist_scaled = dist / sum(dist)
+    for record, abundance in zip(record_list, dist_scaled):
+        abundance_dic[record] = abundance
+
     return abundance_dic
 
 
