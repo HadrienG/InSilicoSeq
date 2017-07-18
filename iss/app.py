@@ -53,16 +53,21 @@ def generate_reads(args):
         sys.exit(1)
 
     try:  # try to read genomes and generate reads
-        assert os.stat(args.genomes).st_size != 0
-        f = open(args.genomes, 'r')
+        if args.genomes:
+            genome_file = args.genome
+        elif args.refseq:
+            # genome_file = download.refseq(args.refseq, args.n_genomes)
+            pass
+
+        assert os.stat(genome_file).st_size != 0
+        f = open(genome_file, 'r')
         with f:  # count the number of records
             record_list = util.count_records(f)
-
     except IOError as e:
         logger.error('Failed to open genome(s) file:%s' % e)
         sys.exit(1)
     except AssertionError as e:
-        logger.error('Genome(s) file seems empty: %s' % args.genomes)
+        logger.error('Genome(s) file seems empty: %s' % genome_file)
         sys.exit(1)
     else:
         # read the abundance file
