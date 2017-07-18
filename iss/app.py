@@ -54,7 +54,7 @@ def generate_reads(args):
 
     try:  # try to read genomes and generate reads
         if args.genomes:
-            genome_file = args.genome
+            genome_file = args.genomes
         elif args.refseq:
             # genome_file = download.refseq(args.refseq, args.n_genomes)
             pass
@@ -172,6 +172,8 @@ def main():
     )
 
     # arguments form the read generator module
+    input_genomes = parser_gen.add_mutually_exclusive_group()
+    input_abundance = parser_gen.add_mutually_exclusive_group()
     parser_gen.add_argument(
         '--quiet',
         '-q',
@@ -186,14 +188,13 @@ def main():
         default=False,
         help='Enable debug logging. (default: %(default)s).'
     )
-    parser_gen.add_argument(
+    input_genomes.add_argument(
         '--genomes',
         '-g',
-        metavar='<.fasta>',
-        help='Input genome(s) from where the reads will originate (Required)',
-        required=True
+        metavar='<genomes.fasta>',
+        help='Input genome(s) from where the reads will originate'
     )
-    parser_gen.add_argument(
+    input_genomes.add_argument(
         '--refseq',
         '-r',
         choices=['bacteria', 'viruses', 'archaea', 'all'],
@@ -209,7 +210,7 @@ def main():
         help='How many genomes will be downloaded from RefSeq. Required if\
             --refseq/-r is set.'
     )
-    parser_gen.add_argument(
+    input_abundance.add_argument(
         '--abundance',
         '-a',
         choices=['uniform', 'halfnormal',
@@ -219,13 +220,11 @@ def main():
         help='abundance distribution (default: %(default)s). Can be uniform,\
             halfnormal, exponential, lognormal or zero-inflated-lognormal.'
     )
-    parser_gen.add_argument(
+    input_abundance.add_argument(
         '--abundance_file',
         '-b',
-        metavar='<.txt>',
-        help='abundance file for coverage calculations (default: %(default)s).\
-        If both --abundance and --abundance_file, the abundance file will be\
-        used instead of the distribution.'
+        metavar='<abundance.txt>',
+        help='abundance file for coverage calculations (default: %(default)s).'
     )
     parser_gen.add_argument(
         '--n_reads',
