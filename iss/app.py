@@ -188,7 +188,7 @@ def main():
     parser_gen.add_argument(
         '--genomes',
         '-g',
-        metavar='<fasta>',
+        metavar='<.fasta>',
         help='Input genome(s) from where the reads will originate (Required)',
         required=True
     )
@@ -199,15 +199,15 @@ def main():
                  'exponential', 'lognormal', 'zero_inflated_lognormal'],
         metavar='<str>',
         default='lognormal',
-        help='abundance distribution. Can be uniform, halfnormal, exponential,\
-            lognormal or zero-inflated-lognormal. (default: %(default)s).'
+        help='abundance distribution (default: %(default)s). Can be uniform,\
+            halfnormal, exponential, lognormal or zero-inflated-lognormal.'
     )
     parser_gen.add_argument(
         '--abundance_file',
         '-b',
-        metavar='<txt>',
-        help='abundance file for coverage calculations (default: %(default)s). \
-        If both --abundance and --abundance_file, the abundance file will be \
+        metavar='<.txt>',
+        help='abundance file for coverage calculations (default: %(default)s).\
+        If both --abundance and --abundance_file, the abundance file will be\
         used instead of the distribution.'
     )
     parser_gen.add_argument(
@@ -221,11 +221,11 @@ def main():
     parser_gen.add_argument(
         '--model',
         '-m',
-        metavar='[\'cdf\', \'kde\', \'basic\']',
+        metavar='<str>',
         choices=['cdf', 'kde', 'basic'],
         default='kde',
         help='Error model. If not specified, using kernel density estimation \
-        (default: %(default)s). Can be \'kde\', \'cdf\' or \'basic\''
+        (default: %(default)s). Can be kde, cdf or basic.'
     )
     parser_gen.add_argument(
         '--model_file',
