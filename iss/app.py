@@ -38,14 +38,10 @@ def generate_reads(args):
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/HiSeq2500')
-            elif args.model_file == 'MiSeq250bp':
+            elif args.model_file == 'MiSeq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
-                    'profiles/MiSeq250bp')
-            elif args.model_file == 'MiSeq300bp':
-                npz = os.path.join(
-                    os.path.dirname(__file__),
-                    'profiles/MiSeq300bp')
+                    'profiles/MiSeq')
             else:
                 npz = args.model_file
             err_mod = kde.KDErrorModel(npz)
