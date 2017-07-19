@@ -6,13 +6,14 @@
 [![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
 InSilicoSeq (or iss) is a sequencing simulator producing (relatively) realistic
-Illumina reads primarily intended for simulating metagenomic samples, although it can be used to produce sequencing data from a single genome.
+Illumina reads primarily intended for simulating metagenomic samples, although
+it can be used to produce sequencing data from a single genome.
 
 InSilicoSeq is written in python, and use a kernel density estimation model to
 model the read quality of real sequencing data.
 
-InSilicoSeq support substitution, insertion and deletion errors. If you don't have
-the use for insertion and deletion error a basic error model is provided.
+InSilicoSeq support substitution, insertion and deletion errors. If you don't
+have the use for insertion and deletion error a basic error model is provided.
 
 ## Installation
 
@@ -37,38 +38,39 @@ cases.
 
 ### Generate reads with a pre-computed error model
 
-for generating 1M reads using the MiSeq300bp error model:
+for generating 1 million reads modelling a MiSeq instrument:
 
 ```shell
-iss generate --genomes genomes.fasta --abundance abundance_file.txt \
-    --model_file MiSeq300bp --output HiSeq_reads
+iss generate --genomes genomes.fasta --model_file MiSeq --output MiSeq_reads
 ```
 
 where `genomes.fasta` is a (multi-)fasta file containing the reference genome
-from which the simulated reads will be generated, and `abundance_file.txt` a
-tab-delimited file containing abundance information.
+from which the simulated reads will be generated.
 
-Currently InSilicoSeq comes with 3 error models: `HiSeq2500`, `MiSeq250bp` and
-`MiSeq300bp`
+Currently InSilicoSeq comes with 2 error models: `HiSeq2500` and `MiSeq`
 
 If you have built your own model, give the `.npz` file to the `--model_file`
 argument to simulate reads from your own error model.
 
-### Example of genomes and abundance file
+For 10 million reads and a custom error model:
 
+```shell
+iss generate --genomes genomes.fasta -n 10000000 --model_file my_model.npz \
+--output my_model_reads
 ```
-# multi-fasta file
->genome_A
-ATGC...
->genome_B
-CCGT...
-...
 
-# abundance file (total abundance must be 1!)
-genome_A    0.2
-genome_B    0.4
-...
+### Generate reads without input genomes
+
+We can download some for you! InSilicoSeq can download random genomes from the
+ncbi using the infamous [eutils](https://www.ncbi.nlm.nih.gov/books/NBK25501/)
+
+```shell
+iss generate --ncbi bacteria -n_genomes 10 --model_file MiSeq \
+--output ncbi_reads
 ```
+
+For full usage and other option, refer to the full
+[documentation](http://insilicoseq.readthedocs.io)
 
 ### Create your own error model
 
