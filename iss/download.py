@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import http
 import random
 import logging
 
@@ -44,7 +45,13 @@ def ncbi(kingdom, n_genomes):
                     id=nucleotide_id,
                     rettype='fasta',
                     retmode='txt')
-                genomes.append(genome_record)
+                try:
+                    record = SeqIO.read(genome_record, 'fasta')
+                except http.client.IncompleteRead as e:
+                    logger.warning(
+                        'Failed to read downloaded genome. Skipping')
+                    continue
+                genomes.append(record)
                 n += 1
             else:
                 logger.debug(
@@ -84,12 +91,6 @@ def to_fasta(genomes, output):
     else:
         logger.info('Writing genomes to %s' % output_genomes)
         with f:
-            for genome in genomes:
-                try:
-                    record = SeqIO.read(genome, 'fasta')
-                except IncompleteRead as e:
-                    logger.error(
-                        'Failed to read downloaded genome. Please try again')
-                    sys.exit(1)
+            for record in genomes:
                 SeqIO.write(record, f, 'fasta')
     return output_genomes
