@@ -5,12 +5,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='InSilicoSeq',
-    version='0.2.2',
+    version='0.3.0',
 
     description='a sequencing simulator',
 
     url='https://github.com/HadrienG/InSilicoSeq',
-    download_url='https://github.com/HadrienG/InSilicoSeq/tarball/0.2.2',
+    download_url='https://github.com/HadrienG/InSilicoSeq/tarball/0.3.0',
     author='Hadrien Gourlé',
     author_email='hadrien.gourle@slu.se',
 

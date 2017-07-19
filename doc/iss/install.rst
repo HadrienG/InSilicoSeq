@@ -23,5 +23,5 @@ If you wish to use InSilicoSeq using docker
 
 .. code-block:: bash
 
-    docker pull hadrieng/insilicoseq:0.2.2
-    docker run -it --rm hadrieng/insilicoseq:0.2.2 iss
+    docker pull hadrieng/insilicoseq:0.3.0
+    docker run -it --rm hadrieng/insilicoseq:0.3.0 iss
