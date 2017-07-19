@@ -31,14 +31,24 @@ Build the model
 
 which will create a `genomes.npz` file containing your newly built model
 
-Additional options
-------------------
+Full list of options
+--------------------
+
+--bam
+^^^^^
+
+aligned reads from which the model will be inferred (Required)
 
 --model
 ^^^^^^^
 
 Error model to build. If not specified, using kernel density estimation
 (default: kde). Can be 'kde' or 'cdf'
+
+--output
+^^^^^^^^
+
+ Output file prefix (Required)
 
 --quiet
 ^^^^^^^
