@@ -55,9 +55,12 @@ def generate_reads(args):
     try:  # try to read genomes and generate reads
         if args.genomes:
             genome_file = args.genomes
-        elif args.refseq:
+        elif args.refseq and args.n_genomes:
             # genome_file = download.refseq(args.refseq, args.n_genomes)
             pass
+        else:
+            logger.error('Invalid input')  # TODO better error handling here
+            sys.exit(1)
 
         assert os.stat(genome_file).st_size != 0
         f = open(genome_file, 'r')
@@ -172,16 +175,17 @@ def main():
     )
 
     # arguments form the read generator module
+    param_logging = parser_gen.add_mutually_exclusive_group()
     input_genomes = parser_gen.add_mutually_exclusive_group()
     input_abundance = parser_gen.add_mutually_exclusive_group()
-    parser_gen.add_argument(
+    param_logging.add_argument(
         '--quiet',
         '-q',
         action='store_true',
         default=False,
         help='Disable info logging. (default: %(default)s).'
     )
-    parser_gen.add_argument(
+    param_logging.add_argument(
         '--debug',
         '-d',
         action='store_true',
