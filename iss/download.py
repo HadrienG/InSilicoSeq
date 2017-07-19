@@ -30,7 +30,7 @@ def ncbi(kingdom, n_genomes):
         ident = random.choice(full_id_list)
         genome_info = Entrez.read(
             Entrez.esummary(db='genome', id=ident))[0]
-        if genome_info['Assembly_Accession']:
+        if genome_info['Assembly_Accession']:  # TODO: IndexError
             nucleotide_id = Entrez.read(Entrez.elink(
                 dbfrom='genome',
                 db='nucleotide',
