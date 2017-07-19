@@ -36,9 +36,9 @@ def ncbi(kingdom, n_genomes):
                 id=ident))[0]['LinkSetDb'][0]['Link'][0]['Id']
             nucleotide_info = Entrez.read(
                 Entrez.esummary(db='nucleotide', id=nucleotide_id))[0]
-            if nucleotide_info['AccessionVersion'].startswith('NC'):
-                logger.info(
-                    'Downloading %s' % genome_info['Assembly_Accession'])
+            if not nucleotide_info['AccessionVersion'].startswith('NZ'):
+                logger.info('Downloading %s'
+                            % nucleotide_info['AccessionVersion'])
                 genome_record = Entrez.efetch(
                     'nucleotide',
                     id=nucleotide_id,
@@ -47,8 +47,14 @@ def ncbi(kingdom, n_genomes):
                 genomes.append(genome_record)
                 n += 1
             else:
+                logger.debug(
+                    'Found %s but no record associated. Skipping'
+                    % genome_info['Assembly_Accession'])
                 continue
         else:
+            logger.debug(
+                'Organism with ID %s has no associated Assembly. Skipping'
+                % ident)
             continue
 
     return genomes
