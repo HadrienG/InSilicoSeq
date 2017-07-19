@@ -2,6 +2,7 @@
 ## A sequencing simulator
 
 [![Build Status](https://travis-ci.org/HadrienG/InSilicoSeq.svg?branch=master)](https://travis-ci.org/HadrienG/InSilicoSeq)
+[![Documentation Status](https://readthedocs.org/projects/insilicoseq/badge/?version=0.3.0)](http://insilicoseq.readthedocs.io/en/0.3.0/?badge=0.3.0)
 [![codecov](https://codecov.io/gh/HadrienG/InSilicoSeq/branch/master/graph/badge.svg)](https://codecov.io/gh/HadrienG/InSilicoSeq)
 [![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
