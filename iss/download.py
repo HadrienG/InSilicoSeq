@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import random
+import logging
 
 from Bio import SeqIO
 from Bio import Entrez
@@ -16,12 +17,14 @@ def ncbi(kingdom, n_genomes):
     Returns:
         list: list of handles
     """
+    logger = logging.getLogger(__name__)
     Entrez.email = ''
     Entrez.tool = 'InSilicoSeq'
     full_id_list = Entrez.read(Entrez.esearch(
         'genome', term='%s[Organism]' % kingdom, retmax=100000))['IdList']
     genomes = []
     n = 0
+    logger.info('Searching for genomes to download')
     while n < n_genomes:
         ident = random.choice(full_id_list)
         genome_info = Entrez.read(
@@ -34,7 +37,8 @@ def ncbi(kingdom, n_genomes):
             nucleotide_info = Entrez.read(
                 Entrez.esummary(db='nucleotide', id=nucleotide_id))[0]
             if nucleotide_info['AccessionVersion'].startswith('NC'):
-                print('found %s' % genome_info['Assembly_Accession'])
+                logger.info(
+                    'Downloading %s' % genome_info['Assembly_Accession'])
                 genome_record = Entrez.efetch(
                     'nucleotide',
                     id=nucleotide_id,
@@ -63,6 +67,7 @@ def to_fasta(genomes, output):
     Returns:
         str: the file name
     """
+    logger = logging.getLogger(__name__)
     # define name of output files
     output_genomes = output + '_genomes.fasta'
     try:
@@ -71,8 +76,14 @@ def to_fasta(genomes, output):
         logger.error('Failed to open output file: %s' % e)
         sys.exit(1)
     else:
+        logger.info('Writing genomes to %s' % output_genomes)
         with f:
             for genome in genomes:
-                record = SeqIO.read(genome, 'fasta')
+                try:
+                    record = SeqIO.read(genome, 'fasta')
+                except IncompleteRead as e:
+                    logger.error(
+                        'Failed to read downloaded genome. Please try again')
+                    sys.exit(1)
                 SeqIO.write(record, f, 'fasta')
     return output_genomes
