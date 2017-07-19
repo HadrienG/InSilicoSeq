@@ -59,6 +59,9 @@ def to_fasta(genomes, output):
     Args:
         genomes (list): list of genome handles
         output (string): the output file prefix
+
+    Returns:
+        str: the file name
     """
     # define name of output files
     output_genomes = output + '_genomes.fasta'
@@ -72,3 +75,4 @@ def to_fasta(genomes, output):
             for genome in genomes:
                 record = SeqIO.read(genome, 'fasta')
                 SeqIO.write(record, f, 'fasta')
+    return output_genomes

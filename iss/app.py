@@ -3,6 +3,7 @@
 
 from iss import bam
 from iss import util
+from iss import download
 from iss import abundance
 from iss import generator
 from Bio import SeqIO
@@ -55,9 +56,9 @@ def generate_reads(args):
     try:  # try to read genomes and generate reads
         if args.genomes:
             genome_file = args.genomes
-        elif args.refseq and args.n_genomes:
-            # genome_file = download.refseq(args.refseq, args.n_genomes)
-            pass
+        elif args.ncbi and args.n_genomes:
+            genomes = download.ncbi(args.ncbi, args.n_genomes)
+            genome_file = download.to_fasta(genomes, args.output)
         else:
             logger.error('Invalid input')  # TODO better error handling here
             sys.exit(1)
@@ -96,7 +97,7 @@ def generate_reads(args):
             logger.error('Could not get abundance')
             sys.exit(1)
 
-        f = open(args.genomes, 'r')  # re-opens the file
+        f = open(genome_file, 'r')  # re-opens the file
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
             for record in fasta_file:  # generate set of reads for each record
@@ -199,12 +200,12 @@ def main():
         help='Input genome(s) from where the reads will originate'
     )
     input_genomes.add_argument(
-        '--refseq',
-        '-r',
-        choices=['bacteria', 'viruses', 'archaea', 'all'],
+        '--ncbi',
+        '-k',
+        choices=['bacteria', 'viruses', 'archaea'],
         metavar='<str>',
         help='Download input genomes from RefSeq. Requires --n_genomes/-u\
-            option. Can be bacteria, viruses, archaea or all.'
+            option. Can be bacteria, viruses or archaea.'
     )
     parser_gen.add_argument(
         '--n_genomes',
