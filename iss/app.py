@@ -3,6 +3,7 @@
 
 from iss import bam
 from iss import util
+from iss import download
 from iss import abundance
 from iss import generator
 from Bio import SeqIO
@@ -53,16 +54,24 @@ def generate_reads(args):
         sys.exit(1)
 
     try:  # try to read genomes and generate reads
-        assert os.stat(args.genomes).st_size != 0
-        f = open(args.genomes, 'r')
+        if args.genomes:
+            genome_file = args.genomes
+        elif args.ncbi and args.n_genomes:
+            genomes = download.ncbi(args.ncbi, args.n_genomes)
+            genome_file = download.to_fasta(genomes, args.output)
+        else:
+            logger.error('Invalid input')  # TODO better error handling here
+            sys.exit(1)
+
+        assert os.stat(genome_file).st_size != 0
+        f = open(genome_file, 'r')
         with f:  # count the number of records
             record_list = util.count_records(f)
-
     except IOError as e:
         logger.error('Failed to open genome(s) file:%s' % e)
         sys.exit(1)
     except AssertionError as e:
-        logger.error('Genome(s) file seems empty: %s' % args.genomes)
+        logger.error('Genome(s) file seems empty: %s' % genome_file)
         sys.exit(1)
     else:
         # read the abundance file
@@ -88,7 +97,7 @@ def generate_reads(args):
             logger.error('Could not get abundance')
             sys.exit(1)
 
-        f = open(args.genomes, 'r')  # re-opens the file
+        f = open(genome_file, 'r')  # re-opens the file
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
             for record in fasta_file:  # generate set of reads for each record
@@ -167,28 +176,46 @@ def main():
     )
 
     # arguments form the read generator module
-    parser_gen.add_argument(
+    param_logging = parser_gen.add_mutually_exclusive_group()
+    input_genomes = parser_gen.add_mutually_exclusive_group()
+    input_abundance = parser_gen.add_mutually_exclusive_group()
+    param_logging.add_argument(
         '--quiet',
         '-q',
         action='store_true',
         default=False,
         help='Disable info logging. (default: %(default)s).'
     )
-    parser_gen.add_argument(
+    param_logging.add_argument(
         '--debug',
         '-d',
         action='store_true',
         default=False,
         help='Enable debug logging. (default: %(default)s).'
     )
-    parser_gen.add_argument(
+    input_genomes.add_argument(
         '--genomes',
         '-g',
-        metavar='<.fasta>',
-        help='Input genome(s) from where the reads will originate (Required)',
-        required=True
+        metavar='<genomes.fasta>',
+        help='Input genome(s) from where the reads will originate'
+    )
+    input_genomes.add_argument(
+        '--ncbi',
+        '-k',
+        choices=['bacteria', 'viruses', 'archaea'],
+        metavar='<str>',
+        help='Download input genomes from RefSeq. Requires --n_genomes/-u\
+            option. Can be bacteria, viruses or archaea.'
     )
     parser_gen.add_argument(
+        '--n_genomes',
+        '-u',
+        type=int,
+        metavar='<int>',
+        help='How many genomes will be downloaded from RefSeq. Required if\
+            --refseq/-r is set.'
+    )
+    input_abundance.add_argument(
         '--abundance',
         '-a',
         choices=['uniform', 'halfnormal',
@@ -198,13 +225,11 @@ def main():
         help='abundance distribution (default: %(default)s). Can be uniform,\
             halfnormal, exponential, lognormal or zero-inflated-lognormal.'
     )
-    parser_gen.add_argument(
+    input_abundance.add_argument(
         '--abundance_file',
         '-b',
-        metavar='<.txt>',
-        help='abundance file for coverage calculations (default: %(default)s).\
-        If both --abundance and --abundance_file, the abundance file will be\
-        used instead of the distribution.'
+        metavar='<abundance.txt>',
+        help='abundance file for coverage calculations (default: %(default)s).'
     )
     parser_gen.add_argument(
         '--n_reads',
