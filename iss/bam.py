@@ -146,6 +146,7 @@ def to_model(bam_path, model, output):
 
     logger.info('Calculating mean insert size')
     insert_size = int(np.mean(insert_size_dist))
+    # insert_size = modeller.insert_size(insert_size_dist)
 
     logger.info('Calculating base quality distribution')
     hist_f = modeller.raw_qualities_to_histogram(qualities_forward, model)

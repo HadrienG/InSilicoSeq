@@ -10,6 +10,26 @@ import logging
 import numpy as np
 
 
+def insert_size(insert_size_distribution):
+    """Calculate cumulative distribution function from the raw insert size
+    distributin. Uses 1D kernel density estimation.
+
+    Args:
+        insert_size_distribution (list): list of insert sizes from aligned
+        reads
+
+    Returns:
+        TODO
+    """
+    kde = stats.gaussian_kde(
+        insert_size_distribution,
+        bw_method=0.2 / np.std(insert_size_distribution, ddof=1))
+    kde = kde.evaluate(range(10))
+    cdf = np.cumsum(kde)
+    cdf = cdf / cdf[-1]
+    return cdf
+
+
 def raw_qualities_to_histogram(qualities, model):
     """Calculate probabilities of each phred score at each position of the read
 
