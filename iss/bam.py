@@ -144,9 +144,9 @@ def to_model(bam_path, model, output):
                 elif read.is_read2:
                     indel_matrix_r[pos, indel] += 1
 
-    logger.info('Calculating mean insert size')
-    insert_size = int(np.mean(insert_size_dist))
-    # insert_size = modeller.insert_size(insert_size_dist)
+    logger.info('Calculating insert size distribution')
+    # insert_size = int(np.mean(insert_size_dist))
+    hist_insert_size = modeller.insert_size(insert_size_dist)
 
     logger.info('Calculating base quality distribution')
     hist_f = modeller.raw_qualities_to_histogram(qualities_forward, model)

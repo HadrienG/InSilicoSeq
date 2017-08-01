@@ -24,7 +24,10 @@ def insert_size(insert_size_distribution):
     kde = stats.gaussian_kde(
         insert_size_distribution,
         bw_method=0.2 / np.std(insert_size_distribution, ddof=1))
-    kde = kde.evaluate(range(10))
+    x_grid = np.linspace(
+        min(insert_size_distribution),
+        max(insert_size_distribution), 1000)
+    kde = kde.evaluate(x_grid)
     cdf = np.cumsum(kde)
     cdf = cdf / cdf[-1]
     return cdf
