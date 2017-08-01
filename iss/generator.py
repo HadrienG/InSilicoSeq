@@ -40,6 +40,7 @@ def reads(record, coverage, ErrorModel):
     n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
 
     for i in range(n_pairs):
+        insert_size = ErrorModel.random_insert_size()
         # generate the forward read
         try:  # a ref sequence has to be longer than 2 * read_length + i_size
             forward_start = random.randrange(
@@ -66,7 +67,7 @@ def reads(record, coverage, ErrorModel):
         forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
         # generate the reverse read
-        reverse_start = forward_end + ErrorModel.random_insert_size()
+        reverse_start = forward_end + insert_size
         reverse_end = reverse_start + read_length
         bounds = (reverse_start, reverse_end)
         # create a perfect read
