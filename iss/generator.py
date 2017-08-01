@@ -36,7 +36,6 @@ def reads(record, coverage, ErrorModel):
     sequence = record.seq
 
     read_length = ErrorModel.read_length
-    insert_size = ErrorModel.insert_size
 
     n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
 
@@ -67,7 +66,7 @@ def reads(record, coverage, ErrorModel):
         forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
         # generate the reverse read
-        reverse_start = forward_end + insert_size
+        reverse_start = forward_end + ErrorModel.random_insert_size()
         reverse_end = reverse_start + read_length
         bounds = (reverse_start, reverse_end)
         # create a perfect read

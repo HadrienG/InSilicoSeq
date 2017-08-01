@@ -185,5 +185,5 @@ def to_model(bam_path, model, output):
         ins_r,
         del_f,
         del_r,
-        insert_size,
+        hist_insert_size,
         output + '.npz')
