@@ -20,7 +20,7 @@ def test_basic_phred():
 
 def test_kde_phred():
     np.random.seed(42)
-    err_mod = kde.KDErrorModel('data/ecoli_kde.npz')
+    err_mod = kde.KDErrorModel('data/ecoli.npz')
     distribution = err_mod.gen_phred_scores(err_mod.quality_reverse)[:10]
     assert distribution == [10, 20, 40, 40, 30, 30, 30, 40, 40, 40]
 
