@@ -11,25 +11,6 @@ import sys
 import numpy as np
 
 
-def test_cdf_qualities():
-    quality_distribution = [
-        [40, 30],
-        [40, 30],
-        [20, 20],
-        [40, 10],
-        [10, 10]]
-
-    weights_first_base, weights_sec_base = \
-        modeller.raw_qualities_to_histogram(quality_distribution, 'cdf')
-    assert weights_first_base[1][10] == 0.2
-    assert weights_first_base[1][20] == 0.2
-    assert weights_first_base[1][-1] == 0.6
-
-    assert weights_sec_base[1][10] == 0.4
-    assert weights_sec_base[1][20] == 0.2
-    assert weights_sec_base[1][30] == 0.4
-
-
 def test_kde_qualities():
     quality_distribution = [
         [40, 30],
@@ -38,7 +19,7 @@ def test_kde_qualities():
         [40, 10],
         [10, 10]]
     cdf_first_base, cdf_sec_base = \
-        modeller.raw_qualities_to_histogram(quality_distribution, 'kde')
+        modeller.raw_qualities_to_histogram(quality_distribution)
     assert_almost_equals(cdf_first_base[10], 0.199999702)
     assert_almost_equals(cdf_first_base[20], 0.400000149)
     assert cdf_first_base[-1] == 1

@@ -29,11 +29,7 @@ def generate_reads(args):
     try:  # try to import and load the correct error model
         logger.info('Starting iss generate')
         logger.info('Using %s ErrorModel' % args.model)
-        if args.model == 'cdf':
-            from iss.error_models import cdf
-            npz = args.model_file
-            err_mod = cdf.CDFErrorModel(npz)
-        elif args.model == 'kde':
+        if args.model == 'kde':
             from iss.error_models import kde
             if args.model_file == 'HiSeq2500':
                 npz = os.path.join(
@@ -146,8 +142,8 @@ def model_from_bam(args):
         logger.error('Failed to import bam module: %s' % e)
         sys.exit(1)
     else:
-        logger.info('Using %s ErrorModel' % args.model)
-        bam.to_model(args.bam, args.model, args.output)
+        logger.info('Using KDE ErrorModel')
+        bam.to_model(args.bam, args.output)
         logger.info('Model generation complete')
 
 
@@ -204,7 +200,7 @@ def main():
         '-k',
         choices=['bacteria', 'viruses', 'archaea'],
         metavar='<str>',
-        help='Download input genomes from RefSeq. Requires --n_genomes/-u\
+        help='Download input genomes from NCBI. Requires --n_genomes/-u\
             option. Can be bacteria, viruses or archaea.'
     )
     parser_gen.add_argument(
@@ -212,8 +208,8 @@ def main():
         '-u',
         type=int,
         metavar='<int>',
-        help='How many genomes will be downloaded from RefSeq. Required if\
-            --refseq/-r is set.'
+        help='How many genomes will be downloaded from NCBI. Required if\
+            --ncbi/-k is set.'
     )
     input_abundance.add_argument(
         '--abundance',
@@ -243,10 +239,10 @@ def main():
         '--model',
         '-m',
         metavar='<str>',
-        choices=['cdf', 'kde', 'basic'],
+        choices=['cdf', 'basic'],
         default='kde',
         help='Error model. If not specified, using kernel density estimation \
-        (default: %(default)s). Can be kde, cdf or basic.'
+        (default: %(default)s). Can be kde or basic.'
     )
     parser_gen.add_argument(
         '--model_file',
@@ -289,15 +285,6 @@ def main():
         metavar='<bam>',
         help='aligned reads from which the model will be inferred (Required)',
         required=True
-    )
-    parser_mod.add_argument(
-        '--model',
-        '-m',
-        metavar='[\'cdf\', \'kde\']',
-        choices=['cdf', 'kde'],
-        default='kde',
-        help='Error model to generate. (default: %(default)s). \
-        Can be \'kde\' or \'cdf\''
     )
     parser_mod.add_argument(
         '--output',

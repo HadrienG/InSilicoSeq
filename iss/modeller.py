@@ -33,46 +33,32 @@ def insert_size(insert_size_distribution):
     return cdf
 
 
-def raw_qualities_to_histogram(qualities, model):
+def raw_qualities_to_histogram(qualities):
     """Calculate probabilities of each phred score at each position of the read
 
-    Generate numpy histograms (in cdf mode) or cumulative distribution
-    functions (in kde mode)
+    Generate cumulative distribution functions
 
-    Both contains the distribution/probabilities of the phred scores for
+    contains the distribution/probabilities of the phred scores for
     one position in all the reads. Returns a list of numpy arrays for each
     position
 
     Args:
         qualities (list): raw count of all phred scores
-        model (string): error model. Can be 'cdf' or 'kde'
 
     Returns:
-        list: if the mode is 'cdf', list of tuples. Tuples are (weights,
-            indices) representing an histogram. One tuple per base. If the
-            mode is 'kde', list of cumulative distribution functions.
-            One cdf per base. In both cases the list has the size of the read
-            length
+        list: list of cumulative distribution functions. One cdf per base.
+            the list has the size of the read length
     """
-    if model == 'cdf':  # construct a histogram for each pos, extract w and i
-        histograms = [np.histogram(
-            i, bins=range(0, 41)) for i in zip(*qualities)]
-        weights_list = []
-        for hist in histograms:
-            values, indices = hist
-            weights = values / np.sum(values)
-            weights_list.append((indices, weights))
-        return weights_list
-    elif model == 'kde':  # construct a cdf for each pos
-        quals = [i for i in zip(*qualities)]
-        cdfs_list = []
-        for q in quals:
-            kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
-            kde = kde.evaluate(range(41))
-            cdf = np.cumsum(kde)
-            cdf = cdf / cdf[-1]
-            cdfs_list.append(cdf)
-        return cdfs_list
+
+    quals = [i for i in zip(*qualities)]
+    cdfs_list = []
+    for q in quals:
+        kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
+        kde = kde.evaluate(range(41))
+        cdf = np.cumsum(kde)
+        cdf = cdf / cdf[-1]
+        cdfs_list.append(cdf)
+    return cdfs_list
 
 
 def dispatch_subst(base, read, read_has_indels):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss.error_models import ErrorModel, basic, cdf, kde
+from iss.error_models import ErrorModel, basic, kde
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
@@ -16,13 +16,6 @@ def test_basic_phred():
 
     distribution = err_mod.gen_phred_scores(20)[:10]
     assert distribution == [23, 19, 25, 40, 19, 19, 40, 26, 18, 23]
-
-
-def test_cdf_phred():
-    np.random.seed(42)
-    err_mod = cdf.CDFErrorModel('data/ecoli_cdf.npz')
-    distribution = err_mod.gen_phred_scores(err_mod.quality_reverse)[:10]
-    assert distribution == [11, 21, 40, 40, 31, 31, 31, 40, 40, 40]
 
 
 def test_kde_phred():
