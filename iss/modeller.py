@@ -179,7 +179,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                 T = (
                     ['A', 'C', 'G'],
                     [count / sums['T'] for
-                        count in substitution_matrix[pos][1:4]])
+                        count in substitution_matrix[pos][5:8]])
             except FloatingPointError as e:
                 logger.debug(e, exc_info=True)
                 T = (['A', 'C', 'G'], [1/3, 1/3, 1/3])
@@ -187,7 +187,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                 C = (
                     ['A', 'T', 'G'],
                     [count / sums['C'] for
-                        count in substitution_matrix[pos][1:4]])
+                        count in substitution_matrix[pos][9:12]])
             except FloatingPointError as e:
                 logger.debug(e, exc_info=True)
                 C = (['A', 'T', 'G'], [1/3, 1/3, 1/3])
@@ -195,7 +195,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                 G = (
                     ['A', 'T', 'C'],
                     [count / sums['G'] for
-                        count in substitution_matrix[pos][1:4]])
+                        count in substitution_matrix[pos][13:]])
             except FloatingPointError as e:
                 logger.debug(e, exc_info=True)
                 G = (['A', 'T', 'C'], [1/3, 1/3, 1/3])
