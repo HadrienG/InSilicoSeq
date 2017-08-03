@@ -33,7 +33,7 @@ class KDErrorModel(ErrorModel):
         self.error_profile = self.load_npz(npz_path, 'kde')
 
         self.read_length = self.error_profile['read_length']
-        self.insert_size = self.error_profile['insert_size']
+        self.i_size_cdf = self.error_profile['insert_size']
 
         self.quality_forward = self.error_profile['quality_hist_forward']
         self.quality_reverse = self.error_profile['quality_hist_reverse']
@@ -63,3 +63,15 @@ class KDErrorModel(ErrorModel):
             random_quality = np.searchsorted(cdf, np.random.rand())
             phred_list.append(random_quality)
         return phred_list
+
+    def random_insert_size(self):
+        """Draw a random insert size from the insert size cdf
+
+        Args:
+            i_size_cdf: cumulative distribution function of the insert size
+
+        Returns:
+            int: an insert size
+        """
+        insert_size = np.searchsorted(self.i_size_cdf, np.random.rand())
+        return insert_size

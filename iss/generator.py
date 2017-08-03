@@ -36,11 +36,11 @@ def reads(record, coverage, ErrorModel):
     sequence = record.seq
 
     read_length = ErrorModel.read_length
-    insert_size = ErrorModel.insert_size
 
     n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
 
     for i in range(n_pairs):
+        insert_size = ErrorModel.random_insert_size()
         # generate the forward read
         try:  # a ref sequence has to be longer than 2 * read_length + i_size
             forward_start = random.randrange(

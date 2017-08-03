@@ -88,7 +88,7 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
         sys.exit(1)
 
 
-def to_model(bam_path, model, output):
+def to_model(bam_path, output):
     """from a bam file, write all variables needed for modelling reads in
     a .npz model file
 
@@ -144,12 +144,13 @@ def to_model(bam_path, model, output):
                 elif read.is_read2:
                     indel_matrix_r[pos, indel] += 1
 
-    logger.info('Calculating mean insert size')
-    insert_size = int(np.mean(insert_size_dist))
+    logger.info('Calculating insert size distribution')
+    # insert_size = int(np.mean(insert_size_dist))
+    hist_insert_size = modeller.insert_size(insert_size_dist)
 
     logger.info('Calculating base quality distribution')
-    hist_f = modeller.raw_qualities_to_histogram(qualities_forward, model)
-    hist_r = modeller.raw_qualities_to_histogram(qualities_reverse, model)
+    hist_f = modeller.raw_qualities_to_histogram(qualities_forward)
+    hist_r = modeller.raw_qualities_to_histogram(qualities_reverse)
     read_length = len(hist_f)
     # now we can resize the substitution and indel matrices before
     # doing operations on them
@@ -174,7 +175,7 @@ def to_model(bam_path, model, output):
         indel_matrix_r, read_length)
 
     write_to_file(
-        model,
+        'kde',
         read_length,
         hist_f,
         hist_r,
@@ -184,5 +185,5 @@ def to_model(bam_path, model, output):
         ins_r,
         del_f,
         del_r,
-        insert_size,
+        hist_insert_size,
         output + '.npz')
