@@ -120,9 +120,25 @@ def to_model(bam_path, output):
 
         # get qualities
         if read.is_read1:
-            qualities_forward.append(read.query_qualities)
+            # get mean quality too
+            quality_means = []
+            read_quality = read.query_qualities
+            mean_quality = np.mean(read_quality)
+
+            quality_plus_mean = [
+                (quality, mean_quality) for quality in read_quality]
+            qualities_forward.append(np.asarray(quality_plus_mean))
+            # qualities_forward.append(read.query_qualities)
         elif read.is_read2:
-            qualities_reverse.append(read.query_qualities)
+            # get mean quality too
+            quality_means = []
+            read_quality = read.query_qualities
+            mean_quality = np.mean(read_quality)
+
+            quality_plus_mean = [
+                (quality, mean_quality) for quality in read_quality]
+            qualities_reverse.append(np.asarray(quality_plus_mean))
+            # qualities_reverse.append(read.query_qualities)
 
         # get mismatches
         alignment = read.get_aligned_pairs(
@@ -149,8 +165,8 @@ def to_model(bam_path, output):
     hist_insert_size = modeller.insert_size(insert_size_dist)
 
     logger.info('Calculating base quality distribution')
-    hist_f = modeller.raw_qualities_to_histogram(qualities_forward)
-    hist_r = modeller.raw_qualities_to_histogram(qualities_reverse)
+    hist_f = modeller.qualities_2d(qualities_forward)
+    hist_r = modeller.qualities_2d(qualities_reverse)
     read_length = len(hist_f)
     # now we can resize the substitution and indel matrices before
     # doing operations on them

@@ -61,6 +61,44 @@ def raw_qualities_to_histogram(qualities):
     return cdfs_list
 
 
+def qualities_2d(qualities):
+    """Test function that calculates 2d cumulative density functions for
+    each position
+
+    EXPERIMENTAL
+
+    Args:
+        qualities (list): raw count of all phred scores and mean sequence
+            qualities
+
+    Returns:
+        list: list of cumulative distribution functions. One cdf per base.
+            the list has the size of the read length
+    """
+    qualities = np.asarray(qualities[:10000])  # TODO random sampling in bam.py
+    quals = np.stack(qualities, axis=1)
+    cdfs_list = []
+    for q in quals:
+        x = y = np.linspace(0, 40, 100)
+        x, y = np.meshgrid(x, y)
+        positions = np.stack([x.ravel(), y.ravel()])
+
+        kde = stats.gaussian_kde(q.T)
+        kde = kde.evaluate(positions)
+        pdf = np.reshape(kde, x.shape)
+        # Generate the bins for each axis
+        x_bins = np.linspace(0, 40, pdf.shape[0]+1)
+        y_bins = np.linspace(0, 40, pdf.shape[1]+1)
+        # Find the middle point for each bin
+        x_bin_midpoints = x_bins[:-1] + np.diff(x_bins) / 2
+        y_bin_midpoints = y_bins[:-1] + np.diff(y_bins) / 2
+        # Calculate the Cumulative Distribution Function (cdf) from the pdf
+        cdf = np.cumsum(pdf.ravel())
+        cdf = cdf / cdf[-1]
+        cdfs_list.append(cdf)
+    return cdfs_list
+
+
 def dispatch_subst(base, read, read_has_indels):
     """Return the x and y position of a substitution to be inserted in the
     substitution matrix.
