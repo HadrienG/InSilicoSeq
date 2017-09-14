@@ -39,14 +39,16 @@ def read_bam(bam_file):
                     yield read
 
 
-def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
-                  ins_r, del_f, del_r, i_size, output):
+def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
+                  sub_f, sub_r, ins_f, ins_r, del_f, del_r, i_size, output):
     """Write variables to a .npz file
 
     Args:
         model (string): the type of error model
         read_length (int): read length of the dataset
         insert_size (int): mean insert size of the aligned reads
+        mean_count_forward (list): list of mean bin sizes
+        mean_count_reverse (list): list of mean bin sizes
         quality_hist_forward (list): list of weights, indices if model is
             cdf, list of cumulative distribution functions if model is kde
         quality_hist_reverse (list): list of weights, indices if model is
@@ -74,6 +76,8 @@ def write_to_file(model, read_length, hist_f, hist_r, sub_f, sub_r, ins_f,
             model=model,
             read_length=read_length,
             insert_size=i_size,
+            mean_count_forward=mean_f,
+            mean_count_reverse=mean_r,
             quality_hist_forward=hist_f,
             quality_hist_reverse=hist_r,
             subst_choices_forward=sub_f,
@@ -164,10 +168,18 @@ def to_model(bam_path, output):
     # insert_size = int(np.mean(insert_size_dist))
     hist_insert_size = modeller.insert_size(insert_size_dist)
 
-    logger.info('Calculating base quality distribution')
-    hist_f = modeller.qualities_2d(qualities_forward)
-    hist_r = modeller.qualities_2d(qualities_reverse)
-    read_length = len(hist_f)
+    logger.info('Calculating mean and base quality distribution')
+    quality_bins_f = modeller.divide_qualities_into_bins(qualities_forward)
+    quality_bins_r = modeller.divide_qualities_into_bins(qualities_reverse)
+
+    # getting distribution of mean sequence quality
+    mean_f = [len(quality_bin) for quality_bin in quality_bins_f]
+    mean_r = [len(quality_bin) for quality_bin in quality_bins_r]
+
+    hists_f = modeller.quality_bins_to_histogram(quality_bins_f)
+    hists_r = modeller.quality_bins_to_histogram(quality_bins_r)
+    read_length = len(hists_f[-1])  # the first low quality bin might be empty
+
     # now we can resize the substitution and indel matrices before
     # doing operations on them
     subst_matrix_f.resize([read_length, 16])
@@ -193,8 +205,10 @@ def to_model(bam_path, output):
     write_to_file(
         'kde',
         read_length,
-        hist_f,
-        hist_r,
+        mean_f,
+        mean_r,
+        hists_f,
+        hists_r,
         subst_f,
         subst_r,
         ins_f,
