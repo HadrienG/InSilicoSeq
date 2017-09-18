@@ -30,7 +30,7 @@ def generate_reads(args):
         logger.info('Starting iss generate')
         logger.info('Using %s ErrorModel' % args.model)
         if args.model == 'kde':
-            from iss.error_models import kde
+            from iss.error_models import kde, two_dim
             if args.model_file == 'HiSeq2500':
                 npz = os.path.join(
                     os.path.dirname(__file__),
@@ -41,7 +41,7 @@ def generate_reads(args):
                     'profiles/MiSeq')
             else:
                 npz = args.model_file
-            err_mod = kde.KDErrorModel(npz)
+            err_mod = two_dim.MultiKDErrorModel(npz)
         elif args.model == 'basic':
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
