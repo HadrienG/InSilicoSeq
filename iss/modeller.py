@@ -33,7 +33,7 @@ def insert_size(insert_size_distribution):
     return cdf
 
 
-def divide_qualities_into_bins(qualities, n_bins=10):
+def divide_qualities_into_bins(qualities, n_bins=4):
     """Divides the raw quality scores in bins according to the mean phred
     quality of the sequence they come from
 

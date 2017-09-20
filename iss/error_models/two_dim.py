@@ -76,8 +76,8 @@ class MultiKDErrorModel(ErrorModel):
         quality_bin = np.searchsorted(norm_mean, np.random.rand())
         # downgrades index out of bound (ex rand is 1, last bin in searchsorted
         # is 0.95) to best quality bin
-        if quality_bin == 10:
-            quality_bin = 9
+        if quality_bin == 4:
+            quality_bin = 3
 
         cdfs_bin = cdfs[quality_bin]
 
