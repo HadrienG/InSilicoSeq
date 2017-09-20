@@ -46,7 +46,7 @@ class KDErrorModel(ErrorModel):
         self.del_for = self.error_profile['del_forward']
         self.del_rev = self.error_profile['del_reverse']
 
-    def gen_phred_scores(self, cdfs):
+    def gen_phred_scores(self, cdfs, orientation):
         """Generate a list of phred scores based on cdfs
 
         For each position, draw a phred score from the cdf and append to the
