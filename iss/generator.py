@@ -9,13 +9,15 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
+from Bio.SeqUtils import GC
 
 import sys
 import random
 import logging
+import numpy as np
 
 
-def reads(record, coverage, ErrorModel):
+def reads(record, coverage, ErrorModel, gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     Each read is a SeqRecord object
@@ -26,6 +28,8 @@ def reads(record, coverage, ErrorModel):
         record (SeqRecord): sequence or genome of reference
         coverage (float): desired coverage of the genome
         ErrorModel (ErrorModel): an ErrorModel class
+        gc_bias (bool): if set, the function may skip a read due to abnormal
+            GC content
 
     Yields:
         tuple: tuple containg a forward read and a reverse
@@ -84,7 +88,15 @@ def reads(record, coverage, ErrorModel):
         reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
         reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
 
-        yield(forward, reverse)
+        if gc_bias:
+            stiched_seq = forward.seq + reverse.seq
+            gc_content = GC(stiched_seq)
+            if 40 < gc_content < 60:
+                yield(forward, reverse)
+            elif np.random.rand() > 0.95:
+                continue
+        else:
+            yield(forward, reverse)
 
 
 def to_fastq(generator, output):

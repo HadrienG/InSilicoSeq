@@ -170,6 +170,7 @@ class ErrorModel(object):
         position = 0
         for nucl in range(self.read_length - 1):
             if mutable_seq[nucl] == 'N':
+                position += 1
                 continue
             for nucl_to_insert, prob in insertions[position].items():  # ins
                 if random.random() < prob:

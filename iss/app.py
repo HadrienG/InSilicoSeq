@@ -116,7 +116,8 @@ def generate_reads(args):
                     read_gen = generator.reads(
                         record,
                         coverage,
-                        err_mod
+                        err_mod,
+                        args.gc_bias
                         )
 
                     generator.to_fastq(read_gen, args.output)
@@ -253,6 +254,14 @@ def main():
         error model instead (default: %(default)s). Use \'HiSeq2500\' or \
         \'MiSeq\'for a pre-computed error model provided with the software \
         (require --model kde)'
+    )
+    parser_gen.add_argument(
+        '--gc_bias',
+        '-c',
+        action='store_true',
+        default=False,
+        help='If set, may fail to sequence reads with abnormal GC content. \
+        Doesn\'t guarantee --n_reads (default: %(default)s)'
     )
     parser_gen.add_argument(
         '--output',
