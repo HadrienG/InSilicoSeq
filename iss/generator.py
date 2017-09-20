@@ -93,7 +93,9 @@ def reads(record, coverage, ErrorModel, gc_bias=False):
             gc_content = GC(stiched_seq)
             if 40 < gc_content < 60:
                 yield(forward, reverse)
-            elif np.random.rand() > 0.95:
+            elif np.random.rand() < 0.90:
+                yield(forward, reverse)
+            else:
                 continue
         else:
             yield(forward, reverse)
