@@ -14,14 +14,15 @@ def test_basic_phred():
     np.random.seed(42)
     err_mod = basic.BasicErrorModel()
 
-    distribution = err_mod.gen_phred_scores(20)[:10]
+    distribution = err_mod.gen_phred_scores(20, 'forward')[:10]
     assert distribution == [23, 19, 25, 40, 19, 19, 40, 26, 18, 23]
 
 
 def test_kde_phred():
     np.random.seed(42)
     err_mod = kde.KDErrorModel('data/ecoli.npz')
-    distribution = err_mod.gen_phred_scores(err_mod.quality_reverse)[:10]
+    distribution = err_mod.gen_phred_scores(err_mod.quality_reverse,
+                                            'forward')[:10]
     assert distribution == [10, 20, 40, 40, 30, 30, 30, 40, 40, 40]
 
 

@@ -33,6 +33,58 @@ def insert_size(insert_size_distribution):
     return cdf
 
 
+def divide_qualities_into_bins(qualities, n_bins=4):
+    """Divides the raw quality scores in bins according to the mean phred
+    quality of the sequence they come from
+
+    Args:
+        qualities (list): raw count of all the phred scores and mean sequence
+            quality
+        n_bins (int): number of bins to create (default: 4)
+    """
+    bin_lists = [[] for _ in range(n_bins)]  # create list of `n_bins` list
+    ranges = np.split(np.array(range(40)), n_bins)
+    for quality in qualities:
+        mean = int(quality[0][1])  # mean is at 1 and same regardless of b pos
+        which_array = 0
+        for array in ranges:
+            if mean in array:
+                read = [q[0] for q in quality]
+                bin_lists[which_array].append(read)
+            which_array += 1
+    return bin_lists
+
+
+def quality_bins_to_histogram(bin_lists):
+    """Test function that calculates pseudo 2d cumulative density functions for
+    each position
+
+    Generate cumulative distribution functions for a number of mean quality
+    bins
+
+    EXPERIMENTAL
+
+    Args:
+        bins_lists (list): list of list containing raw count of all phred
+        scores
+
+    Returns:
+        list
+    """
+    logger = logging.getLogger(__name__)
+    cdf_bins = []
+    i = 0
+    for quality_bin in bin_lists:
+        if len(quality_bin) > 0:
+            cdfs_list = raw_qualities_to_histogram(quality_bin)
+            cdf_bins.append(cdfs_list)
+        else:
+            logger.debug('Mean quality bin #%s of length 0. Skipping' % i)
+            cdf_bins.append([])
+        i += 1
+    return cdf_bins
+
+
 def raw_qualities_to_histogram(qualities):
     """Calculate probabilities of each phred score at each position of the read
 
@@ -49,11 +101,18 @@ def raw_qualities_to_histogram(qualities):
         list: list of cumulative distribution functions. One cdf per base.
             the list has the size of the read length
     """
+    logger = logging.getLogger(__name__)
 
     quals = [i for i in zip(*qualities)]
     cdfs_list = []
     for q in quals:
-        kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
+        try:
+            kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
+        except np.linalg.linalg.LinAlgError as e:
+            logger.debug('np.std of %s is zero: %s' % (q, e))
+            q = list(q)
+            q[-1] += 1
+            kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
         kde = kde.evaluate(range(41))
         cdf = np.cumsum(kde)
         cdf = cdf / cdf[-1]

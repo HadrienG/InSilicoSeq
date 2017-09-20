@@ -36,7 +36,7 @@ class BasicErrorModel(ErrorModel):
             'A': 0.0, 'T': 0.0, 'C': 0.0, 'G': 0.0
         } for _ in range(125)]
 
-    def gen_phred_scores(self, mean_quality):
+    def gen_phred_scores(self, mean_quality, orientation):
         """Generate a normal distribution, transform to phred scores
 
         Generate a list of phred score according to a normal distribution

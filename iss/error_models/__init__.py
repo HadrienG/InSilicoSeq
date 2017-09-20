@@ -60,10 +60,10 @@ class ErrorModel(object):
         """
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_forward)
+                self.quality_forward, 'forward')
         elif orientation == 'reverse':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_reverse)
+                self.quality_reverse, 'reverse')
         return record
 
     def mut_sequence(self, record, orientation):
