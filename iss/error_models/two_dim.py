@@ -17,8 +17,6 @@ import numpy as np
 class MultiKDErrorModel(ErrorModel):
     """KDErrorModel class.
 
-    EXPERIMENTAL
-
     Error model based on an .npz files derived from read alignments.
     the npz file must contain:
 

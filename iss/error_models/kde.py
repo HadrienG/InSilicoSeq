@@ -17,6 +17,8 @@ import numpy as np
 class KDErrorModel(ErrorModel):
     """KDErrorModel class.
 
+    Legacy 1D KDE error model
+
     Error model based on an .npz files derived from read alignments.
     the npz file must contain:
 
