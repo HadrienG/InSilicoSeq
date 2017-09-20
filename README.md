@@ -25,8 +25,7 @@ To install InSilicoSeq, type the following in your terminal:
 Alternatively, with docker:
 
 ```shell
-docker pull hadrieng/insilicoseq:0.3.0
-docker run -it --rm hadrieng/insilicoseq:0.3.0 iss
+docker pull hadrieng/insilicoseq:0.4.0
 ```
 
 ## Usage
@@ -59,6 +58,9 @@ For 10 million reads and a custom error model:
 iss generate --genomes genomes.fasta -n 10000000 --model_file my_model.npz \
 --output my_model_reads
 ```
+
+For more examples and a full list of options, please refer to the full
+[documentation](http://insilicoseq.readthedocs.io)
 
 ### Generate reads without input genomes
 
