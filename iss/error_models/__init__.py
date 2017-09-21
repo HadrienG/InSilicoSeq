@@ -169,7 +169,7 @@ class ErrorModel(object):
         mutable_seq = record.seq.tomutable()
         position = 0
         for nucl in range(self.read_length - 1):
-            if mutable_seq[nucl] == 'N':
+            if mutable_seq[nucl] in 'RYWSMKHBVDN':
                 position += 1
                 continue
             for nucl_to_insert, prob in insertions[position].items():  # ins
