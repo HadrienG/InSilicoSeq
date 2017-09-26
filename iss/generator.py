@@ -43,62 +43,81 @@ def reads(record, coverage, ErrorModel, gc_bias=False):
 
     n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
 
-    for i in range(n_pairs):
-        insert_size = ErrorModel.random_insert_size()
-        # generate the forward read
-        try:  # a ref sequence has to be longer than 2 * read_length + i_size
-            forward_start = random.randrange(
-                0, len(sequence) - (2 * read_length + insert_size))
-        except ValueError as e:
-            logger.error(
-                '%s too small for this ErrorModel:%s' % (record.id, e))
-            sys.exit(1)
+    # generator version
+    # for i in range(n_pairs):
+    #     yield simulate_read(record, ErrorModel, i)
 
-        forward_end = forward_start + read_length
-        bounds = (forward_start, forward_end)
-        # create a perfect read
-        forward = SeqRecord(
-            Seq(str(sequence[forward_start:forward_end]),
-                IUPAC.unambiguous_dna
-                ),
-            id='%s_%s_1' % (header, i),
-            description=''
-        )
-        # add the indels, the qual scores and modify the record accordingly
-        forward.seq = ErrorModel.introduce_indels(
-            forward, 'forward', sequence, bounds)
-        forward = ErrorModel.introduce_error_scores(forward, 'forward')
-        forward.seq = ErrorModel.mut_sequence(forward, 'forward')
+    # list version
+    read_tuple_list = [simulate_read(
+        record, ErrorModel, i) for i in range(n_pairs)]
+    return read_tuple_list
+# if gc_bias:
+#     stiched_seq = forward.seq + reverse.seq
+#     gc_content = GC(stiched_seq)
+#     if 40 < gc_content < 60:
+#         yield(forward, reverse)
+#     elif np.random.rand() < 0.90:
+#         yield(forward, reverse)
+#     else:
+#         continue
+# else:
+#     yield(forward, reverse)
 
-        # generate the reverse read
-        reverse_start = forward_end + insert_size
-        reverse_end = reverse_start + read_length
-        bounds = (reverse_start, reverse_end)
-        # create a perfect read
-        reverse = SeqRecord(
-            Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
-                IUPAC.unambiguous_dna
-                ),
-            id='%s_%s_2' % (header, i),
-            description=''
-        )
-        # add the indels, the qual scores and modify the record accordingly
-        reverse.seq = ErrorModel.introduce_indels(
-            reverse, 'reverse', sequence, bounds)
-        reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
-        reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
 
-        if gc_bias:
-            stiched_seq = forward.seq + reverse.seq
-            gc_content = GC(stiched_seq)
-            if 40 < gc_content < 60:
-                yield(forward, reverse)
-            elif np.random.rand() < 0.90:
-                yield(forward, reverse)
-            else:
-                continue
-        else:
-            yield(forward, reverse)
+def simulate_read(record, ErrorModel, i):
+    """From a sequence record and an ErrorModel, generate a read pair
+
+    EXPERIMENTAL. SHOULD BE MULTI-THREADABLE
+    """
+    sequence = record.seq
+    header = record.id
+
+    read_length = ErrorModel.read_length
+    insert_size = ErrorModel.random_insert_size()
+    # generate the forward read
+    try:  # a ref sequence has to be longer than 2 * read_length + i_size
+        forward_start = random.randrange(
+            0, len(record.seq) - (2 * read_length + insert_size))
+    except ValueError as e:
+        logger.error(
+            '%s too small for this ErrorModel:%s' % (record.id, e))
+        sys.exit(1)
+
+    forward_end = forward_start + read_length
+    bounds = (forward_start, forward_end)
+    # create a perfect read
+    forward = SeqRecord(
+        Seq(str(sequence[forward_start:forward_end]),
+            IUPAC.unambiguous_dna
+            ),
+        id='%s_%s_1' % (header, i),
+        description=''
+    )
+    # add the indels, the qual scores and modify the record accordingly
+    forward.seq = ErrorModel.introduce_indels(
+        forward, 'forward', sequence, bounds)
+    forward = ErrorModel.introduce_error_scores(forward, 'forward')
+    forward.seq = ErrorModel.mut_sequence(forward, 'forward')
+
+    # generate the reverse read
+    reverse_start = forward_end + insert_size
+    reverse_end = reverse_start + read_length
+    bounds = (reverse_start, reverse_end)
+    # create a perfect read
+    reverse = SeqRecord(
+        Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
+            IUPAC.unambiguous_dna
+            ),
+        id='%s_%s_2' % (header, i),
+        description=''
+    )
+    # add the indels, the qual scores and modify the record accordingly
+    reverse.seq = ErrorModel.introduce_indels(
+        reverse, 'reverse', sequence, bounds)
+    reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
+    reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
+
+    return (forward, reverse)
 
 
 def to_fastq(generator, output):

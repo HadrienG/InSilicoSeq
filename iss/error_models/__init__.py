@@ -19,7 +19,8 @@ class ErrorModel(object):
     the functions that are shared by all ErrorModel
     """
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
+        self.logger = 'bla'
+        # self.logger = logging.getLogger(__name__)
 
     def load_npz(self, npz_path, model):
         """load the error profile .npz file
@@ -36,15 +37,16 @@ class ErrorModel(object):
             error_profile = np.load(npz_path)
             assert error_profile['model'] == model
         except OSError as e:
-            self.logger.error('Failed to read ErrorModel file: %s' % e)
+            # self.logger.error('Failed to read ErrorModel file: %s' % e)
             sys.exit(1)
         except AssertionError as e:
-            self.logger.error(
-                'Trying to load a %s ErrorModel in %s mode' % (
-                    error_profile['model'], model))
+            # self.logger.error(
+            #     'Trying to load a %s ErrorModel in %s mode' % (
+            #         error_profile['model'], model))
             sys.exit(1)
         else:
-            self.logger.info('Loaded ErrorProfile: %s' % npz_path)
+            # self.logger.info('Loaded ErrorProfile: %s' % npz_path)
+            print('bla')
         return error_profile
 
     def introduce_error_scores(self, record, orientation):

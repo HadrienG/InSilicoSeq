@@ -50,6 +50,8 @@ class MultiKDErrorModel(ErrorModel):
         self.del_for = self.error_profile['del_forward']
         self.del_rev = self.error_profile['del_reverse']
 
+        self.error_profile = ''  # discard the error profile after reading
+
     def gen_phred_scores(self, cdfs, orientation):
         """Generate a list of phred scores based on cdfs and mean bins
 

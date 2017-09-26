@@ -7,6 +7,7 @@ from iss import download
 from iss import abundance
 from iss import generator
 from Bio import SeqIO
+from joblib import Parallel, delayed
 
 import os
 import sys
@@ -112,15 +113,18 @@ def generate_reads(args):
                         err_mod.read_length,
                         genome_size
                         )
+                    # n_pairs = int(round(
+                    #     (coverage * len(record.seq)) / err_mod.read_length) / 2)
 
-                    read_gen = generator.reads(
+                    # read_list = Parallel(n_jobs=-1)(
+                    #     delayed(generator.simulate_read)(
+                    #         record, err_mod, i) for i in range(n_pairs))
+                    read_list = generator.reads(
                         record,
                         coverage,
-                        err_mod,
-                        args.gc_bias
-                        )
-
-                    generator.to_fastq(read_gen, args.output)
+                        err_mod
+                    )
+                    generator.to_fastq(read_list, args.output)
         logger.info('Read generation complete')
 
 
