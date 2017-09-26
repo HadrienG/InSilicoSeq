@@ -113,17 +113,17 @@ def generate_reads(args):
                         err_mod.read_length,
                         genome_size
                         )
-                    # n_pairs = int(round(
-                    #     (coverage * len(record.seq)) / err_mod.read_length) / 2)
+                    n_pairs = int(round(
+                        (coverage * len(record.seq)) / err_mod.read_length) / 2)
 
-                    # read_list = Parallel(n_jobs=-1)(
-                    #     delayed(generator.simulate_read)(
-                    #         record, err_mod, i) for i in range(n_pairs))
-                    read_list = generator.reads(
-                        record,
-                        coverage,
-                        err_mod
-                    )
+                    read_list = Parallel(n_jobs=2)(
+                        delayed(generator.simulate_read)(
+                            record, err_mod, i) for i in range(n_pairs))
+                    # read_list = generator.reads(
+                    #     record,
+                    #     coverage,
+                    #     err_mod
+                    # )
                     generator.to_fastq(read_list, args.output)
         logger.info('Read generation complete')
 
