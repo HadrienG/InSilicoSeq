@@ -116,14 +116,26 @@ def generate_reads(args):
                     n_pairs = int(round(
                         (coverage * len(record.seq)) / err_mod.read_length) / 2)
 
-                    read_list = Parallel(n_jobs=2)(
-                        delayed(generator.simulate_read)(
-                            record, err_mod, i) for i in range(n_pairs))
+                    cpus = 4
+                    # will correct approximation later
+                    n_pairs_per_cpu = int(round(n_pairs / 4))
+                    print('reads per cpu %s' % n_pairs_per_cpu)
+                    # processes = [mp.Process(
+                    #   target = simulate_N_reads,
+                    #       args = (N, output)) for x in range(args.threads)]
+
+                    read_list = Parallel(n_jobs=cpus)(
+                        delayed(generator.reads)(
+                            record, err_mod,
+                            n_pairs_per_cpu) for i in range(cpus))
                     # read_list = generator.reads(
                     #     record,
                     #     coverage,
                     #     err_mod
                     # )
+                    logger.info(
+                        'Writing reads for record %s to %s'
+                        % (record.id, args.output))
                     generator.to_fastq(read_list, args.output)
         logger.info('Read generation complete')
 

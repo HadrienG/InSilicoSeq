@@ -17,7 +17,7 @@ import logging
 import numpy as np
 
 
-def reads(record, coverage, ErrorModel, gc_bias=False):
+def reads(record, ErrorModel, n_pairs, gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     Each read is a SeqRecord object
@@ -41,7 +41,7 @@ def reads(record, coverage, ErrorModel, gc_bias=False):
 
     read_length = ErrorModel.read_length
 
-    n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
+    # n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
 
     # generator version
     # for i in range(n_pairs):
@@ -50,6 +50,8 @@ def reads(record, coverage, ErrorModel, gc_bias=False):
     # list version
     read_tuple_list = [simulate_read(
         record, ErrorModel, i) for i in range(n_pairs)]
+
+    print('generated %s reads in generator.py' % len(read_tuple_list))
     return read_tuple_list
 # if gc_bias:
 #     stiched_seq = forward.seq + reverse.seq
@@ -143,6 +145,8 @@ def to_fastq(generator, output):
         sys.exit(1)
     else:
         with f, r:
-            for read_tuple in generator:
-                SeqIO.write(read_tuple[0], f, 'fastq-sanger')
-                SeqIO.write(read_tuple[1], r, 'fastq-sanger')
+            # read_list = [item for sublist in generator for item in sublist]
+            for sublist in generator:
+                for read_tuple in sublist:
+                    SeqIO.write(read_tuple[0], f, 'fastq-sanger')
+                    SeqIO.write(read_tuple[1], r, 'fastq-sanger')
