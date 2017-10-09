@@ -94,6 +94,7 @@ def generate_reads(args):
             logger.error('Could not get abundance')
             sys.exit(1)
 
+        temp_file_list = []  # list holding the name prefix of all temp files
         f = open(genome_file, 'r')  # re-opens the file
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
@@ -114,29 +115,26 @@ def generate_reads(args):
                         genome_size
                         )
                     n_pairs = int(round(
-                        (coverage * len(record.seq)) / err_mod.read_length) / 2)
+                        (coverage *
+                            len(record.seq)) / err_mod.read_length) / 2)
 
                     cpus = 4
                     # will correct approximation later
                     n_pairs_per_cpu = int(round(n_pairs / cpus))
-                    print('reads per cpu %s' % n_pairs_per_cpu)
-                    # processes = [mp.Process(
-                    #   target = simulate_N_reads,
-                    #       args = (N, output)) for x in range(args.threads)]
+                    logger.debug(
+                        'Generating %s read pairs / cpu (%s total)'
+                        % (n_pairs_per_cpu, n_pairs))
 
-                    read_list = Parallel(n_jobs=cpus)(
+                    record_file_name_list = Parallel(n_jobs=cpus)(
                         delayed(generator.reads)(
                             record, err_mod,
                             n_pairs_per_cpu, i) for i in range(cpus))
-                    # read_list = generator.reads(
-                    #     record,
-                    #     coverage,
-                    #     err_mod
-                    # )
-                    # logger.info(
-                    #     'Writing reads for record %s to %s'
-                    #     % (record.id, args.output))
-                    # generator.to_fastq(read_list, args.output)
+                    temp_file_list.extend(record_file_name_list)
+
+        logger.info('Stitching temporary files together')
+        generator.concatenate(temp_file_list, args.output)
+        logger.info('Cleaning up')
+        generator.cleanup(temp_file_list)
         logger.info('Read generation complete')
 
 

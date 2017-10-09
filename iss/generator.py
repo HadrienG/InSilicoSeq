@@ -10,7 +10,9 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
 from Bio.SeqUtils import GC
+from shutil import copyfileobj
 
+import os
 import sys
 import random
 import logging
@@ -36,21 +38,14 @@ def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
             read
     """
     logger = logging.getLogger(__name__)
-    header = record.id
-    sequence = record.seq
 
-    read_length = ErrorModel.read_length
-
-    # list version
     read_tuple_list = [simulate_read(
         record, ErrorModel, i) for i in range(n_pairs)]
 
-    print(
-        'generated %s reads in generator.py %s'
-        % (len(read_tuple_list), cpu_number))
-    to_fastq(read_tuple_list, '.iss.tmp.%s.%s' % (record.id, cpu_number))
-    print('wrote reads to files %s' % cpu_number)
-    # return read_tuple_list
+    temp_file_name = '.iss.tmp.%s.%s' % (record.id, cpu_number)
+    to_fastq(read_tuple_list, temp_file_name)
+
+    return temp_file_name
 # if gc_bias:
 #     stiched_seq = forward.seq + reverse.seq
 #     gc_content = GC(stiched_seq)
@@ -143,7 +138,46 @@ def to_fastq(generator, output):
         sys.exit(1)
     else:
         with f, r:
-            # read_list = [item for sublist in generator for item in sublist]
             for read_tuple in generator:
                 SeqIO.write(read_tuple[0], f, 'fastq-sanger')
                 SeqIO.write(read_tuple[1], r, 'fastq-sanger')
+
+
+def concatenate(file_list, output):
+    """Concatenate fastq files together
+
+    Outputs two files: output_R1.fastq and output_R2.fastq
+
+    Args:
+        file_list (list): the list of input files prefix
+        output (string): the output files prefix
+    """
+    logger = logging.getLogger(__name__)
+    # define name of output files
+    output_forward = output + '_R1.fastq'
+    output_reverse = output + '_R2.fastq'
+    try:
+        out_f = open(output_forward, 'wb')
+        out_r = open(output_reverse, 'wb')
+    except PermissionError as e:
+        logger.error('Failed to open output file(s): %s' % e)
+        sys.exit(1)
+
+    with out_f, out_r:
+        for file_name in file_list:
+            temp_forward = file_name + '_R1.fastq'
+            temp_reverse = file_name + '_R2.fastq'
+            with open(temp_forward, 'rb') as f, open(temp_reverse, 'rb') as r:
+                copyfileobj(f, out_f)
+                copyfileobj(r, out_r)
+
+
+def cleanup(file_list):
+    """remove temporary files
+
+    Args:
+        file_list (list): a list of files to be removed
+    """
+    for temp_file in file_list:
+        os.remove(temp_file + '_R1.fastq')
+        os.remove(temp_file + '_R2.fastq')

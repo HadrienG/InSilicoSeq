@@ -19,7 +19,7 @@ class ErrorModel(object):
     the functions that are shared by all ErrorModel
     """
     def __init__(self):
-        self.logger = 'bla'
+        self.logger = 'logger currently unavailable'
         # self.logger = logging.getLogger(__name__)
 
     def load_npz(self, npz_path, model):
@@ -44,9 +44,9 @@ class ErrorModel(object):
             #     'Trying to load a %s ErrorModel in %s mode' % (
             #         error_profile['model'], model))
             sys.exit(1)
-        else:
+        # else:
             # self.logger.info('Loaded ErrorProfile: %s' % npz_path)
-            print('bla')
+            # print('bla')
         return error_profile
 
     def introduce_error_scores(self, record, orientation):
