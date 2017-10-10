@@ -5,12 +5,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='InSilicoSeq',
-    version='0.5.0',
+    version='0.5.1',
 
     description='a sequencing simulator',
 
     url='https://github.com/HadrienG/InSilicoSeq',
-    download_url='https://github.com/HadrienG/InSilicoSeq/tarball/0.5.0',
+    download_url='https://github.com/HadrienG/InSilicoSeq/tarball/0.5.1',
     author='Hadrien Gourlé',
     author_email='hadrien.gourle@slu.se',
 
@@ -18,7 +18,8 @@ setup(
     packages=find_packages(),
 
     tests_require=['nose'],
-    install_requires=['numpy', 'scipy', 'biopython', 'pysam', 'future'],
+    install_requires=['numpy', 'scipy', 'biopython', 'pysam', 'future',
+                      'joblib'],
     include_package_data=True,
 
     entry_points={
