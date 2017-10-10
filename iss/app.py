@@ -94,6 +94,9 @@ def generate_reads(args):
             logger.error('Could not get abundance')
             sys.exit(1)
 
+        cpus = args.cpus
+        logger.info('Using %s cpus for read generation' % cpus)
+
         temp_file_list = []  # list holding the name prefix of all temp files
         f = open(genome_file, 'r')  # re-opens the file
         with f:
@@ -118,7 +121,6 @@ def generate_reads(args):
                         (coverage *
                             len(record.seq)) / err_mod.read_length) / 2)
 
-                    cpus = 4
                     # will correct approximation later
                     n_pairs_per_cpu = int(round(n_pairs / cpus))
                     logger.debug(
@@ -203,6 +205,14 @@ def main():
         action='store_true',
         default=False,
         help='Enable debug logging. (default: %(default)s).'
+    )
+    parser_gen.add_argument(
+        '--cpus',
+        '-c',
+        default=2,
+        type=int,
+        metavar='<int>',
+        help='number of cpus to use. (default: %(default)s).'
     )
     input_genomes.add_argument(
         '--genomes',
