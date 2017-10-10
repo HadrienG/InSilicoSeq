@@ -7,9 +7,9 @@ InSilicoSeq comes with a set of pre-computed error models to allow the user
 to easily generate reads from:
 
 - HiSeq 2500
-- MiSeq (300bp)
+- MiSeq
 
-Per example generate 1 million MiSeq 300bp reads from a set of input genomes:
+Per example generate 1 million MiSeq 150bp reads from a set of input genomes:
 
 .. code-block:: bash
 
@@ -19,7 +19,7 @@ Per example generate 1 million MiSeq 300bp reads from a set of input genomes:
 This will create 2 files, `MiSeq_reads_R1.fastq` and `MiSeq_reads_R2.fastq` in
 your current directory
 
-If you have created your custom model, change `--model_file MiSeq` to your
+If you have created your custom model, change ``--model_file MiSeq`` to your
 custom model file:
 
 .. code-block:: bash
@@ -56,8 +56,8 @@ Abundance distribution
 The abundance of the input genomes is determined (by default) by a log-normal
 distribution.
 
-Alternatively, you can use other distribution with the `--abundance` parameter:
-`uniform`, `halfnormal`, `exponential` or `zero-inflated-lognormal`
+Alternatively, you can use other distributions with the ``--abundance``
+parameter: `uniform`, `halfnormal`, `exponential` or `zero-inflated-lognormal`
 
 If you wish to fine-tune the distribution of your genomes, InSilicoSeq also
 accepts an abundance file:
@@ -78,6 +78,10 @@ genome_B.
 
 For the abundance to make sense, the total abundance in your abundance file
 must equal 1.
+
+.. figure:: distributions.png
+
+    Histograms of the different distribution (drawn with 100 samples)
 
 
 Full list of options
@@ -103,13 +107,13 @@ Required if --ncbi is set.
 --abundance
 ^^^^^^^^^^^
 
-abundance distribution (default: lognormal). Can be uniform, halfnormal,
+Abundance distribution (default: lognormal). Can be uniform, halfnormal,
 exponential, lognormal or zero-inflated-lognormal.
 
 --abundance_file
 ^^^^^^^^^^^^^^^^
 
-abundance file for coverage calculations (default: None).
+Abundance file for coverage calculations (default: None).
 
 --n_reads
 ^^^^^^^^^
@@ -128,6 +132,11 @@ Can be 'kde', 'cdf' or 'basic'
 Error model file. If not specified, using a basic error model instead
 (default: None). Use 'HiSeq2500' or 'MiSeq' for a pre-computed error model
 provided with the software.
+
+--cpus
+^^^^^^
+
+Number of cpus to use. (default: 2).
 
 --quiet
 ^^^^^^^
