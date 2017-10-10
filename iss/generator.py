@@ -38,7 +38,9 @@ def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
             read
     """
     logger = logging.getLogger(__name__)
-
+    logger.debug(
+        'Cpu #%s: Generating %s read pairs'
+        % (cpu_number, n_pairs))
     read_tuple_list = []
     for i in range(n_pairs):
         forward, reverse = simulate_read(record, ErrorModel, i)
@@ -154,6 +156,7 @@ def concatenate(file_list, output):
         output (string): the output files prefix
     """
     logger = logging.getLogger(__name__)
+    logger.info('Stitching temporary files together')
     # define name of output files
     output_forward = output + '_R1.fastq'
     output_reverse = output + '_R2.fastq'
@@ -179,6 +182,8 @@ def cleanup(file_list):
     Args:
         file_list (list): a list of files to be removed
     """
+    logger = logging.getLogger(__name__)
+    logger.info('Cleaning up')
     for temp_file in file_list:
         os.remove(temp_file + '_R1.fastq')
         os.remove(temp_file + '_R2.fastq')

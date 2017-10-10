@@ -18,9 +18,10 @@ class ErrorModel(object):
     This class is used to create inheriting classes and contains all
     the functions that are shared by all ErrorModel
     """
-    def __init__(self):
-        self.logger = 'logger currently unavailable'
-        # self.logger = logging.getLogger(__name__)
+    @property
+    def logger(self):
+        component = "{}.{}".format(type(self).__module__, type(self).__name__)
+        return logging.getLogger(component)
 
     def load_npz(self, npz_path, model):
         """load the error profile .npz file
@@ -37,16 +38,15 @@ class ErrorModel(object):
             error_profile = np.load(npz_path)
             assert error_profile['model'] == model
         except OSError as e:
-            # self.logger.error('Failed to read ErrorModel file: %s' % e)
+            self.logger.error('Failed to read ErrorModel file: %s' % e)
             sys.exit(1)
         except AssertionError as e:
-            # self.logger.error(
-            #     'Trying to load a %s ErrorModel in %s mode' % (
-            #         error_profile['model'], model))
+            self.logger.error(
+                'Trying to load a %s ErrorModel in %s mode' % (
+                    error_profile['model'], model))
             sys.exit(1)
-        # else:
-            # self.logger.info('Loaded ErrorProfile: %s' % npz_path)
-            # print('bla')
+        else:
+            self.logger.debug('Loaded ErrorProfile: %s' % npz_path)
         return error_profile
 
     def introduce_error_scores(self, record, orientation):
@@ -93,7 +93,8 @@ class ErrorModel(object):
         quality_list = record.letter_annotations["phred_quality"]
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
-            if random.random() > util.phred_to_prob(qual) and nucl not in 'RYWSMKHBVDN':
+            if random.random() > util.phred_to_prob(qual) \
+                    and nucl not in 'RYWSMKHBVDN':
                 mutable_seq[position] = str(np.random.choice(
                     nucl_choices[position][nucl][0],
                     p=nucl_choices[position][nucl][1]))

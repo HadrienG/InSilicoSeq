@@ -123,9 +123,6 @@ def generate_reads(args):
 
                     # will correct approximation later
                     n_pairs_per_cpu = int(round(n_pairs / cpus))
-                    logger.debug(
-                        'Generating %s read pairs / cpu (%s total)'
-                        % (n_pairs_per_cpu, n_pairs))
 
                     record_file_name_list = Parallel(n_jobs=cpus)(
                         delayed(generator.reads)(
@@ -133,9 +130,7 @@ def generate_reads(args):
                             n_pairs_per_cpu, i) for i in range(cpus))
                     temp_file_list.extend(record_file_name_list)
 
-        logger.info('Stitching temporary files together')
         generator.concatenate(temp_file_list, args.output)
-        logger.info('Cleaning up')
         generator.cleanup(temp_file_list)
         logger.info('Read generation complete')
 
