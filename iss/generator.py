@@ -10,14 +10,16 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
 from Bio.SeqUtils import GC
+from shutil import copyfileobj
 
+import os
 import sys
 import random
 import logging
 import numpy as np
 
 
-def reads(record, coverage, ErrorModel, gc_bias=False):
+def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     Each read is a SeqRecord object
@@ -36,69 +38,84 @@ def reads(record, coverage, ErrorModel, gc_bias=False):
             read
     """
     logger = logging.getLogger(__name__)
-    header = record.id
-    sequence = record.seq
-
-    read_length = ErrorModel.read_length
-
-    n_pairs = int(round((coverage * len(sequence)) / read_length) / 2)
-
+    logger.debug(
+        'Cpu #%s: Generating %s read pairs'
+        % (cpu_number, n_pairs))
+    read_tuple_list = []
     for i in range(n_pairs):
-        insert_size = ErrorModel.random_insert_size()
-        # generate the forward read
-        try:  # a ref sequence has to be longer than 2 * read_length + i_size
-            forward_start = random.randrange(
-                0, len(sequence) - (2 * read_length + insert_size))
-        except ValueError as e:
-            logger.error(
-                '%s too small for this ErrorModel:%s' % (record.id, e))
-            sys.exit(1)
-
-        forward_end = forward_start + read_length
-        bounds = (forward_start, forward_end)
-        # create a perfect read
-        forward = SeqRecord(
-            Seq(str(sequence[forward_start:forward_end]),
-                IUPAC.unambiguous_dna
-                ),
-            id='%s_%s_1' % (header, i),
-            description=''
-        )
-        # add the indels, the qual scores and modify the record accordingly
-        forward.seq = ErrorModel.introduce_indels(
-            forward, 'forward', sequence, bounds)
-        forward = ErrorModel.introduce_error_scores(forward, 'forward')
-        forward.seq = ErrorModel.mut_sequence(forward, 'forward')
-
-        # generate the reverse read
-        reverse_start = forward_end + insert_size
-        reverse_end = reverse_start + read_length
-        bounds = (reverse_start, reverse_end)
-        # create a perfect read
-        reverse = SeqRecord(
-            Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
-                IUPAC.unambiguous_dna
-                ),
-            id='%s_%s_2' % (header, i),
-            description=''
-        )
-        # add the indels, the qual scores and modify the record accordingly
-        reverse.seq = ErrorModel.introduce_indels(
-            reverse, 'reverse', sequence, bounds)
-        reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
-        reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
-
+        forward, reverse = simulate_read(record, ErrorModel, i)
         if gc_bias:
             stiched_seq = forward.seq + reverse.seq
             gc_content = GC(stiched_seq)
             if 40 < gc_content < 60:
-                yield(forward, reverse)
+                read_tuple_list.append((forward, reverse))
             elif np.random.rand() < 0.90:
-                yield(forward, reverse)
+                read_tuple_list.append((forward, reverse))
             else:
                 continue
         else:
-            yield(forward, reverse)
+            read_tuple_list.append((forward, reverse))
+
+    temp_file_name = '.iss.tmp.%s.%s' % (record.id, cpu_number)
+    to_fastq(read_tuple_list, temp_file_name)
+
+    return temp_file_name
+
+
+def simulate_read(record, ErrorModel, i):
+    """From a sequence record and an ErrorModel, generate a read pair
+
+    EXPERIMENTAL. SHOULD BE MULTI-THREADABLE
+    """
+    sequence = record.seq
+    header = record.id
+
+    read_length = ErrorModel.read_length
+    insert_size = ErrorModel.random_insert_size()
+    # generate the forward read
+    try:  # a ref sequence has to be longer than 2 * read_length + i_size
+        forward_start = random.randrange(
+            0, len(record.seq) - (2 * read_length + insert_size))
+    except ValueError as e:
+        logger.error(
+            '%s too small for this ErrorModel:%s' % (record.id, e))
+        sys.exit(1)
+
+    forward_end = forward_start + read_length
+    bounds = (forward_start, forward_end)
+    # create a perfect read
+    forward = SeqRecord(
+        Seq(str(sequence[forward_start:forward_end]),
+            IUPAC.unambiguous_dna
+            ),
+        id='%s_%s_1' % (header, i),
+        description=''
+    )
+    # add the indels, the qual scores and modify the record accordingly
+    forward.seq = ErrorModel.introduce_indels(
+        forward, 'forward', sequence, bounds)
+    forward = ErrorModel.introduce_error_scores(forward, 'forward')
+    forward.seq = ErrorModel.mut_sequence(forward, 'forward')
+
+    # generate the reverse read
+    reverse_start = forward_end + insert_size
+    reverse_end = reverse_start + read_length
+    bounds = (reverse_start, reverse_end)
+    # create a perfect read
+    reverse = SeqRecord(
+        Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
+            IUPAC.unambiguous_dna
+            ),
+        id='%s_%s_2' % (header, i),
+        description=''
+    )
+    # add the indels, the qual scores and modify the record accordingly
+    reverse.seq = ErrorModel.introduce_indels(
+        reverse, 'reverse', sequence, bounds)
+    reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
+    reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
+
+    return (forward, reverse)
 
 
 def to_fastq(generator, output):
@@ -127,3 +144,46 @@ def to_fastq(generator, output):
             for read_tuple in generator:
                 SeqIO.write(read_tuple[0], f, 'fastq-sanger')
                 SeqIO.write(read_tuple[1], r, 'fastq-sanger')
+
+
+def concatenate(file_list, output):
+    """Concatenate fastq files together
+
+    Outputs two files: output_R1.fastq and output_R2.fastq
+
+    Args:
+        file_list (list): the list of input files prefix
+        output (string): the output files prefix
+    """
+    logger = logging.getLogger(__name__)
+    logger.info('Stitching temporary files together')
+    # define name of output files
+    output_forward = output + '_R1.fastq'
+    output_reverse = output + '_R2.fastq'
+    try:
+        out_f = open(output_forward, 'wb')
+        out_r = open(output_reverse, 'wb')
+    except PermissionError as e:
+        logger.error('Failed to open output file(s): %s' % e)
+        sys.exit(1)
+
+    with out_f, out_r:
+        for file_name in file_list:
+            temp_forward = file_name + '_R1.fastq'
+            temp_reverse = file_name + '_R2.fastq'
+            with open(temp_forward, 'rb') as f, open(temp_reverse, 'rb') as r:
+                copyfileobj(f, out_f)
+                copyfileobj(r, out_r)
+
+
+def cleanup(file_list):
+    """remove temporary files
+
+    Args:
+        file_list (list): a list of files to be removed
+    """
+    logger = logging.getLogger(__name__)
+    logger.info('Cleaning up')
+    for temp_file in file_list:
+        os.remove(temp_file + '_R1.fastq')
+        os.remove(temp_file + '_R2.fastq')

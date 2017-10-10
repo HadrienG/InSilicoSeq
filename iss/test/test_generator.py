@@ -30,11 +30,9 @@ def test_basic():
             id='my_genome',
             description='test genome'
             )
-        read_gen = generator.reads(ref_genome, 2, err_mod)
-        big_read = ''.join(
-            str(read_tuple[0].seq) + str(read_tuple[1].seq)
-            for read_tuple in read_gen)
-        assert big_read[1890:1910] == 'GGGGGTGTTTGGGGGTTTTT'
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1)
+        big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
+        assert big_read[-15:] == 'TTTTGGGGGTTTTTG'
 
 
 def test_kde():
@@ -49,8 +47,6 @@ def test_kde():
             id='my_genome',
             description='test genome'
             )
-        read_gen = generator.reads(ref_genome, 2, err_mod)
-        big_read = ''.join(
-            str(read_tuple[0].seq) + str(read_tuple[1].seq)
-            for read_tuple in read_gen)
-        assert big_read[140:170] == 'AAAACGGGTTGAAACGGGTTTTCAACCCGT'
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1)
+        big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
+        assert big_read[:15] == 'CCGTTTCAACCCGTT'

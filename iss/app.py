@@ -7,6 +7,7 @@ from iss import download
 from iss import abundance
 from iss import generator
 from Bio import SeqIO
+from joblib import Parallel, delayed
 
 import os
 import sys
@@ -93,6 +94,10 @@ def generate_reads(args):
             logger.error('Could not get abundance')
             sys.exit(1)
 
+        cpus = args.cpus
+        logger.info('Using %s cpus for read generation' % cpus)
+
+        temp_file_list = []  # list holding the name prefix of all temp files
         f = open(genome_file, 'r')  # re-opens the file
         with f:
             fasta_file = SeqIO.parse(f, 'fasta')
@@ -112,15 +117,21 @@ def generate_reads(args):
                         err_mod.read_length,
                         genome_size
                         )
+                    n_pairs = int(round(
+                        (coverage *
+                            len(record.seq)) / err_mod.read_length) / 2)
 
-                    read_gen = generator.reads(
-                        record,
-                        coverage,
-                        err_mod,
-                        args.gc_bias
-                        )
+                    # will correct approximation later
+                    n_pairs_per_cpu = int(round(n_pairs / cpus))
 
-                    generator.to_fastq(read_gen, args.output)
+                    record_file_name_list = Parallel(n_jobs=cpus)(
+                        delayed(generator.reads)(
+                            record, err_mod,
+                            n_pairs_per_cpu, i) for i in range(cpus))
+                    temp_file_list.extend(record_file_name_list)
+
+        generator.concatenate(temp_file_list, args.output)
+        generator.cleanup(temp_file_list)
         logger.info('Read generation complete')
 
 
@@ -189,6 +200,14 @@ def main():
         action='store_true',
         default=False,
         help='Enable debug logging. (default: %(default)s).'
+    )
+    parser_gen.add_argument(
+        '--cpus',
+        '-p',
+        default=2,
+        type=int,
+        metavar='<int>',
+        help='number of cpus to use. (default: %(default)s).'
     )
     input_genomes.add_argument(
         '--genomes',

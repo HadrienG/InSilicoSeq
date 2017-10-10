@@ -4,3 +4,4 @@ scipy
 biopython
 nose
 pysam
+joblib
