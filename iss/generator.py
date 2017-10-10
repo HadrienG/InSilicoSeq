@@ -39,24 +39,25 @@ def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
     """
     logger = logging.getLogger(__name__)
 
-    read_tuple_list = [simulate_read(
-        record, ErrorModel, i) for i in range(n_pairs)]
+    read_tuple_list = []
+    for i in range(n_pairs):
+        forward, reverse = simulate_read(record, ErrorModel, i)
+        if gc_bias:
+            stiched_seq = forward.seq + reverse.seq
+            gc_content = GC(stiched_seq)
+            if 40 < gc_content < 60:
+                read_tuple_list.append((forward, reverse))
+            elif np.random.rand() < 0.90:
+                read_tuple_list.append((forward, reverse))
+            else:
+                continue
+        else:
+            read_tuple_list.append((forward, reverse))
 
     temp_file_name = '.iss.tmp.%s.%s' % (record.id, cpu_number)
     to_fastq(read_tuple_list, temp_file_name)
 
     return temp_file_name
-# if gc_bias:
-#     stiched_seq = forward.seq + reverse.seq
-#     gc_content = GC(stiched_seq)
-#     if 40 < gc_content < 60:
-#         yield(forward, reverse)
-#     elif np.random.rand() < 0.90:
-#         yield(forward, reverse)
-#     else:
-#         continue
-# else:
-#     yield(forward, reverse)
 
 
 def simulate_read(record, ErrorModel, i):

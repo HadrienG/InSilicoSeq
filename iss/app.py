@@ -208,7 +208,7 @@ def main():
     )
     parser_gen.add_argument(
         '--cpus',
-        '-c',
+        '-p',
         default=2,
         type=int,
         metavar='<int>',
