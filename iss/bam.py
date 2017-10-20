@@ -5,6 +5,7 @@ from builtins import int, dict, range
 
 from iss import modeller
 from scipy import stats
+from random import random
 
 import sys
 import pysam
@@ -12,8 +13,8 @@ import logging
 import numpy as np
 
 
-def read_bam(bam_file):
-    """Bam file reader
+def read_bam(bam_file, n_reads=1000000):
+    """Bam file reader. Select random mapped reads from a bam file
 
     Args:
         bam_file (string): path to a bam file
@@ -25,6 +26,10 @@ def read_bam(bam_file):
 
     try:
         bam = pysam.AlignmentFile(bam_file, 'rb')
+        total_records = sum(1 for _ in bam.fetch() if not _.is_unmapped)
+        random_fraction = n_reads / total_records
+        bam = pysam.AlignmentFile(bam_file, 'rb')  # reopen the file
+
     except IOError as e:
         logger.error('Failed to open bam file:%s' % e)
         sys.exit(1)
@@ -33,9 +38,16 @@ def read_bam(bam_file):
         sys.exit(1)
     else:
         logger.info('Reading bam file: %s' % bam_file)
+        c = 0
         with bam:
             for read in bam.fetch():
-                if not read.is_unmapped:
+                if not read.is_unmapped and random() < random_fraction:
+                    c += 1
+                    if logger.getEffectiveLevel() == 10:
+                        print(
+                            'DEBUG:iss.bam:Subsampling %s / %s reads'
+                            % (c, n_reads),
+                            end='\r')
                     yield read
 
 
