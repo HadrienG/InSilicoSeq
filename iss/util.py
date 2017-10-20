@@ -99,3 +99,8 @@ def split_list(l, n_parts=1):
     length = len(l)
     return [l[i * length // n_parts: (i + 1) * length // n_parts]
             for i in range(n_parts)]
+
+
+def nplog(type, flag):
+    logger = logging.getLogger(__name__)
+    logger.debug("FloatingPointError (%s), with flag %s" % (type, flag))
