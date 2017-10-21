@@ -44,6 +44,8 @@ def divide_qualities_into_bins(qualities, n_bins=4):
             quality
         n_bins (int): number of bins to create (default: 4)
     """
+    logger = logging.getLogger(__name__)
+    logger.debug('Dividing qualities into mean clusters')
     bin_lists = [[] for _ in range(n_bins)]  # create list of `n_bins` list
     ranges = np.split(np.array(range(40)), n_bins)
     for quality in qualities:
@@ -51,8 +53,7 @@ def divide_qualities_into_bins(qualities, n_bins=4):
         which_array = 0
         for array in ranges:
             if mean in array:
-                # TODO try numpy.fromiter((f(x) for x in X),<dtype>,<size X>)
-                read = [q[0] for q in quality]
+                read = np.fromiter((q[0] for q in quality), dtype=np.float)
                 bin_lists[which_array].append(read)
             which_array += 1
     return bin_lists
@@ -79,15 +80,12 @@ def quality_bins_to_histogram(bin_lists):
     i = 0
     for qual_bin in bin_lists:
         if len(qual_bin) > 0:
-            logger.debug('Dealing with quality bin #%s' % i)
-            # TODO try matrix transposition (qual_bin.T)
-            # won't work with one cpu, if subsampling back to old code
-            # quals = np.array_split([i for i in zip(*qual_bin)], cpus)
-            quals = [i for i in zip(*qual_bin)]  # can't parallel this
+            logger.debug('Transposing matrix for mean cluster #%s' % i)
+            quals = np.asarray(qual_bin).T
+            logger.debug(
+                'Modelling quality distribution for mean cluster #%s'
+                % i)
             cdfs_list = raw_qualities_to_histogram(quals)
-            # cdfs_list = Parallel(n_jobs=cpus)(
-            #     delayed(raw_qualities_to_histogram)(
-            #         quals[i], i) for i in range(cpus))
             cdf_bins.append(cdfs_list)
         else:
             logger.debug('Mean quality bin #%s of length 0. Skipping' % i)
@@ -116,7 +114,6 @@ def raw_qualities_to_histogram(qualities):
 
     # moved this in quality_bins_to_histogram to try parallelization
     # quals = util.split_list([i for i in zip(*qualities)], n_parts=cpus)
-    logger.debug('Modelling base quality distribution')
     cdfs_list = []
     for q in qualities:
         numpy_log_handler = np.seterrcall(util.nplog)
