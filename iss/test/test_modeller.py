@@ -18,16 +18,11 @@ def test_kde_qualities():
         [20, 20],
         [40, 10],
         [10, 10]]
-    cdf_first_base, cdf_sec_base = \
-        modeller.raw_qualities_to_histogram(quality_distribution)
-    assert_almost_equals(cdf_first_base[10], 0.199999702)
-    assert_almost_equals(cdf_first_base[20], 0.400000149)
-    assert cdf_first_base[-1] == 1
-
-    assert_almost_equals(cdf_sec_base[10], 0.399998509)
-    assert_almost_equals(cdf_sec_base[20], 0.599999255)
-    assert_almost_equals(cdf_sec_base[30], 0.999998509)
-    assert cdf_sec_base[-1] == 1
+    cdf_list = modeller.raw_qualities_to_histogram(quality_distribution)
+    assert_almost_equals(cdf_list[0][-2], 0.500002794)
+    assert cdf_list[-1][0] == 0.0
+    assert cdf_list[-1][-1] == 1
+    assert len(cdf_list) == 5
 
 
 def test_substitutions():

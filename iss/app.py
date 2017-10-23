@@ -335,7 +335,9 @@ def main():
             logging.basicConfig(level=logging.INFO)
 
         args.func(args)
+        logging.shutdown()
     except AttributeError as e:
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
+        # raise  # extra traceback to uncomment if all hell breaks lose

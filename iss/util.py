@@ -84,3 +84,23 @@ def count_records(fasta_file):
         sys.exit(1)
     else:
         return record_list
+
+
+def split_list(l, n_parts=1):
+    """Split a list in a number of parts
+
+    Args:
+        l (list): a list
+        n_parts (in): the number of parts to split the list in
+
+    Returns:
+        list: a list of n_parts lists
+    """
+    length = len(l)
+    return [l[i * length // n_parts: (i + 1) * length // n_parts]
+            for i in range(n_parts)]
+
+
+def nplog(type, flag):
+    logger = logging.getLogger(__name__)
+    logger.debug("FloatingPointError (%s), with flag %s" % (type, flag))

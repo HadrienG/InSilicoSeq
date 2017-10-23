@@ -4,7 +4,9 @@
 from __future__ import division
 from builtins import dict, range, zip
 
+from iss import util
 from scipy import stats
+from joblib import Parallel, delayed
 
 import logging
 import numpy as np
@@ -42,6 +44,8 @@ def divide_qualities_into_bins(qualities, n_bins=4):
             quality
         n_bins (int): number of bins to create (default: 4)
     """
+    logger = logging.getLogger(__name__)
+    logger.debug('Dividing qualities into mean clusters')
     bin_lists = [[] for _ in range(n_bins)]  # create list of `n_bins` list
     ranges = np.split(np.array(range(40)), n_bins)
     for quality in qualities:
@@ -49,7 +53,7 @@ def divide_qualities_into_bins(qualities, n_bins=4):
         which_array = 0
         for array in ranges:
             if mean in array:
-                read = [q[0] for q in quality]
+                read = np.fromiter((q[0] for q in quality), dtype=np.float)
                 bin_lists[which_array].append(read)
             which_array += 1
     return bin_lists
@@ -74,9 +78,14 @@ def quality_bins_to_histogram(bin_lists):
     logger = logging.getLogger(__name__)
     cdf_bins = []
     i = 0
-    for quality_bin in bin_lists:
-        if len(quality_bin) > 0:
-            cdfs_list = raw_qualities_to_histogram(quality_bin)
+    for qual_bin in bin_lists:
+        if len(qual_bin) > 0:
+            logger.debug('Transposing matrix for mean cluster #%s' % i)
+            quals = np.asarray(qual_bin).T
+            logger.debug(
+                'Modelling quality distribution for mean cluster #%s'
+                % i)
+            cdfs_list = raw_qualities_to_histogram(quals)
             cdf_bins.append(cdfs_list)
         else:
             logger.debug('Mean quality bin #%s of length 0. Skipping' % i)
@@ -103,17 +112,23 @@ def raw_qualities_to_histogram(qualities):
     """
     logger = logging.getLogger(__name__)
 
-    quals = [i for i in zip(*qualities)]
+    # moved this in quality_bins_to_histogram to try parallelization
+    # quals = util.split_list([i for i in zip(*qualities)], n_parts=cpus)
     cdfs_list = []
-    for q in quals:
-        try:
-            kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
-        except np.linalg.linalg.LinAlgError as e:
-            logger.debug('np.std of %s is zero: %s' % (q, e))
-            q = list(q)
-            q[-1] += 1
-            kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
-        kde = kde.evaluate(range(41))
+    for q in qualities:
+        numpy_log_handler = np.seterrcall(util.nplog)
+        with np.errstate(under='ignore', divide='call'):
+            try:
+                kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
+            except np.linalg.linalg.LinAlgError as e:
+                # if np.std of array is 0, we modify the array slightly to be
+                # able to divide by ~ np.std
+                # this will print a FloatingPointError in DEBUG mode
+                # logger.debug('np.std of quality array is zero: %s' % e)
+                q = list(q)
+                q[-1] += 1
+                kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
+            kde = kde.evaluate(range(41))
         cdf = np.cumsum(kde)
         cdf = cdf / cdf[-1]
         cdfs_list.append(cdf)
