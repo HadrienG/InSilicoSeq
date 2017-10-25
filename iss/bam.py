@@ -4,6 +4,7 @@
 from __future__ import print_function
 from builtins import int, dict, range
 
+from iss import util
 from iss import modeller
 from scipy import stats
 from random import random
@@ -26,8 +27,10 @@ def read_bam(bam_file, n_reads=1000000):
     logger = logging.getLogger(__name__)
 
     try:
-        bam = pysam.AlignmentFile(bam_file, 'rb')
-        total_records = sum(1 for _ in bam.fetch() if not _.is_unmapped)
+        lines = pysam.idxstats(bam_file).splitlines()
+        total_records = sum([int(l.split("\t")[2])
+                            for l in lines if not l.startswith("#")])
+        # total_records = sum(1 for _ in bam.fetch() if not _.is_unmapped)
         random_fraction = n_reads / total_records
         bam = pysam.AlignmentFile(bam_file, 'rb')  # reopen the file
 
@@ -50,6 +53,8 @@ def read_bam(bam_file, n_reads=1000000):
                             % (c, n_reads),
                             end='\r')
                     yield read
+                elif c >= 1000000:
+                    break
 
 
 def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
@@ -141,6 +146,8 @@ def to_model(bam_path, output):
             quality_means = []
             read_quality = read.query_qualities
             mean_quality = np.mean(read_quality)
+            if read.is_reverse:
+                read_quality = read_quality[::-1]  # reverse the list
 
             quality_plus_mean = [
                 (quality, mean_quality) for quality in read_quality]
@@ -151,6 +158,8 @@ def to_model(bam_path, output):
             quality_means = []
             read_quality = read.query_qualities
             mean_quality = np.mean(read_quality)
+            if read.is_reverse:
+                read_quality = read_quality[::-1]  # reverse the list
 
             quality_plus_mean = [
                 (quality, mean_quality) for quality in read_quality]

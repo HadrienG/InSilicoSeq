@@ -314,8 +314,8 @@ def dispatch_indels(read):
                 dispatch_tuple = (position, indel)
                 position += cigar_length
             except KeyError as e:  # we avoid ambiguous bases
-                logger.debug(
-                    '%s not in dispatch: %s' % (insertion, e), exc_info=True)
+                # logger.debug(
+                #     '%s not in dispatch: %s' % (insertion, e), exc_info=True)
                 position += cigar_length
                 continue
         elif cigar_type == 2:  # deletion
@@ -326,8 +326,8 @@ def dispatch_indels(read):
                 dispatch_tuple = (position, indel)
                 position -= cigar_length
             except KeyError as e:  # we avoid ambiguous bases
-                logger.debug(
-                    '%s not in dispatch: %s' % (deletion, e), exc_info=True)
+                # logger.debug(
+                #     '%s not in dispatch: %s' % (deletion, e), exc_info=True)
                 position -= cigar_length
                 continue
         yield dispatch_tuple
