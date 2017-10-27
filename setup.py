@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='InSilicoSeq',
-    version='0.6.0',
+    version='0.7.0',
 
     description='a sequencing simulator',
 
