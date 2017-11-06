@@ -2,7 +2,7 @@
 ## A sequencing simulator
 
 [![Build Status](https://travis-ci.org/HadrienG/InSilicoSeq.svg?branch=master)](https://travis-ci.org/HadrienG/InSilicoSeq)
-[![Documentation Status](https://readthedocs.org/projects/insilicoseq/badge/?version=0.5.1)](http://insilicoseq.readthedocs.io/en/0.5.1/?badge=0.5.1)
+[![Documentation Status](https://readthedocs.org/projects/insilicoseq/badge/?version=0.8.0)](http://insilicoseq.readthedocs.io/en/0.8.0/?badge=0.8.0)
 [![codecov](https://codecov.io/gh/HadrienG/InSilicoSeq/branch/master/graph/badge.svg)](https://codecov.io/gh/HadrienG/InSilicoSeq)
 [![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
@@ -25,7 +25,7 @@ To install InSilicoSeq, type the following in your terminal:
 Alternatively, with docker:
 
 ```shell
-docker pull hadrieng/insilicoseq:0.7.0
+docker pull hadrieng/insilicoseq:0.8.0
 ```
 
 ## Usage

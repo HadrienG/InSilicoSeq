@@ -27,7 +27,7 @@ def test_kde_qualities():
 
 def test_substitutions():
     subst_matrix = np.zeros([20, 16])
-    bam_file = 'data/ecoli.bam'
+    bam_file = 'data/substitutions_test.bam'
     bam_reader = bam.read_bam(bam_file)
     if sys.version_info > (3,):
         for _ in range(2):
@@ -51,7 +51,7 @@ def test_substitutions():
 
 def test_indels():
     indel_matrix = np.zeros([20, 9])
-    bam_file = 'data/ecoli.bam'
+    bam_file = 'data/substitutions_test.bam'
     bam_reader = bam.read_bam(bam_file)
     if sys.version_info > (3,):
         for _ in range(8):

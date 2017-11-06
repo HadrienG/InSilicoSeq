@@ -25,6 +25,8 @@ build/
 !ecoli_R*.fastq
 !ecoli.bam
 !ecoli.bam.bai
+!substitutions_test.bam
+!substitutions_test.bam.bai
 
 # virtualenv
 venv_iss/

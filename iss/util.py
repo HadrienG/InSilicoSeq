@@ -6,6 +6,7 @@ from builtins import dict
 
 from Bio import SeqIO
 
+import sys
 import logging
 import numpy as np
 
@@ -104,3 +105,30 @@ def split_list(l, n_parts=1):
 def nplog(type, flag):
     logger = logging.getLogger(__name__)
     logger.debug("FloatingPointError (%s), with flag %s" % (type, flag))
+
+
+def convert_n_reads(unit):
+    """For strings representing a number of bases and ending with k, K, m, M,
+    g, and G converts to a plain old number
+
+    Args:
+        n (str): a string representing a number ending with a suffix
+    Returns:
+        float: a number of reads
+    """
+    logger = logging.getLogger(__name__)
+    suffixes = {'k': 3, 'm': 6, 'g': 9}
+    if unit[-1].isdigit():
+        try:
+            unit_int = int(unit)
+        except ValueError as e:
+            logger.error('%s is not a valid number of reads' % unit)
+            sys.exit(1)
+    elif unit[-1].lower() in suffixes:
+        number = unit[:-1]
+        exponent = suffixes[unit[-1].lower()]
+        unit_int = int(float(number) * 10**exponent)
+    else:
+        logger.error('%s is not a valid number of reads' % unit)
+        sys.exit(1)
+    return unit_int

@@ -43,7 +43,12 @@ def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
         % (cpu_number, n_pairs))
     read_tuple_list = []
     for i in range(n_pairs):
-        forward, reverse = simulate_read(record, ErrorModel, i)
+        try:
+            forward, reverse = simulate_read(record, ErrorModel, i)
+        except ValueError as e:
+            logger.error('Skipping this record: %s' % record.id)
+            return
+        # forward, reverse = simulate_read(record, ErrorModel, i)
         if gc_bias:
             stiched_seq = forward.seq + reverse.seq
             gc_content = GC(stiched_seq)
@@ -67,6 +72,7 @@ def simulate_read(record, ErrorModel, i):
 
     EXPERIMENTAL. SHOULD BE MULTI-THREADABLE
     """
+    logger = logging.getLogger(__name__)
     sequence = record.seq
     header = record.id
 
@@ -78,8 +84,9 @@ def simulate_read(record, ErrorModel, i):
             0, len(record.seq) - (2 * read_length + insert_size))
     except ValueError as e:
         logger.error(
-            '%s too small for this ErrorModel:%s' % (record.id, e))
-        sys.exit(1)
+            '%s shorter than template length for this ErrorModel:%s'
+            % (record.id, e))
+        raise
 
     forward_end = forward_start + read_length
     bounds = (forward_start, forward_end)
@@ -169,11 +176,12 @@ def concatenate(file_list, output):
 
     with out_f, out_r:
         for file_name in file_list:
-            temp_forward = file_name + '_R1.fastq'
-            temp_reverse = file_name + '_R2.fastq'
-            with open(temp_forward, 'rb') as f, open(temp_reverse, 'rb') as r:
-                copyfileobj(f, out_f)
-                copyfileobj(r, out_r)
+            if file_name is not None:
+                temp_f = file_name + '_R1.fastq'
+                temp_r = file_name + '_R2.fastq'
+                with open(temp_f, 'rb') as f, open(temp_r, 'rb') as r:
+                    copyfileobj(f, out_f)
+                    copyfileobj(r, out_r)
 
 
 def cleanup(file_list):
@@ -185,5 +193,6 @@ def cleanup(file_list):
     logger = logging.getLogger(__name__)
     logger.info('Cleaning up')
     for temp_file in file_list:
-        os.remove(temp_file + '_R1.fastq')
-        os.remove(temp_file + '_R2.fastq')
+        if temp_file is not None:
+            os.remove(temp_file + '_R1.fastq')
+            os.remove(temp_file + '_R2.fastq')
