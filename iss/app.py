@@ -32,10 +32,14 @@ def generate_reads(args):
         logger.info('Using %s ErrorModel' % args.model)
         if args.model == 'kde':
             from iss.error_models import kde, two_dim
-            if args.model_file == 'HiSeq2500':
+            if args.model_file == 'HiSeq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
-                    'profiles/HiSeq2500')
+                    'profiles/HiSeq')
+            elif args.model_file == 'NovaSeq':
+                npz = os.path.join(
+                    os.path.dirname(__file__),
+                    'profiles/NovaSeq')
             elif args.model_file == 'MiSeq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
