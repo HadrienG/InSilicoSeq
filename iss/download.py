@@ -47,9 +47,16 @@ def ncbi(kingdom, n_genomes):
                     retmode='txt')
                 try:
                     record = SeqIO.read(genome_record, 'fasta')
+                    n_count = record.seq.count('N') + record.seq.count('n')
+                    assert n_count / len(record) != 1.0
                 except http.client.IncompleteRead as e:
                     logger.warning(
                         'Failed to read downloaded genome. Skipping')
+                    continue
+                except AssertionError as e:
+                    logger.warning(
+                        '%s only contains Ns. Skipping'
+                        % nucleotide_info['AccessionVersion'])
                     continue
                 genomes.append(record)
                 n += 1

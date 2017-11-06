@@ -67,6 +67,7 @@ def simulate_read(record, ErrorModel, i):
 
     EXPERIMENTAL. SHOULD BE MULTI-THREADABLE
     """
+    logger = logging.getLogger(__name__)
     sequence = record.seq
     header = record.id
 
@@ -78,7 +79,8 @@ def simulate_read(record, ErrorModel, i):
             0, len(record.seq) - (2 * read_length + insert_size))
     except ValueError as e:
         logger.error(
-            '%s too small for this ErrorModel:%s' % (record.id, e))
+            '%s shorter than template length for this ErrorModel:%s'
+            % (record.id, e))
         sys.exit(1)
 
     forward_end = forward_start + read_length
