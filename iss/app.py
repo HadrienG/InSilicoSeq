@@ -101,43 +101,48 @@ def generate_reads(args):
         cpus = args.cpus
         logger.info('Using %s cpus for read generation' % cpus)
 
-        temp_file_list = []  # list holding the name prefix of all temp files
-        f = open(genome_file, 'r')  # re-opens the file
-        with f:
-            fasta_file = SeqIO.parse(f, 'fasta')
-            for record in fasta_file:  # generate set of reads for each record
-                try:
-                    species_abundance = abundance_dic[record.id]
-                except KeyError as e:
-                    logger.error(
-                        'Fasta record not found in abundance file: %s' % e)
-                    sys.exit(1)
-                else:
-                    logger.info('Generating reads for record: %s' % record.id)
-                    genome_size = len(record.seq)
-                    coverage = abundance.to_coverage(
-                        args.n_reads,
-                        species_abundance,
-                        err_mod.read_length,
-                        genome_size
-                        )
-                    n_pairs = int(round(
-                        (coverage *
-                            len(record.seq)) / err_mod.read_length) / 2)
+        try:
+            temp_file_list = []  # list holding the prefix of all temp files
+            f = open(genome_file, 'r')  # re-opens the file
+            with f:
+                fasta_file = SeqIO.parse(f, 'fasta')
+                for record in fasta_file:  # generate reads for each record
+                    try:
+                        species_abundance = abundance_dic[record.id]
+                    except KeyError as e:
+                        logger.error(
+                            'Fasta record not found in abundance file: %s' % e)
+                        sys.exit(1)
+                    else:
+                        logger.info('Generating reads for record: %s'
+                                    % record.id)
+                        genome_size = len(record.seq)
+                        coverage = abundance.to_coverage(
+                            args.n_reads,
+                            species_abundance,
+                            err_mod.read_length,
+                            genome_size
+                            )
+                        n_pairs = int(round(
+                            (coverage *
+                                len(record.seq)) / err_mod.read_length) / 2)
 
-                    # will correct approximation later
-                    n_pairs_per_cpu = int(round(n_pairs / cpus))
+                        # good enough approximation
+                        n_pairs_per_cpu = int(round(n_pairs / cpus))
 
-                    record_file_name_list = Parallel(n_jobs=cpus)(
-                        delayed(generator.reads)(
-                            record, err_mod,
-                            n_pairs_per_cpu, i,
-                            args.gc_bias) for i in range(cpus))
-                    temp_file_list.extend(record_file_name_list)
-
-        generator.concatenate(temp_file_list, args.output)
-        generator.cleanup(temp_file_list)
-        logger.info('Read generation complete')
+                        record_file_name_list = Parallel(n_jobs=cpus)(
+                            delayed(generator.reads)(
+                                record, err_mod,
+                                n_pairs_per_cpu, i,
+                                args.gc_bias) for i in range(cpus))
+                        temp_file_list.extend(record_file_name_list)
+        except KeyboardInterrupt as e:
+            logger.error('iss generate interrupted: %s' % e)
+            generator.cleanup(temp_file_list)
+        else:
+            generator.concatenate(temp_file_list, args.output)
+            generator.cleanup(temp_file_list)
+            logger.info('Read generation complete')
 
 
 def model_from_bam(args):
