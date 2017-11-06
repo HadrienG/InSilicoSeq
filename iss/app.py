@@ -29,25 +29,28 @@ def generate_reads(args):
 
     try:  # try to import and load the correct error model
         logger.info('Starting iss generate')
-        logger.info('Using %s ErrorModel' % args.model)
-        if args.model == 'kde':
+        logger.info('Using %s ErrorModel' % args.mode)
+        if args.mode == 'kde':
             from iss.error_models import kde
-            if args.model_file == 'HiSeq':
+            if args.model == 'HiSeq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/HiSeq')
-            elif args.model_file == 'NovaSeq':
+            elif args.model == 'NovaSeq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/NovaSeq')
-            elif args.model_file == 'MiSeq':
+            elif args.model == 'MiSeq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/MiSeq')
+            elif args.model is None:
+                logger.error('--model is required in --mode kde')
+                sys.exit(1)
             else:
-                npz = args.model_file
+                npz = args.model
             err_mod = kde.KDErrorModel(npz)
-        elif args.model == 'basic':
+        elif args.mode == 'basic':
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
@@ -266,23 +269,23 @@ def main():
         help='Number of reads to generate (default: %(default)s)'
     )
     parser_gen.add_argument(
-        '--model',
-        '-m',
+        '--mode',
+        '-e',
         metavar='<str>',
-        choices=['cdf', 'basic'],
+        choices=['kde', 'basic'],
         default='kde',
         help='Error model. If not specified, using kernel density estimation \
         (default: %(default)s). Can be kde or basic.'
     )
     parser_gen.add_argument(
-        '--model_file',
-        '-f',
+        '--model',
+        '-m',
         metavar='<npz>',
         default=None,
-        help='Error model file. If not specified, using a basic \
-        error model instead (default: %(default)s). Use \'HiSeq2500\' or \
-        \'MiSeq\'for a pre-computed error model provided with the software \
-        (require --model kde)'
+        help='Error model file. (default: %(default)s). Use HiSeq, NovaSeq or \
+        MiSeq for a pre-computed error model provided with the software, or a \
+        file generated with iss model. If you do not wish to use a model, use \
+        --mode basic.'
     )
     parser_gen.add_argument(
         '--gc_bias',
@@ -290,7 +293,7 @@ def main():
         action='store_true',
         default=False,
         help='If set, may fail to sequence reads with abnormal GC content. \
-        Doesn\'t guarantee --n_reads (default: %(default)s)'
+        Does not guarantee --n_reads (default: %(default)s)'
     )
     parser_gen.add_argument(
         '--output',
