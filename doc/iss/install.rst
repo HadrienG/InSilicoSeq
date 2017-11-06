@@ -21,6 +21,27 @@ It will install InSilicoSeq as well as the following dependencies:
 * pysam
 * scipy
 
+Advanced options
+^^^^^^^^^^^^^^^^
+
+* If you don't have administration rights on your machine:
+
+.. code-block:: bash
+
+    pip install --user InSilicoSeq
+
+* if you wish to install InSilicoSeq at a custom location (i.e with a
+mdoule system):
+
+.. code-block:: bash
+
+    prefix="/path/to/install/prefix"
+    pip install --install-option="--prefix=/$prefix" InSilicoSeq
+
+then add ``$prefix/bin`` to your ``PATH``, and
+``$prefix/lib/pythonX.X/site-packages`` to your ``PYTHONPATH`` (replacing
+pythonX.X with your python version)
+
 .. _using_docker:
 
 Using docker
