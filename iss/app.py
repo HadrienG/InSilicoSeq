@@ -6,6 +6,7 @@ from iss import util
 from iss import download
 from iss import abundance
 from iss import generator
+from iss.version import __version__
 from Bio import SeqIO
 from joblib import Parallel, delayed
 
@@ -182,6 +183,13 @@ def main():
         usage='iss [subcommand] [options]',
         description='InSilicoSeq: A sequencing simulator'
     )
+    parser.add_argument(
+        '-v',
+        '--version',
+        action='store_true',
+        default=False,
+        help='print software version and exit'
+    )
     subparsers = parser.add_subparsers(
             title='available subcommands',
             metavar=''
@@ -342,9 +350,12 @@ def main():
     parser_mod.set_defaults(func=model_from_bam)
     args = parser.parse_args()
 
-    # set logger
+    # set logger and display version if args.version
     try:
-        if args.quiet:
+        if args.version:
+            print('iss version %s' % __version__)
+            sys.exit(0)
+        elif args.quiet:
             logging.basicConfig(level=logging.ERROR)
         elif args.debug:
             logging.basicConfig(level=logging.DEBUG)
