@@ -104,6 +104,9 @@ def generate_reads(args):
         cpus = args.cpus
         logger.info('Using %s cpus for read generation' % cpus)
 
+        n_reads = util.convert_n_reads(args.n_reads)
+        logger.info('Generating %s reads' % n_reads)
+
         try:
             temp_file_list = []  # list holding the prefix of all temp files
             f = open(genome_file, 'r')  # re-opens the file
@@ -120,8 +123,9 @@ def generate_reads(args):
                         logger.info('Generating reads for record: %s'
                                     % record.id)
                         genome_size = len(record.seq)
+
                         coverage = abundance.to_coverage(
-                            args.n_reads,
+                            n_reads,
                             species_abundance,
                             err_mod.read_length,
                             genome_size
@@ -264,9 +268,9 @@ def main():
         '--n_reads',
         '-n',
         metavar='<int>',
-        type=int,
         default=1000000,
-        help='Number of reads to generate (default: %(default)s)'
+        help='Number of reads to generate (default: %(default)s). Allows \
+        suffixes k, K, m, M, g and G (ex 0.5M for 500000).'
     )
     parser_gen.add_argument(
         '--mode',
