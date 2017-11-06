@@ -6,6 +6,7 @@ from builtins import dict
 
 from Bio import SeqIO
 
+import sys
 import logging
 import numpy as np
 

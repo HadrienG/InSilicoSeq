@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from nose.tools import raises
+
 from iss import util
 
 
@@ -55,3 +57,27 @@ def test_split_list():
         list(range(3, 6)),
         list(range(6, 10))
     ]
+
+
+def test_convert_n_reads():
+    simple_number = '10000'
+    kilo_lower = '100k'
+    kilo_upper = '100K'
+    mega_lower = '20m'
+    mega_upper = '20M'
+    giga_lower = '1.5g'
+    giga_upper = '0.5G'
+
+    assert util.convert_n_reads(simple_number) == 10000
+    assert util.convert_n_reads(kilo_lower) == 100000
+    assert util.convert_n_reads(kilo_upper) == 100000
+    assert util.convert_n_reads(mega_lower) == 20000000
+    assert util.convert_n_reads(mega_upper) == 20000000
+    assert util.convert_n_reads(giga_lower) == 1500000000
+    assert util.convert_n_reads(giga_upper) == 500000000
+
+
+@raises(SystemExit)
+def test_convert_n_reads_exit():
+    not_valid = '0.12Q'
+    util.convert_n_reads(not_valid)
