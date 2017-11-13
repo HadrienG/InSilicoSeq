@@ -51,7 +51,7 @@ If you wish to use InSilicoSeq using docker
 
 .. code-block:: bash
 
-    docker pull hadrieng/insilicoseq:0.8.0
+    docker pull hadrieng/insilicoseq:0.8.1
 
 To use InSilicoSeq with docker, you need to provide a `volume` to the
 ``docker run`` command. Given with the ``-v`` option, the volume is your way
