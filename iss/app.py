@@ -85,25 +85,21 @@ def generate_reads(args):
         logger.error('Genome(s) file seems empty: %s' % genome_file)
         sys.exit(1)
     else:
+        abundance_dispatch = {
+            'uniform': abundance.uniform,
+            'halfnormal': abundance.halfnormal,
+            'exponential': abundance.exponential,
+            'lognormal': abundance.lognormal,
+            'zero_inflated_lognormal': abundance.zero_inflated_lognormal
+        }
         # read the abundance file
         if args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
-        elif args.abundance == 'uniform':
+        elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.uniform(record_list)
-        elif args.abundance == 'halfnormal':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.halfnormal(record_list)
-        elif args.abundance == 'exponential':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.exponential(record_list)
-        elif args.abundance == 'lognormal':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.lognormal(record_list)
-        elif args.abundance == 'zero_inflated_lognormal':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.zero_inflated_lognormal(record_list)
+            abundance_dic = abundance_dispatch[args.abundance](record_list)
+            abundance.to_file(abundance_dic, args.output)
         else:
             logger.error('Could not get abundance')
             sys.exit(1)
