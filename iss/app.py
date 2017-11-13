@@ -149,8 +149,12 @@ def generate_reads(args):
             logger.error('iss generate interrupted: %s' % e)
             generator.cleanup(temp_file_list)
         else:
-            generator.concatenate(temp_file_list, args.output)
-            generator.cleanup(temp_file_list)
+            # remove the duplicates in file list and cleanup
+            # we remove the duplicates in case two records had the same header
+            # and reads were appended to the same temp file.
+            temp_file_unique = list(set(temp_file_list))
+            generator.concatenate(temp_file_unique, args.output)
+            generator.cleanup(temp_file_unique)
             logger.info('Read generation complete')
 
 
