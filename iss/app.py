@@ -52,6 +52,11 @@ def generate_reads(args):
                 npz = args.model
             err_mod = kde.KDErrorModel(npz)
         elif args.mode == 'basic':
+            if args.model is not None:
+                logger.warning(
+                    '--model %s will be ignored in --mode %s' %
+                    (args.model, args.mode)
+                )
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
