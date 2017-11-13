@@ -25,7 +25,7 @@ To install InSilicoSeq, type the following in your terminal:
 Alternatively, with docker:
 
 ```shell
-docker pull hadrieng/insilicoseq:0.8.0
+docker pull hadrieng/insilicoseq:0.8.1
 ```
 
 ## Usage

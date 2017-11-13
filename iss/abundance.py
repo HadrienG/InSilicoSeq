@@ -162,3 +162,23 @@ def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
     n_reads = total_n_reads * species_abundance
     coverage = (n_reads * read_length) / genome_size
     return coverage
+
+
+def to_file(abundance_dic, output):
+    """write the abundance dictionary to a file
+
+    Args:
+        abundance_dic (dict): the abundance dictionary
+        output (str): the output file name
+    """
+    logger = logging.getLogger(__name__)
+    output_abundance = output + '_abundance.txt'
+    try:
+        f = open(output_abundance, 'w')
+    except PermissionError as e:
+        logger.error('Failed to open output file: %s' % e)
+        sys.exit(1)
+    else:
+        with f:
+            for record, abundance in abundance_dic.items():
+                f.write('%s\t%s\n' % (record, abundance))

@@ -52,6 +52,11 @@ def generate_reads(args):
                 npz = args.model
             err_mod = kde.KDErrorModel(npz)
         elif args.mode == 'basic':
+            if args.model is not None:
+                logger.warning(
+                    '--model %s will be ignored in --mode %s' %
+                    (args.model, args.mode)
+                )
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
@@ -62,6 +67,7 @@ def generate_reads(args):
         if args.genomes:
             genome_file = args.genomes
         elif args.ncbi and args.n_genomes:
+            util.genome_file_exists(args.output + '_genomes.fasta')
             genomes = download.ncbi(args.ncbi, args.n_genomes)
             genome_file = download.to_fasta(genomes, args.output)
         else:
@@ -79,25 +85,21 @@ def generate_reads(args):
         logger.error('Genome(s) file seems empty: %s' % genome_file)
         sys.exit(1)
     else:
+        abundance_dispatch = {
+            'uniform': abundance.uniform,
+            'halfnormal': abundance.halfnormal,
+            'exponential': abundance.exponential,
+            'lognormal': abundance.lognormal,
+            'zero_inflated_lognormal': abundance.zero_inflated_lognormal
+        }
         # read the abundance file
         if args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
-        elif args.abundance == 'uniform':
+        elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.uniform(record_list)
-        elif args.abundance == 'halfnormal':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.halfnormal(record_list)
-        elif args.abundance == 'exponential':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.exponential(record_list)
-        elif args.abundance == 'lognormal':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.lognormal(record_list)
-        elif args.abundance == 'zero_inflated_lognormal':
-            logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance.zero_inflated_lognormal(record_list)
+            abundance_dic = abundance_dispatch[args.abundance](record_list)
+            abundance.to_file(abundance_dic, args.output)
         else:
             logger.error('Could not get abundance')
             sys.exit(1)
@@ -148,8 +150,12 @@ def generate_reads(args):
             logger.error('iss generate interrupted: %s' % e)
             generator.cleanup(temp_file_list)
         else:
-            generator.concatenate(temp_file_list, args.output)
-            generator.cleanup(temp_file_list)
+            # remove the duplicates in file list and cleanup
+            # we remove the duplicates in case two records had the same header
+            # and reads were appended to the same temp file.
+            temp_file_unique = list(set(temp_file_list))
+            generator.concatenate(temp_file_unique, args.output)
+            generator.cleanup(temp_file_unique)
             logger.info('Read generation complete')
 
 
@@ -276,7 +282,7 @@ def main():
         '--n_reads',
         '-n',
         metavar='<int>',
-        default=1000000,
+        default='1000000',
         help='Number of reads to generate (default: %(default)s). Allows \
         suffixes k, K, m, M, g and G (ex 0.5M for 500000).'
     )

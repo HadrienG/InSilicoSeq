@@ -194,5 +194,10 @@ def cleanup(file_list):
     logger.info('Cleaning up')
     for temp_file in file_list:
         if temp_file is not None:
-            os.remove(temp_file + '_R1.fastq')
-            os.remove(temp_file + '_R2.fastq')
+            try:
+                os.remove(temp_file + '_R1.fastq')
+                os.remove(temp_file + '_R2.fastq')
+            except FileNotFoundError as e:
+                logger.error('Temporary file not found: %s' % temp_file)
+                logger.error('You may have to remove temporary files manually')
+                sys.exit(1)
