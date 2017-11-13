@@ -281,7 +281,7 @@ def main():
         '--n_reads',
         '-n',
         metavar='<int>',
-        default=1000000,
+        default='1000000',
         help='Number of reads to generate (default: %(default)s). Allows \
         suffixes k, K, m, M, g and G (ex 0.5M for 500000).'
     )
