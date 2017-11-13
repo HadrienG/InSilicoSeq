@@ -6,6 +6,7 @@ from builtins import dict
 
 from Bio import SeqIO
 
+import os
 import sys
 import logging
 import numpy as np
@@ -132,3 +133,14 @@ def convert_n_reads(unit):
         logger.error('%s is not a valid number of reads' % unit)
         sys.exit(1)
     return unit_int
+
+
+def genome_file_exists(filename):
+    logger = logging.getLogger(__name__)
+    try:
+        assert os.path.exists(filename) == False
+    except AssertionError as e:
+        logger.error('%s already exists. Aborting.' % filename)
+        logger.error('Maybe use --genomes %s' % filename)
+        logger.error('or use --ncbi with another output prefix')
+        sys.exit(1)

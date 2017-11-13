@@ -62,6 +62,7 @@ def generate_reads(args):
         if args.genomes:
             genome_file = args.genomes
         elif args.ncbi and args.n_genomes:
+            util.genome_file_exists(args.output + '_genomes.fasta')
             genomes = download.ncbi(args.ncbi, args.n_genomes)
             genome_file = download.to_fasta(genomes, args.output)
         else:
