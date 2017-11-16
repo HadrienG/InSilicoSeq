@@ -33,15 +33,15 @@ def generate_reads(args):
         logger.info('Using %s ErrorModel' % args.mode)
         if args.mode == 'kde':
             from iss.error_models import kde
-            if args.model == 'HiSeq':
+            if args.model.lower() == 'hiseq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/HiSeq')
-            elif args.model == 'NovaSeq':
+            elif args.model.lower() == 'novaseq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/NovaSeq')
-            elif args.model == 'MiSeq':
+            elif args.model.lower() == 'miseq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/MiSeq')
@@ -303,7 +303,7 @@ def main():
         help='Error model file. (default: %(default)s). Use HiSeq, NovaSeq or \
         MiSeq for a pre-computed error model provided with the software, or a \
         file generated with iss model. If you do not wish to use a model, use \
-        --mode basic.'
+        --mode basic. The name of the built-in models is case insensitive.'
     )
     parser_gen.add_argument(
         '--gc_bias',
