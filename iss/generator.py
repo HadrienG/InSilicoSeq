@@ -19,7 +19,7 @@ import logging
 import numpy as np
 
 
-def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
+def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     Each read is a SeqRecord object
@@ -61,7 +61,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
         else:
             read_tuple_list.append((forward, reverse))
 
-    temp_file_name = '.iss.tmp.%s.%s' % (record.id, cpu_number)
+    temp_file_name = output + '.iss.tmp.%s.%s' % (record.id, cpu_number)
     to_fastq(read_tuple_list, temp_file_name)
 
     return temp_file_name

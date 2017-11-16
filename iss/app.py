@@ -155,7 +155,7 @@ def generate_reads(args):
                         record_file_name_list = Parallel(n_jobs=cpus)(
                             delayed(generator.reads)(
                                 record, err_mod,
-                                n_pairs_per_cpu, i,
+                                n_pairs_per_cpu, i, args.output,
                                 args.gc_bias) for i in range(cpus))
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
