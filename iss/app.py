@@ -68,8 +68,17 @@ def generate_reads(args):
             genome_file = args.genomes
         elif args.ncbi and args.n_genomes:
             util.genome_file_exists(args.output + '_genomes.fasta')
-            genomes = download.ncbi(args.ncbi, args.n_genomes)
-            genome_file = download.to_fasta(genomes, args.output)
+            total_genomes = []
+            try:
+                assert len(*args.ncbi) == len(*args.n_genomes)
+            except AssertionError as e:
+                logger.error(
+                '--ncbi and --n_genomes of unequal lengths. Aborting')
+                sys.exit(1)
+            for g, n in zip(*args.ncbi, *args.n_genomes):
+                genomes = download.ncbi(g, n)
+                total_genomes.extend(genomes)
+            genome_file = download.to_fasta(total_genomes, args.output)
         else:
             logger.error('Invalid input')  # TODO better error handling here
             sys.exit(1)
@@ -83,6 +92,9 @@ def generate_reads(args):
         sys.exit(1)
     except AssertionError as e:
         logger.error('Genome(s) file seems empty: %s' % genome_file)
+        sys.exit(1)
+    except KeyboardInterrupt as e:
+        logger.error('iss generate interrupted: %s' % e)
         sys.exit(1)
     else:
         abundance_dispatch = {
@@ -149,6 +161,7 @@ def generate_reads(args):
         except KeyboardInterrupt as e:
             logger.error('iss generate interrupted: %s' % e)
             generator.cleanup(temp_file_list)
+            sys.exit(1)
         else:
             # remove the duplicates in file list and cleanup
             # we remove the duplicates in case two records had the same header
@@ -250,17 +263,23 @@ def main():
         '--ncbi',
         '-k',
         choices=['bacteria', 'viruses', 'archaea'],
+        action='append',
+        nargs='*',
         metavar='<str>',
         help='Download input genomes from NCBI. Requires --n_genomes/-u\
-            option. Can be bacteria, viruses or archaea.'
+            option. Can be bacteria, viruses, archaea or a combination of the\
+            three (space-separated)'
     )
     parser_gen.add_argument(
         '--n_genomes',
         '-u',
         type=int,
+        action='append',
         metavar='<int>',
+        nargs='*',
         help='How many genomes will be downloaded from NCBI. Required if\
-            --ncbi/-k is set.'
+            --ncbi/-k is set. If more than one kingdom is set with --ncbi,\
+            multiple values are necessary (space-separated).'
     )
     input_abundance.add_argument(
         '--abundance',

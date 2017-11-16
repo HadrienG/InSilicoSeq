@@ -25,7 +25,7 @@ def ncbi(kingdom, n_genomes):
         'genome', term='%s[Organism]' % kingdom, retmax=100000))['IdList']
     genomes = []
     n = 0
-    logger.info('Searching for genomes to download')
+    logger.info('Searching for %s to download' % kingdom)
     while n < n_genomes:
         ident = random.choice(full_id_list)
         genome_info = Entrez.read(
