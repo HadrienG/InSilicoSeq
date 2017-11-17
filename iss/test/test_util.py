@@ -33,6 +33,11 @@ def test_count_records():
         'genome_A', 'genome_T', 'genome_GC', 'genome_ATCG', 'genome_TA']
 
 
+@raises(SystemExit)
+def test_count_records_empty():
+    util.count_records('data/empty_file')
+
+
 def test_split_list():
     test_range = range(10)
     test_list = list(range(10))
@@ -78,6 +83,18 @@ def test_convert_n_reads():
 
 
 @raises(SystemExit)
-def test_convert_n_reads_exit():
+def test_convert_n_reads_bad_not_a_number():
+    not_valid = 'rocket0'
+    util.convert_n_reads(not_valid)
+
+
+@raises(SystemExit)
+def test_convert_n_reads_bad_suffix():
     not_valid = '0.12Q'
     util.convert_n_reads(not_valid)
+
+
+@raises(SystemExit)
+def test_genome_file_exists():
+    my_important_file = 'data/ecoli.fasta'
+    util.genome_file_exists(my_important_file)
