@@ -10,12 +10,36 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
 
+from nose.tools import with_setup
+
+import os
 import sys
 import random
 import numpy as np
 
-# due to inconsistent seeding between python 2 and 3, thos tests are disabled
-# with python2
+# due to inconsistent seeding between python 2 and 3, some of the following
+# tests are disabled with python2
+
+
+def setup_function():
+    output_file_prefix = 'data/.test'
+
+
+def teardown_function():
+    generator.cleanup(['data/.test.iss.tmp.my_genome.0'])
+
+
+@with_setup(setup_function, teardown_function)
+def test_simulate_and_save():
+    err_mod = basic.BasicErrorModel()
+    ref_genome = SeqRecord(
+        Seq(str('AAAAACCCCC' * 100),
+            IUPAC.unambiguous_dna
+            ),
+        id='my_genome',
+        description='test genome'
+        )
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
 
 
 def test_basic():
