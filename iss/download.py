@@ -16,7 +16,7 @@ def ncbi(kingdom, n_genomes):
         n_genomes (int): the number of genomes to download
 
     Returns:
-        list: list of handles
+        list: a list of genome records
     """
     logger = logging.getLogger(__name__)
     Entrez.email = ''
@@ -75,13 +75,13 @@ def ncbi(kingdom, n_genomes):
 
 
 def to_fasta(genomes, output):
-    """Write genomes to fasta
+    """Write genomes to a fasta file
 
-    Take the genomes from the ncbi function and write them to a fasta file:
+    Take a list of genome records and write them to a fasta file named
     output_genomes.fasta
 
     Args:
-        genomes (list): list of genome handles
+        genomes (list): list of genome records
         output (string): the output file prefix
 
     Returns:

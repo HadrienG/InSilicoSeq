@@ -16,7 +16,7 @@ class ErrorModel(object):
     """Main ErrorModel Class
 
     This class is used to create inheriting classes and contains all
-    the functions that are shared by all ErrorModel
+    the functions that are shared by all ErrorModel classes
     """
     @property
     def logger(self):
@@ -28,7 +28,8 @@ class ErrorModel(object):
 
         Args:
             npz_path (string): path to the npz file
-            model (string): type of model. Can be 'cdf' or 'kde'
+            model (string): type of model. Could be 'cdf' or 'kde'. 'cdf' has
+                been deprecated and is no longer available
 
         Returns:
             ndarray: numpy object containg variables necessary
@@ -119,7 +120,6 @@ class ErrorModel(object):
 
         Returns:
             Seq: a sequence fitting the ErrorModel
-                read_length
         """
         read_start, read_end = bounds
         if len(mut_seq) == self.read_length:

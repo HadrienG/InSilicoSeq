@@ -22,20 +22,21 @@ import numpy as np
 def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
-    Each read is a SeqRecord object
-    Return a generator of tuples containing the forward and
-    reverse read.
+    This function makes use of the `simulate_read` function to simulate reads
+    and save them in a fastq file
 
     Args:
         record (SeqRecord): sequence or genome of reference
-        coverage (float): desired coverage of the genome
-        ErrorModel (ErrorModel): an ErrorModel class
+        ErrorModel (ErrorModel): an ErrorModel
+        n_pairs (int): the number of reads to generate
+        cpu_number (int): an int indentifying the cpu that is used by the
+            function. Is used for naming the output file
+        output (str): the output file prefix
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
 
-    Yields:
-        tuple: tuple containg a forward read and a reverse
-            read
+    Returns:
+        str: the name of the output file
     """
     logger = logging.getLogger(__name__)
     logger.debug(
@@ -68,9 +69,18 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
 
 
 def simulate_read(record, ErrorModel, i):
-    """From a sequence record and an ErrorModel, generate a read pair
+    """From a read pair from one genome (or sequence) according to an ErrorModel
 
-    EXPERIMENTAL. SHOULD BE MULTI-THREADABLE
+    Each read is a SeqRecord object
+    returns a tuple containing the forward and reverse read.
+
+    Args:
+        record (SeqRecord): sequence or genome of reference
+        ErrorModel (ErrorModel): an ErrorModel class
+        i (int): a number identifying the read
+
+    Returns:
+        tuple: tuple containg a forward read and a reverse read
     """
     logger = logging.getLogger(__name__)
     sequence = record.seq
@@ -126,13 +136,13 @@ def simulate_read(record, ErrorModel, i):
 
 
 def to_fastq(generator, output):
-    """Write reads to fastq
+    """Write reads to a fastq file
 
-    Take the read generator and write read pairs in two fastq files:
-    output_R1.fastq and output_R2.fastq
+    Take a generator or a list containing read pairs (tuples) and write them
+        in two fastq files: output_R1.fastq and output_R2.fastq
 
     Args:
-        generator (generator): the read generator
+        generator (generator): a read generator (or list)
         output (string): the output files prefix
     """
     logger = logging.getLogger(__name__)

@@ -20,8 +20,7 @@ def parse_abundance_file(abundance_file):
         abundance_file (string): the path to the abundance file
 
     Returns:
-        dict: genome_id as keys, abundance as
-            values
+        dict: genome_id as keys, abundance as values
     """
     logger = logging.getLogger(__name__)
     abundance_dic = {}
@@ -56,7 +55,7 @@ def uniform(record_list):
         record_list (list): a list of record.id
 
     Returns:
-        list: a list of floats
+        dict: a dictionary with records as keys, abundance as values
     """
     abundance_dic = {}
     n_records = len(record_list)
@@ -74,7 +73,7 @@ def halfnormal(record_list):
         record_list (list): a list of record.id
 
     Returns:
-        list: a list of floats
+        dict: a dictionary with records as keys, abundance as values
     """
     abundance_dic = {}
     n_records = len(record_list)
@@ -94,7 +93,7 @@ def exponential(record_list):
         record_list (list): a list of record.id
 
     Returns:
-        list: a list of floats
+        dict: a dictionary with records as keys, abundance as values
     """
     abundance_dic = {}
     n_records = len(record_list)
@@ -114,7 +113,7 @@ def lognormal(record_list):
         record_list (list): a list of record.id
 
     Returns:
-        list: a list of floats
+        dict: a dictionary with records as keys, abundance as values
     """
     abundance_dic = {}
     n_records = len(record_list)
@@ -134,7 +133,7 @@ def zero_inflated_lognormal(record_list):
         record_list (list): a list of record.id
 
     Returns:
-        list: a list of floats
+        dict: a dictionary with records as keys, abundance as values
     """
     abundance_dic = {}
     n_records = len(record_list)
@@ -158,7 +157,7 @@ def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
         genome_size (int): size of the genome
 
     Returns:
-        float: genome coverage
+        float: coverage of the genome
     """
     n_reads = total_n_reads * species_abundance
     coverage = (n_reads * read_length) / genome_size
@@ -166,7 +165,7 @@ def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
 
 
 def to_file(abundance_dic, output):
-    """write the abundance dictionary to a file
+    """Write the abundance dictionary to a file
 
     Args:
         abundance_dic (dict): the abundance dictionary
