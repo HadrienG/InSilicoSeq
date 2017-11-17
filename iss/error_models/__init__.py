@@ -37,7 +37,7 @@ class ErrorModel(object):
         try:
             error_profile = np.load(npz_path)
             assert error_profile['model'] == model
-        except OSError as e:
+        except (OSError, IOError) as e:
             self.logger.error('Failed to read ErrorModel file: %s' % e)
             sys.exit(1)
         except AssertionError as e:
