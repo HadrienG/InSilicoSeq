@@ -10,7 +10,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
 
-from nose.tools import with_setup
+from nose.tools import with_setup, raises
 
 import os
 import sys
@@ -29,6 +29,18 @@ def teardown_function():
     generator.cleanup(['data/.test.iss.tmp.my_genome.0'])
 
 
+@raises(SystemExit)
+def test_cleanup_fail():
+    generator.cleanup('data/does_not_exist')
+
+
+@with_setup(setup_function, teardown_function)
+def test_concatenate():
+    output = 'data/.test.iss.tmp.my_genome.0'
+    file_list = ['data/ecoli', 'data/ecoli']
+    generator.concatenate(file_list, output)
+
+
 @with_setup(setup_function, teardown_function)
 def test_simulate_and_save():
     err_mod = basic.BasicErrorModel()
@@ -40,6 +52,19 @@ def test_simulate_and_save():
         description='test genome'
         )
     generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
+
+
+@raises(ValueError)
+def test_small_input():
+    err_mod = kde.KDErrorModel('data/ecoli.npz')
+    ref_genome = SeqRecord(
+        Seq(str('AAAAACCCCC'),
+            IUPAC.unambiguous_dna
+            ),
+        id='my_genome',
+        description='test genome'
+        )
+    generator.simulate_read(ref_genome, err_mod, 1)
 
 
 def test_basic():
