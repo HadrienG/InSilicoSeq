@@ -46,11 +46,11 @@ def read_bam(bam_file, n_reads=1000000):
                     c += 1
                     if logger.getEffectiveLevel() == 10:
                         print(
-                            'DEBUG:iss.bam:Subsampling %s / %s reads'
-                            % (c, n_reads),
+                            'DEBUG:iss.bam:Subsampling %s / %s reads' % (
+                                c, n_reads),
                             end='\r')
                     yield read
-            elif c >= n_reads:
+                elif c >= n_reads:
                     break
 
 

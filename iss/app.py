@@ -53,10 +53,8 @@ def generate_reads(args):
             err_mod = kde.KDErrorModel(npz)
         elif args.mode == 'basic':
             if args.model is not None:
-                logger.warning(
-                    '--model %s will be ignored in --mode %s' %
-                    (args.model, args.mode)
-                )
+                logger.warning('--model %s will be ignored in --mode %s' % (
+                    args.model, args.mode))
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
@@ -73,7 +71,7 @@ def generate_reads(args):
                 assert len(*args.ncbi) == len(*args.n_genomes)
             except AssertionError as e:
                 logger.error(
-                '--ncbi and --n_genomes of unequal lengths. Aborting')
+                    '--ncbi and --n_genomes of unequal lengths. Aborting')
                 sys.exit(1)
             for g, n in zip(*args.ncbi, *args.n_genomes):
                 genomes = download.ncbi(g, n)
@@ -146,8 +144,7 @@ def generate_reads(args):
                             genome_size
                             )
                         n_pairs = int(round(
-                            (coverage *
-                                len(record.seq)) / err_mod.read_length) / 2)
+                            (coverage * len(record.seq)) / err_mod.read_length) / 2)
 
                         # good enough approximation
                         n_pairs_per_cpu = int(round(n_pairs / cpus))

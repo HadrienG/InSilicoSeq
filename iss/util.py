@@ -143,7 +143,7 @@ def genome_file_exists(filename):
     """
     logger = logging.getLogger(__name__)
     try:
-        assert os.path.exists(filename) == False
+        assert os.path.exists(filename) is False
     except AssertionError as e:
         logger.error('%s already exists. Aborting.' % filename)
         logger.error('Maybe use --genomes %s' % filename)
