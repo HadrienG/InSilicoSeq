@@ -3,6 +3,7 @@
 
 from iss import util
 from iss import abundance
+from nose.tools import raises
 
 import numpy as np
 
@@ -16,6 +17,21 @@ def test_parsing():
         'genome_GC': 0.4,
         'genome_T': 0.2
         }
+
+
+@raises(SystemExit)
+def test_parsing_empty():
+    abundance_dic = abundance.parse_abundance_file('data/empty_file')
+
+
+@raises(SystemExit)
+def test_parsing_no_exists():
+    abundance_dic = abundance.parse_abundance_file('data/does_not_exist')
+
+
+@raises(SystemExit)
+def test_parsing_bad_abundance():
+    abundance_dic = abundance.parse_abundance_file('data/bad_abundance.txt')
 
 
 def test_cov_calc():

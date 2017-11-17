@@ -42,6 +42,7 @@ def parse_abundance_file(abundance_file):
                     abundance = float(line.split()[1])
                 except IndexError as e:
                     logger.error('Failed to read abundance file: %s' % e)
+                    sys.exit(1)
                 else:
                     abundance_dic[genome_id] = abundance
     logger.info('Loaded abundance file: %s' % abundance_file)
