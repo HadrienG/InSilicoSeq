@@ -82,10 +82,9 @@ def quality_bins_to_histogram(bin_lists):
         if len(qual_bin) > 0:
             logger.debug('Transposing matrix for mean cluster #%s' % i)
             # quals = np.asarray(qual_bin).T  # seems to make clunkier models
-            quals = [i for i in zip(*qual_bin)]
+            quals = [q for q in zip(*qual_bin)]
             logger.debug(
-                'Modelling quality distribution for mean cluster #%s'
-                % i)
+                'Modelling quality distribution for mean cluster #%s' % i)
             cdfs_list = raw_qualities_to_histogram(quals)
             cdf_bins.append(cdfs_list)
         else:
