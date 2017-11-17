@@ -28,7 +28,7 @@ def parse_abundance_file(abundance_file):
     try:
         assert os.stat(abundance_file).st_size != 0
         f = open(abundance_file, 'r')
-    except IOError as e:
+    except (IOError, OSError) as e:
         logger.error('Failed to open abundance file:%s' % e)
         sys.exit(1)
     except AssertionError as e:
