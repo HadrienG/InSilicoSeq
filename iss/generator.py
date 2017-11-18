@@ -5,11 +5,12 @@ from __future__ import division, unicode_literals
 from builtins import range
 
 from iss.util import rev_comp
+
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
 from Bio.SeqUtils import GC
+from Bio.Alphabet import IUPAC
+from Bio.SeqRecord import SeqRecord
 from shutil import copyfileobj
 
 import os

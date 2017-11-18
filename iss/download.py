@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from Bio import SeqIO
+from Bio import Entrez
 
 import http
 import random
 import logging
-
-from Bio import SeqIO
-from Bio import Entrez
 
 
 def ncbi(kingdom, n_genomes):

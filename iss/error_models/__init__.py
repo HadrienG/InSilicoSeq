@@ -7,8 +7,8 @@ from builtins import dict, range, zip
 from iss import util
 
 import sys
-import logging
 import random
+import logging
 import numpy as np
 
 

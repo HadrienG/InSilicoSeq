@@ -3,12 +3,12 @@
 
 from __future__ import division
 
+from scipy import stats
+
 import os
 import sys
 import logging
 import numpy as np
-
-from scipy import stats
 
 
 def parse_abundance_file(abundance_file):

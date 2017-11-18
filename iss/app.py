@@ -7,6 +7,7 @@ from iss import download
 from iss import abundance
 from iss import generator
 from iss.version import __version__
+
 from Bio import SeqIO
 from joblib import Parallel, delayed
 
@@ -144,7 +145,8 @@ def generate_reads(args):
                             genome_size
                             )
                         n_pairs = int(round(
-                            (coverage * len(record.seq)) / err_mod.read_length) / 2)
+                            (coverage *
+                                len(record.seq)) / err_mod.read_length) / 2)
 
                         # good enough approximation
                         n_pairs_per_cpu = int(round(n_pairs / cpus))

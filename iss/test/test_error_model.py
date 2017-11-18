@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from iss.error_models import ErrorModel, basic, kde
+
 from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
+from Bio.SeqRecord import SeqRecord
 from nose.tools import raises
 
 import random

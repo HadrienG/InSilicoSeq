@@ -5,6 +5,7 @@ from builtins import next
 
 from iss import bam
 from iss import modeller
+
 from nose.tools import assert_almost_equals
 
 import sys
