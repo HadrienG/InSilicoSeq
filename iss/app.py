@@ -27,6 +27,7 @@ def generate_reads(args):
         args (object): the command-line arguments from argparse
     """
     logger = logging.getLogger(__name__)
+    logger.debug('iss version %s' % __version__)
     logger.debug('Using verbose logger')
 
     try:  # try to import and load the correct error model
@@ -181,6 +182,7 @@ def model_from_bam(args):
         args (object): the command-line arguments from argparse
     """
     logger = logging.getLogger(__name__)
+    logger.debug('iss version %s' % __version__)
     logger.debug('Using verbose logger')
 
     try:  # try to import bam module and write model data to file
