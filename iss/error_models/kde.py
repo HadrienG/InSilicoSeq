@@ -5,6 +5,7 @@ from builtins import super
 
 from iss import util
 from iss.error_models import ErrorModel
+
 from Bio.Seq import MutableSeq
 from Bio.SeqRecord import SeqRecord
 from scipy import stats

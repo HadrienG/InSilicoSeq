@@ -7,8 +7,8 @@ from builtins import dict, range, zip
 from iss import util
 
 import sys
-import logging
 import random
+import logging
 import numpy as np
 
 
@@ -16,7 +16,7 @@ class ErrorModel(object):
     """Main ErrorModel Class
 
     This class is used to create inheriting classes and contains all
-    the functions that are shared by all ErrorModel
+    the functions that are shared by all ErrorModel classes
     """
     @property
     def logger(self):
@@ -28,7 +28,8 @@ class ErrorModel(object):
 
         Args:
             npz_path (string): path to the npz file
-            model (string): type of model. Can be 'cdf' or 'kde'
+            model (string): type of model. Could be 'cdf' or 'kde'. 'cdf' has
+                been deprecated and is no longer available
 
         Returns:
             ndarray: numpy object containg variables necessary
@@ -37,7 +38,7 @@ class ErrorModel(object):
         try:
             error_profile = np.load(npz_path)
             assert error_profile['model'] == model
-        except OSError as e:
+        except (OSError, IOError) as e:
             self.logger.error('Failed to read ErrorModel file: %s' % e)
             sys.exit(1)
         except AssertionError as e:
@@ -119,7 +120,6 @@ class ErrorModel(object):
 
         Returns:
             Seq: a sequence fitting the ErrorModel
-                read_length
         """
         read_start, read_end = bounds
         if len(mut_seq) == self.read_length:
@@ -136,9 +136,7 @@ class ErrorModel(object):
                     mut_seq.append(nucl_to_add)
             elif orientation == 'reverse':
                 for i in range(to_add):
-                    nucl_to_add = util.rev_comp(
-                        full_sequence[read_end + i]
-                    )
+                    nucl_to_add = util.rev_comp(full_sequence[read_end + i])
                     mut_seq.append(nucl_to_add)
             return mut_seq.toseq()
 

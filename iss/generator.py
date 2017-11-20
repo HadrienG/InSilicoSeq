@@ -5,11 +5,12 @@ from __future__ import division, unicode_literals
 from builtins import range
 
 from iss.util import rev_comp
+
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
 from Bio.SeqUtils import GC
+from Bio.Alphabet import IUPAC
+from Bio.SeqRecord import SeqRecord
 from shutil import copyfileobj
 
 import os
@@ -19,23 +20,24 @@ import logging
 import numpy as np
 
 
-def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
+def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
-    Each read is a SeqRecord object
-    Return a generator of tuples containing the forward and
-    reverse read.
+    This function makes use of the `simulate_read` function to simulate reads
+    and save them in a fastq file
 
     Args:
         record (SeqRecord): sequence or genome of reference
-        coverage (float): desired coverage of the genome
-        ErrorModel (ErrorModel): an ErrorModel class
+        ErrorModel (ErrorModel): an ErrorModel
+        n_pairs (int): the number of reads to generate
+        cpu_number (int): an int indentifying the cpu that is used by the
+            function. Is used for naming the output file
+        output (str): the output file prefix
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
 
-    Yields:
-        tuple: tuple containg a forward read and a reverse
-            read
+    Returns:
+        str: the name of the output file
     """
     logger = logging.getLogger(__name__)
     logger.debug(
@@ -61,16 +63,25 @@ def reads(record, ErrorModel, n_pairs, cpu_number, gc_bias=False):
         else:
             read_tuple_list.append((forward, reverse))
 
-    temp_file_name = '.iss.tmp.%s.%s' % (record.id, cpu_number)
+    temp_file_name = output + '.iss.tmp.%s.%s' % (record.id, cpu_number)
     to_fastq(read_tuple_list, temp_file_name)
 
     return temp_file_name
 
 
 def simulate_read(record, ErrorModel, i):
-    """From a sequence record and an ErrorModel, generate a read pair
+    """From a read pair from one genome (or sequence) according to an ErrorModel
 
-    EXPERIMENTAL. SHOULD BE MULTI-THREADABLE
+    Each read is a SeqRecord object
+    returns a tuple containing the forward and reverse read.
+
+    Args:
+        record (SeqRecord): sequence or genome of reference
+        ErrorModel (ErrorModel): an ErrorModel class
+        i (int): a number identifying the read
+
+    Returns:
+        tuple: tuple containg a forward read and a reverse read
     """
     logger = logging.getLogger(__name__)
     sequence = record.seq
@@ -126,13 +137,13 @@ def simulate_read(record, ErrorModel, i):
 
 
 def to_fastq(generator, output):
-    """Write reads to fastq
+    """Write reads to a fastq file
 
-    Take the read generator and write read pairs in two fastq files:
-    output_R1.fastq and output_R2.fastq
+    Take a generator or a list containing read pairs (tuples) and write them
+        in two fastq files: output_R1.fastq and output_R2.fastq
 
     Args:
-        generator (generator): the read generator
+        generator (generator): a read generator (or list)
         output (string): the output files prefix
     """
     logger = logging.getLogger(__name__)
@@ -197,7 +208,7 @@ def cleanup(file_list):
             try:
                 os.remove(temp_file + '_R1.fastq')
                 os.remove(temp_file + '_R2.fastq')
-            except FileNotFoundError as e:
-                logger.error('Temporary file not found: %s' % temp_file)
+            except (IOError, OSError) as e:
+                logger.error('Could not read temporary file: %s' % temp_file)
                 logger.error('You may have to remove temporary files manually')
                 sys.exit(1)

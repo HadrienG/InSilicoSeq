@@ -6,6 +6,7 @@ from builtins import int, dict, range
 
 from iss import util
 from iss import modeller
+
 from scipy import stats
 from random import random
 
@@ -22,7 +23,7 @@ def read_bam(bam_file, n_reads=1000000):
         bam_file (string): path to a bam file
 
     Yields:
-        read: a read object
+        read: a pysam read object
     """
     logger = logging.getLogger(__name__)
 
@@ -34,10 +35,7 @@ def read_bam(bam_file, n_reads=1000000):
         random_fraction = n_reads / total_records
         bam = pysam.AlignmentFile(bam_file, 'rb')  # reopen the file
 
-    except IOError as e:
-        logger.error('Failed to open bam file:%s' % e)
-        sys.exit(1)
-    except ValueError as e:
+    except (IOError, ValueError, pysam.utils.SamtoolsError) as e:
         logger.error('Failed to read bam file: %s' % e)
         sys.exit(1)
     else:
@@ -49,11 +47,11 @@ def read_bam(bam_file, n_reads=1000000):
                     c += 1
                     if logger.getEffectiveLevel() == 10:
                         print(
-                            'DEBUG:iss.bam:Subsampling %s / %s reads'
-                            % (c, n_reads),
+                            'DEBUG:iss.bam:Subsampling %s / %s reads' % (
+                                c, n_reads),
                             end='\r')
                     yield read
-                elif c >= 1000000:
+                elif c >= n_reads:
                     break
 
 
@@ -64,25 +62,25 @@ def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
     Args:
         model (string): the type of error model
         read_length (int): read length of the dataset
-        insert_size (int): mean insert size of the aligned reads
-        mean_count_forward (list): list of mean bin sizes
-        mean_count_reverse (list): list of mean bin sizes
-        quality_hist_forward (list): list of weights, indices if model is
-            cdf, list of cumulative distribution functions if model is kde
-        quality_hist_reverse (list): list of weights, indices if model is
-            cdf, list of cumulative distribution functions if model is kde
-        subst_choices_forward (list): list of dictionaries representing
-            the substitution probabilities for the forward reads
-        subst_choices_reverse (list): list of dictionaries representing
-            the substitution probabilities for the reverse reads
-        ins_forward (list): list of dictionaries representing
-            the insertion probabilities for the forward reads
-        ins_reverse (list): list of dictionaries representing
-            the insertion probabilities for the reverse reads
-        del_forward (list): list of dictionaries representing
-            the deletion probabilities for the forward reads
-        del_reverse (list): list of dictionaries representing
-            the deletion probabilities for the reverse reads
+        mean_f (list): list of mean bin sizes
+        mean_r (list): list of mean bin sizes
+        hist_f (list): list of cumulative distribution functions for the
+            forward read quality
+        hist_r (list): list of cumulative distribution functions for the
+            reverse read quality
+        sub_f (list): list of dictionaries representing the substitution
+            probabilities for the forward reads
+        sub_r (list): list of dictionaries representing the substitution
+            probabilities for the reverse reads
+        ins_f (list): list of dictionaries representing the insertion
+            probabilities for the forward reads
+        ins_r (list): list of dictionaries representing the insertion
+            probabilities for the reverse reads
+        del_f (list): list of dictionaries representing the deletion
+            probabilities for the forward reads
+        del_r (list): list of dictionaries representing the deletion
+            probabilities for the reverse reads
+        i_size (int): distribution of insert size for the aligned reads
         output (string): prefix of the output file
     """
     logger = logging.getLogger(__name__)
@@ -119,7 +117,6 @@ def to_model(bam_path, output):
 
     Args:
         bam_path (string): path to a bam file
-        model (string): model to be used. Can be 'cdf' or 'kde'
         output (string): prefix of the output file
     """
     logger = logging.getLogger(__name__)

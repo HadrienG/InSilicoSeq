@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from iss.error_models import ErrorModel, basic, kde
+
 from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
+from Bio.SeqRecord import SeqRecord
+from nose.tools import raises
 
 import random
 import numpy as np
@@ -86,3 +88,8 @@ def test_introduce_indels():
             read, 'forward', ref_genome, bounds)
         assert len(read.seq) == 125
         assert read.seq[:10] == 'ATGATAATAT'
+
+
+@raises(SystemExit)
+def test_bad_err_mod():
+    err_mod = kde.KDErrorModel('data/empty_file')

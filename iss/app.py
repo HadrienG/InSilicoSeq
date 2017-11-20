@@ -7,6 +7,7 @@ from iss import download
 from iss import abundance
 from iss import generator
 from iss.version import __version__
+
 from Bio import SeqIO
 from joblib import Parallel, delayed
 
@@ -26,6 +27,7 @@ def generate_reads(args):
         args (object): the command-line arguments from argparse
     """
     logger = logging.getLogger(__name__)
+    logger.debug('iss version %s' % __version__)
     logger.debug('Using verbose logger')
 
     try:  # try to import and load the correct error model
@@ -33,15 +35,15 @@ def generate_reads(args):
         logger.info('Using %s ErrorModel' % args.mode)
         if args.mode == 'kde':
             from iss.error_models import kde
-            if args.model == 'HiSeq':
+            if args.model.lower() == 'hiseq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/HiSeq')
-            elif args.model == 'NovaSeq':
+            elif args.model.lower() == 'novaseq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/NovaSeq')
-            elif args.model == 'MiSeq':
+            elif args.model.lower() == 'miseq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/MiSeq')
@@ -53,10 +55,8 @@ def generate_reads(args):
             err_mod = kde.KDErrorModel(npz)
         elif args.mode == 'basic':
             if args.model is not None:
-                logger.warning(
-                    '--model %s will be ignored in --mode %s' %
-                    (args.model, args.mode)
-                )
+                logger.warning('--model %s will be ignored in --mode %s' % (
+                    args.model, args.mode))
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
     except ImportError as e:
@@ -68,8 +68,17 @@ def generate_reads(args):
             genome_file = args.genomes
         elif args.ncbi and args.n_genomes:
             util.genome_file_exists(args.output + '_genomes.fasta')
-            genomes = download.ncbi(args.ncbi, args.n_genomes)
-            genome_file = download.to_fasta(genomes, args.output)
+            total_genomes = []
+            try:
+                assert len(*args.ncbi) == len(*args.n_genomes)
+            except AssertionError as e:
+                logger.error(
+                    '--ncbi and --n_genomes of unequal lengths. Aborting')
+                sys.exit(1)
+            for g, n in zip(*args.ncbi, *args.n_genomes):
+                genomes = download.ncbi(g, n)
+                total_genomes.extend(genomes)
+            genome_file = download.to_fasta(total_genomes, args.output)
         else:
             logger.error('Invalid input')  # TODO better error handling here
             sys.exit(1)
@@ -83,6 +92,9 @@ def generate_reads(args):
         sys.exit(1)
     except AssertionError as e:
         logger.error('Genome(s) file seems empty: %s' % genome_file)
+        sys.exit(1)
+    except KeyboardInterrupt as e:
+        logger.error('iss generate interrupted: %s' % e)
         sys.exit(1)
     else:
         abundance_dispatch = {
@@ -143,12 +155,13 @@ def generate_reads(args):
                         record_file_name_list = Parallel(n_jobs=cpus)(
                             delayed(generator.reads)(
                                 record, err_mod,
-                                n_pairs_per_cpu, i,
+                                n_pairs_per_cpu, i, args.output,
                                 args.gc_bias) for i in range(cpus))
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
             logger.error('iss generate interrupted: %s' % e)
             generator.cleanup(temp_file_list)
+            sys.exit(1)
         else:
             # remove the duplicates in file list and cleanup
             # we remove the duplicates in case two records had the same header
@@ -169,6 +182,7 @@ def model_from_bam(args):
         args (object): the command-line arguments from argparse
     """
     logger = logging.getLogger(__name__)
+    logger.debug('iss version %s' % __version__)
     logger.debug('Using verbose logger')
 
     try:  # try to import bam module and write model data to file
@@ -250,17 +264,23 @@ def main():
         '--ncbi',
         '-k',
         choices=['bacteria', 'viruses', 'archaea'],
+        action='append',
+        nargs='*',
         metavar='<str>',
         help='Download input genomes from NCBI. Requires --n_genomes/-u\
-            option. Can be bacteria, viruses or archaea.'
+            option. Can be bacteria, viruses, archaea or a combination of the\
+            three (space-separated)'
     )
     parser_gen.add_argument(
         '--n_genomes',
         '-u',
         type=int,
+        action='append',
         metavar='<int>',
+        nargs='*',
         help='How many genomes will be downloaded from NCBI. Required if\
-            --ncbi/-k is set.'
+            --ncbi/-k is set. If more than one kingdom is set with --ncbi,\
+            multiple values are necessary (space-separated).'
     )
     input_abundance.add_argument(
         '--abundance',
@@ -303,7 +323,7 @@ def main():
         help='Error model file. (default: %(default)s). Use HiSeq, NovaSeq or \
         MiSeq for a pre-computed error model provided with the software, or a \
         file generated with iss model. If you do not wish to use a model, use \
-        --mode basic.'
+        --mode basic. The name of the built-in models is case insensitive.'
     )
     parser_gen.add_argument(
         '--gc_bias',

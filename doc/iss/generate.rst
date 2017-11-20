@@ -3,48 +3,45 @@
 Generating reads
 ================
 
-InSilicoSeq comes with a set of pre-computed error models to allow the user
-to easily generate reads from:
+InSilicoSeq comes with a set of pre-computed error models to allow the user to easily generate reads from the most popular Illumina instruments:
 
-- HiSeq 2500
+- HiSeq
 - MiSeq
+- NovaSeq
 
-Per example generate 1 million MiSeq 150bp reads from a set of input genomes:
-
-.. code-block:: bash
-
-    iss generate --genomes genomes.fasta --model_file MiSeq \
-    --output MiSeq_reads
-
-This will create 2 files, `MiSeq_reads_R1.fastq` and `MiSeq_reads_R2.fastq` in
-your current directory
-
-If you have created your custom model, change ``--model_file MiSeq`` to your
-custom model file:
+Per example generate 1 million MiSeq reads from a set of input genomes:
 
 .. code-block:: bash
 
-    iss generate --genomes genomes.fasta --model_file my_model.npz \
-    --output my_model_reads
+    iss generate --genomes genomes.fasta --model miseq --output miseq_reads
+
+This will create 2 fastq files, `miseq_reads_R1.fastq` and `miseq_reads_R2.fastq` in your current directory, as well as `miseq_reads_abundance.txt`, a tab-delimited file containing the abundance of each genomes.
+
+If you have created your custom model, change ``--model miseq`` to your custom model file:
+
+.. code-block:: bash
+
+    iss generate --genomes genomes.fasta --model model.npz --output model_reads
 
 
 Required input files
 --------------------
 
-By default, InSilicoSeq only requires 1 file in order to start generating
-reads: 1 (multi-)fasta files containing your input genome(s).
+By default, InSilicoSeq only requires 1 file in order to start generating reads: 1 (multi-)fasta files containing your input genome(s).
 
-If you don't want to use a multi-fasta file or don't have one at hand but are
-equipped with an Internet connection, you can download random genomes from the
-ncbi:
+If you don't want to use a multi-fasta file or don't have one at hand but are equipped with an Internet connection, you can download random genomes from the ncbi:
 
 .. code-block:: bash
 
-    iss generate --ncbi bacteria --n_genomes 10 --model_file MiSeq \
-    --output MiSeq_ncbi
+    iss generate --ncbi bacteria -u 10 --model miseq --output miseq_ncbi
 
-In addition the the 2 fastq files, the downloaded genomes will be in the file
-`MiSeq_ncbi_genomes.fasta` in your current directory.
+or for bacteria and viruses:
+
+.. code-block:: bash
+
+    iss generate -k bacteria viruses -u 10 4 --model miseq --output miseq_ncbi
+
+In addition the the 2 fastq files and the abundance file, the downloaded genomes will be saved in `miseq_ncbi_genomes.fasta` in your current directory.
 
 *Note: If possible, I recommend using InSilicoSeq with a fasta file as input.*
 *The eutils utilities from the ncbi can be slow and quirky.*
@@ -53,22 +50,17 @@ In addition the the 2 fastq files, the downloaded genomes will be in the file
 Abundance distribution
 ----------------------
 
-The abundance of the input genomes is determined (by default) by a log-normal
-distribution.
+With default settings, the abundance of the input genomes is drwan from a log-normal distribution.
 
-Alternatively, you can use other distributions with the ``--abundance``
-parameter: `uniform`, `halfnormal`, `exponential` or `zero-inflated-lognormal`
+Alternatively, you can use other distributions with the ``--abundance`` parameter: `uniform`, `halfnormal`, `exponential` or `zero-inflated-lognormal`
 
-If you wish to fine-tune the distribution of your genomes, InSilicoSeq also
-accepts an abundance file:
+If you wish to fine-tune the distribution of your genomes, InSilicoSeq also accepts an abundance file:
 
 .. code-block:: bash
 
-    iss generate --genomes genomes.fasta --abundance_file abundance.txt \
-    --model_file HiSeq2500 --output HiSeq_reads
+    iss generate -g genomes.fasta --abundance_file abundance.txt -m HiSeq -o HiSeq_reads
 
-Example abundance file for a multi-fasta containing 2 genomes: genome_A and
-genome_B.
+Example abundance file for a multi-fasta containing 2 genomes: genome_A and genome_B.
 
 .. code-block:: bash
 
@@ -76,8 +68,7 @@ genome_B.
     genome_B    0.8
 
 
-For the abundance to make sense, the total abundance in your abundance file
-must equal 1.
+For the abundance to make sense, the total abundance in your abundance file must equal 1.
 
 .. figure:: distributions.png
 
@@ -95,20 +86,22 @@ Input genome(s) from where the reads will originate
 --ncbi
 ^^^^^^
 
-Download input genomes from RefSeq instead of using --genomes. Requires
---n_genomes option. Can be bacteria, viruses or archaea.
+Download input genomes from RefSeq instead of using --genomes.
+Requires --n_genomes option.
+Can be bacteria, viruses, archaea or a combination of the three (space-separated)
 
 --n_genomes
 ^^^^^^^^^^^
 
 How many genomes will be downloaded from the ncbi.
 Required if --ncbi is set.
+If more than one kingdom is set with --ncbi, multiple values are necessary (space-separated).
 
 --abundance
 ^^^^^^^^^^^
 
-Abundance distribution (default: lognormal). Can be uniform, halfnormal,
-exponential, lognormal or zero-inflated-lognormal.
+Abundance distribution (default: lognormal).
+Can be uniform, halfnormal, exponential, lognormal or zero_inflated_lognormal.
 
 --abundance_file
 ^^^^^^^^^^^^^^^^
@@ -118,20 +111,28 @@ Abundance file for coverage calculations (default: None).
 --n_reads
 ^^^^^^^^^
 
-Number of reads to generate (default: 1000000)
+Number of reads to generate (default: 1000000).
+Allows suffixes k, K, m, M, g and G (ex 0.5M for 500000).
 
---model
+--mode
 ^^^^^^^
 
 Error model. If not specified, using kernel density estimation (default: kde).
-Can be 'kde', 'cdf' or 'basic'
+Can be 'kde' or 'basic'
 
---model_file
-^^^^^^^^^^^^
+--model
+^^^^^^^^
 
-Error model file. If not specified, using a basic error model instead
-(default: None). Use 'HiSeq2500' or 'MiSeq' for a pre-computed error model
-provided with the software.
+Error model file. (default: None).
+Use HiSeq, NovaSeq or MiSeq for a pre-computed error model provided with the software, or a file generated with iss model.
+If you do not wish to use a model, use --mode basic.
+The name of the built-in models is case insensitive.
+
+--gc_bias
+^^^^^^^^^
+
+If set, may fail to sequence reads with abnormal GC content.
+Does not guarantee --n_reads (default: False)
 
 --cpus
 ^^^^^^

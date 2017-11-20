@@ -18,10 +18,10 @@ def insert_size(insert_size_distribution):
 
     Args:
         insert_size_distribution (list): list of insert sizes from aligned
-        reads
+        read pairs
 
     Returns:
-        TODO
+        1darray: a cumulative density function
     """
     kde = stats.gaussian_kde(
         insert_size_distribution,
@@ -43,6 +43,9 @@ def divide_qualities_into_bins(qualities, n_bins=4):
         qualities (list): raw count of all the phred scores and mean sequence
             quality
         n_bins (int): number of bins to create (default: 4)
+
+    Returns:
+        list: a list of lists containing the binned quality scores
     """
     logger = logging.getLogger(__name__)
     logger.debug('Dividing qualities into mean clusters')
@@ -60,20 +63,17 @@ def divide_qualities_into_bins(qualities, n_bins=4):
 
 
 def quality_bins_to_histogram(bin_lists):
-    """Test function that calculates pseudo 2d cumulative density functions for
-    each position
+    """Wrapper function to generate cdfs for each quality bins
 
     Generate cumulative distribution functions for a number of mean quality
     bins
-
-    EXPERIMENTAL
 
     Args:
         bins_lists (list): list of list containing raw count of all phred
         scores
 
     Returns:
-        list
+        list: a list of lists containg cumulative density functions
     """
     logger = logging.getLogger(__name__)
     cdf_bins = []
@@ -82,10 +82,9 @@ def quality_bins_to_histogram(bin_lists):
         if len(qual_bin) > 0:
             logger.debug('Transposing matrix for mean cluster #%s' % i)
             # quals = np.asarray(qual_bin).T  # seems to make clunkier models
-            quals = [i for i in zip(*qual_bin)]
+            quals = [q for q in zip(*qual_bin)]
             logger.debug(
-                'Modelling quality distribution for mean cluster #%s'
-                % i)
+                'Modelling quality distribution for mean cluster #%s' % i)
             cdfs_list = raw_qualities_to_histogram(quals)
             cdf_bins.append(cdfs_list)
         else:
@@ -96,20 +95,17 @@ def quality_bins_to_histogram(bin_lists):
 
 
 def raw_qualities_to_histogram(qualities):
-    """Calculate probabilities of each phred score at each position of the read
+    """Approximate the distribution of base quality at each position in a read
+    using a pseudo 2d kernel density estimation
 
     Generate cumulative distribution functions
-
-    contains the distribution/probabilities of the phred scores for
-    one position in all the reads. Returns a list of numpy arrays for each
-    position
 
     Args:
         qualities (list): raw count of all phred scores
 
     Returns:
-        list: list of cumulative distribution functions. One cdf per base.
-            the list has the size of the read length
+        list: list of cumulative distribution functions. One cdf per base. The
+            list has the size of the read length
     """
     logger = logging.getLogger(__name__)
 

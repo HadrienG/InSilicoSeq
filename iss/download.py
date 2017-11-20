@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from Bio import SeqIO
+from Bio import Entrez
 
 import http
 import random
 import logging
-
-from Bio import SeqIO
-from Bio import Entrez
 
 
 def ncbi(kingdom, n_genomes):
@@ -16,7 +17,7 @@ def ncbi(kingdom, n_genomes):
         n_genomes (int): the number of genomes to download
 
     Returns:
-        list: list of handles
+        list: a list of genome records
     """
     logger = logging.getLogger(__name__)
     Entrez.email = ''
@@ -25,7 +26,7 @@ def ncbi(kingdom, n_genomes):
         'genome', term='%s[Organism]' % kingdom, retmax=100000))['IdList']
     genomes = []
     n = 0
-    logger.info('Searching for genomes to download')
+    logger.info('Searching for %s to download' % kingdom)
     while n < n_genomes:
         ident = random.choice(full_id_list)
         genome_info = Entrez.read(
@@ -75,13 +76,13 @@ def ncbi(kingdom, n_genomes):
 
 
 def to_fasta(genomes, output):
-    """Write genomes to fasta
+    """Write genomes to a fasta file
 
-    Take the genomes from the ncbi function and write them to a fasta file:
+    Take a list of genome records and write them to a fasta file named
     output_genomes.fasta
 
     Args:
-        genomes (list): list of genome handles
+        genomes (list): list of genome records
         output (string): the output file prefix
 
     Returns:

@@ -6,15 +6,13 @@
 InSilicoSeq
 ============
 
-InSilicoSeq (or iss) is a sequencing simulator producing (relatively) realistic
-Illumina reads primarily intended for simulating metagenomic samples, although
-it can be used to produce sequencing data from a single genome.
+InSilicoSeq is a sequencing simulator producing realistic Illumina reads.
+Primarily intended for simulating metagenomic samples, it can also be used to produce sequencing data from a single genome.
 
-InSilicoSeq is written in python, and use a kernel density estimation model to
-model the read quality of real sequencing data.
+InSilicoSeq is written in python, and use kernel density estimators to model the read quality of real sequencing data.
 
-InSilicoSeq support substitution, insertion and deletion errors. If you don't
-have the use for insertion and deletion error a basic error model is provided.
+InSilicoSeq support substitution, insertion and deletion errors.
+If you don't have the use for insertion and deletion error a basic error model is provided.
 
 Contents
 --------
