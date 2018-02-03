@@ -75,7 +75,12 @@ def generate_reads(args):
                 logger.error(
                     '--ncbi and --n_genomes of unequal lengths. Aborting')
                 sys.exit(1)
-            for g, n in zip(*args.ncbi, *args.n_genomes):
+            # for g, n in zip(*args.ncbi, *args.n_genomes):  # this is py3 only
+            # py2 compatibilty workaround
+            # TODO remove when we drop python2
+            args.ncbi = [x for y in args.ncbi for x in y]
+            args.n_genomes = [x for y in args.n_genomes for x in y]
+            for g, n in zip(args.ncbi, args.n_genomes):
                 genomes = download.ncbi(g, n)
                 total_genomes.extend(genomes)
             genome_file = download.to_fasta(total_genomes, args.output)
@@ -394,4 +399,4 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-        # raise  # extra traceback to uncomment if all hell breaks lose
+        raise  # extra traceback to uncomment if all hell breaks lose
