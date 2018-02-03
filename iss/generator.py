@@ -45,12 +45,12 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
         % (cpu_number, n_pairs))
     read_tuple_list = []
     for i in range(n_pairs):
-        try:
-            forward, reverse = simulate_read(record, ErrorModel, i)
-        except ValueError as e:
-            logger.error('Skipping this record: %s' % record.id)
-            return
-        # forward, reverse = simulate_read(record, ErrorModel, i)
+        # try:
+        #     forward, reverse = simulate_read(record, ErrorModel, i)
+        # except ValueError as e:
+        #     logger.error('Skipping this record: %s' % record.id)
+        #     return
+        forward, reverse = simulate_read(record, ErrorModel, i)
         if gc_bias:
             stiched_seq = forward.seq + reverse.seq
             gc_content = GC(stiched_seq)
@@ -94,10 +94,12 @@ def simulate_read(record, ErrorModel, i):
         forward_start = random.randrange(
             0, len(record.seq) - (2 * read_length + insert_size))
     except ValueError as e:
-        logger.error(
+        logger.debug(
             '%s shorter than template length for this ErrorModel:%s'
             % (record.id, e))
-        raise
+        forward_start = max(0, random.randrange(
+            0, len(record.seq) - read_length))
+        # raise
 
     forward_end = forward_start + read_length
     bounds = (forward_start, forward_end)
@@ -116,8 +118,17 @@ def simulate_read(record, ErrorModel, i):
     forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
     # generate the reverse read
-    reverse_start = forward_end + insert_size
-    reverse_end = reverse_start + read_length
+    try:
+        reverse_start = forward_end + insert_size
+        reverse_end = reverse_start + read_length
+        assert reverse_end < len(record.seq)
+    except AssertionError as e:
+        # we use random insert when the modelled template length distribution
+        # is too large
+        reverse_end = len(record.seq) - random.randrange(
+            read_length, len(record.seq) - read_length
+        )
+        reverse_start = reverse_end - read_length
     bounds = (reverse_start, reverse_end)
     # create a perfect read
     reverse = SeqRecord(
