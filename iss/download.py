@@ -4,7 +4,7 @@
 from Bio import SeqIO
 from Bio import Entrez
 
-import http
+import http.client
 import random
 import logging
 

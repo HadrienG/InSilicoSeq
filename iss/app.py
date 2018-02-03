@@ -399,4 +399,4 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-        raise  # extra traceback to uncomment if all hell breaks lose
+        # raise  # extra traceback to uncomment if all hell breaks lose
