@@ -53,7 +53,20 @@ def test_simulate_and_save():
     generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
 
 
-@raises(ValueError)
+@with_setup(setup_function, teardown_function)
+def test_simulate_And_save_short():
+    err_mod = basic.BasicErrorModel()
+    ref_genome = SeqRecord(
+        Seq(str('AACCC' * 100),
+            IUPAC.unambiguous_dna
+            ),
+        id='my_genome',
+        description='test genome'
+        )
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
+
+
+@raises(SystemExit)
 def test_small_input():
     err_mod = kde.KDErrorModel('data/ecoli.npz')
     ref_genome = SeqRecord(
@@ -98,3 +111,20 @@ def test_kde():
         read_tuple = generator.simulate_read(ref_genome, err_mod, 1)
         big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
         assert big_read[:15] == 'CCGTTTCAACCCGTT'
+
+
+def test_kde_short():
+        if sys.version_info > (3,):
+            random.seed(42)
+            np.random.seed(42)
+            err_mod = kde.KDErrorModel('data/ecoli.npz')
+            ref_genome = SeqRecord(
+                Seq(str('AAACC' * 100),
+                    IUPAC.unambiguous_dna
+                    ),
+                id='my_genome',
+                description='test genome'
+                )
+            read_tuple = generator.simulate_read(ref_genome, err_mod, 1)
+            big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
+            assert big_read == 'ACCAAACCAAACCAAACCAAGGTTTGGTTTGGTTTGGTGT'
