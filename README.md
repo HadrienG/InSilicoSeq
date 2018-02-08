@@ -2,7 +2,7 @@
 ## A sequencing simulator
 
 [![Build Status](https://travis-ci.org/HadrienG/InSilicoSeq.svg?branch=master)](https://travis-ci.org/HadrienG/InSilicoSeq)
-[![Documentation Status](https://readthedocs.org/projects/insilicoseq/badge/?version=1.0.0)](http://insilicoseq.readthedocs.io/en/1.0.0/?badge=0.8.0)
+[![Documentation Status](https://readthedocs.org/projects/insilicoseq/badge/?version=1.0.1)](http://insilicoseq.readthedocs.io/en/1.0.1/?badge=1.0.1)
 [![PyPI version](https://badge.fury.io/py/InSilicoSeq.svg)](https://badge.fury.io/py/InSilicoSeq)
 [![codecov](https://codecov.io/gh/HadrienG/InSilicoSeq/branch/master/graph/badge.svg)](https://codecov.io/gh/HadrienG/InSilicoSeq)
 [![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
@@ -25,7 +25,7 @@ pip install InSilicoSeq
 Alternatively, with docker:
 
 ```shell
-docker pull hadrieng/insilicoseq:1.0.0
+docker pull hadrieng/insilicoseq:1.0.1
 ```
 
 ## Usage
