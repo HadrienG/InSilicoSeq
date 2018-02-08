@@ -91,8 +91,14 @@ def simulate_read(record, ErrorModel, i):
     insert_size = ErrorModel.random_insert_size()
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
+        assert read_length <= len(record.seq)
         forward_start = random.randrange(
             0, len(record.seq) - (2 * read_length + insert_size))
+    except AssertionError as e:
+        logger.error(
+            '%s shorter than read length for this ErrorModel:%s'
+            % (e, record.id))
+        sys.exit(1)
     except ValueError as e:
         logger.debug(
             '%s shorter than template length for this ErrorModel:%s'
