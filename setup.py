@@ -8,11 +8,16 @@ from setuptools import setup, find_packages
 
 url = 'https://github.com/HadrienG/InSilicoSeq'
 
+with open('README.md') as f:
+    long_description = f.read()
+
 setup(
     name='InSilicoSeq',
     version=__version__,
 
     description='a sequencing simulator',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
 
     url=url,
     download_url=url + '/tarball/' + __version__,
