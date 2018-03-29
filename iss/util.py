@@ -8,6 +8,7 @@ from Bio import SeqIO
 
 import os
 import sys
+import random
 import logging
 import numpy as np
 
@@ -146,6 +147,38 @@ def genome_file_exists(filename):
         assert os.path.exists(filename) is False
     except AssertionError as e:
         logger.error('%s already exists. Aborting.' % filename)
-        logger.error('Maybe use --genomes %s' % filename)
-        logger.error('or use --ncbi with another output prefix')
+        logger.error('Maybe use another --output prefix %s' % filename)
         sys.exit(1)
+
+
+def reservoir(records, record_list, args):
+    """yield a number of records from a fasta file using reservoir sampling
+
+    Args:
+        records (obj): fasta records from SeqIO.parse
+
+    Yields:
+        record (obj): a fasta record
+    """
+    logger = logging.getLogger(__name__)
+    if args.n_genomes:
+        try:
+            n = args.n_genomes
+            total = len(record_list)
+            assert n <= total
+        except AssertionError as e:
+            logger.error(
+                '--n_genomes greater than total number of records. Aborting.')
+            sys.exit(1)
+        else:
+            x = 0
+            samples = sorted([random.randint(0, total - 1) for s in range(n)])
+            for sample in samples:
+                while x < sample:
+                    x += 1
+                    _ = records.next()
+                yield record
+                x += 1
+    else:
+        for record in records:
+            yield record
