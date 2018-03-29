@@ -132,7 +132,12 @@ def generate_reads(args):
             f = open(genome_file, 'r')  # re-opens the file
             with f:
                 fasta_file = SeqIO.parse(f, 'fasta')
-                for record in fasta_file:  # generate reads for each record
+                if args.n_genomes:
+                    n = args.n_genomes[0][0]
+                else:
+                    n = None
+                for record in util.reservoir(fasta_file, record_list, n):
+                    # generate reads for records
                     try:
                         species_abundance = abundance_dic[record.id]
                     except KeyError as e:
@@ -285,7 +290,9 @@ def main():
         nargs='*',
         help='How many genomes will be downloaded from NCBI. Required if\
             --ncbi/-k is set. If more than one kingdom is set with --ncbi,\
-            multiple values are necessary (space-separated).'
+            multiple values are necessary (space-separated). Can also be set \
+            with --genomes/-g in which case random genomes will be taken from \
+            the input multifasta'
     )
     input_abundance.add_argument(
         '--abundance',

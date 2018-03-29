@@ -5,6 +5,10 @@ from nose.tools import raises
 
 from iss import util
 
+from Bio import SeqIO
+
+import random
+
 
 def test_phred_conversions():
     assert util.phred_to_prob(40) == 0.9999
@@ -98,3 +102,27 @@ def test_convert_n_reads_bad_suffix():
 def test_genome_file_exists():
     my_important_file = 'data/ecoli.fasta'
     util.genome_file_exists(my_important_file)
+
+
+def test_reservoir():
+    samples = []
+    genome_file = 'data/genomes.fasta'
+    with open(genome_file, 'r') as f:
+        record_list = util.count_records(f)
+    n = 2
+    with open(genome_file, 'r') as f:
+        fasta_file = SeqIO.parse(f, 'fasta')
+        for record in util.reservoir(fasta_file, record_list, n):
+            samples.append(record.id)
+    assert len(samples) == 2
+
+
+@raises(SystemExit)
+def test_reservoir_invalid_input():
+    genome_file = 'data/ecoli.fasta'
+    record_list = ['NC_002695.1']
+    n = 4
+    with open(genome_file, 'r') as f:
+        fasta_file = SeqIO.parse(f, 'fasta')
+        for record in util.reservoir(fasta_file, record_list, n):
+            pass
