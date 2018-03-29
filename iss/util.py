@@ -176,8 +176,14 @@ def reservoir(records, record_list, n=None):
             for sample in samples:
                 while x < sample:
                     x += 1
-                    _ = records.__next__()
-                record = records.__next__()
+                    if sys.version_info > (3,):
+                        _ = records.__next__()
+                    else:
+                        _ = records.next()  # I hate python2
+                if sys.version_info > (3,):
+                    record = records.__next__()
+                else:
+                    record = records.next()
                 x += 1
                 yield record
     else:
