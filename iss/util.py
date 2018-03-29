@@ -151,7 +151,7 @@ def genome_file_exists(filename):
         sys.exit(1)
 
 
-def reservoir(records, record_list, args):
+def reservoir(records, record_list, n=None):
     """yield a number of records from a fasta file using reservoir sampling
 
     Args:
@@ -161,9 +161,8 @@ def reservoir(records, record_list, args):
         record (obj): a fasta record
     """
     logger = logging.getLogger(__name__)
-    if args.n_genomes:
+    if n is not None:
         try:
-            n = args.n_genomes
             total = len(record_list)
             assert n <= total
         except AssertionError as e:
@@ -171,14 +170,16 @@ def reservoir(records, record_list, args):
                 '--n_genomes greater than total number of records. Aborting.')
             sys.exit(1)
         else:
+            random.seed()
             x = 0
             samples = sorted([random.randint(0, total - 1) for s in range(n)])
             for sample in samples:
                 while x < sample:
                     x += 1
-                    _ = records.next()
-                yield record
+                    _ = records.__next__()
+                record = records.__next__()
                 x += 1
+                yield record
     else:
         for record in records:
             yield record
