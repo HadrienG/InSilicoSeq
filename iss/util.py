@@ -164,15 +164,15 @@ def reservoir(records, record_list, n=None):
     if n is not None:
         try:
             total = len(record_list)
-            assert n <= total
+            assert n < total
         except AssertionError as e:
             logger.error(
-                '--n_genomes greater than total number of records. Aborting.')
+                '-u should be strictly smaller than total number of records.')
             sys.exit(1)
         else:
             random.seed()
             x = 0
-            samples = sorted([random.randint(0, total - 1) for s in range(n)])
+            samples = sorted(random.sample(range(0, total - 1), n))
             for sample in samples:
                 while x < sample:
                     x += 1

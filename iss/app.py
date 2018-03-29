@@ -132,7 +132,10 @@ def generate_reads(args):
             f = open(genome_file, 'r')  # re-opens the file
             with f:
                 fasta_file = SeqIO.parse(f, 'fasta')
-                n = args.n_genomes if args.n_genomes else None
+                if args.n_genomes:
+                    n = args.n_genomes[0][0]
+                else:
+                    n = None
                 for record in util.reservoir(fasta_file, record_list, n):
                     # generate reads for records
                     try:
