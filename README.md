@@ -19,6 +19,12 @@ InSilicoSeq support substitution, insertion and deletion errors. If you don't ha
 To install InSilicoSeq, type the following in your terminal:
 
 ```shell
+pip3 install InSilicoSeq
+```
+
+or if you want to use python2, or are using python3 and pip3 aliased to python and pip:
+
+```bash
 pip install InSilicoSeq
 ```
 
@@ -42,7 +48,7 @@ for generating 1 million reads modelling a MiSeq instrument:
 iss generate --genomes genomes.fasta --model miseq --output miseq_reads
 ```
 
-where `genomes.fasta` is a (multi-)fasta file containing the reference genome from which the simulated reads will be generated.
+where `genomes.fasta` should be replaced by a (multi-)fasta file containing the reference genome from which the simulated reads will be generated.
 
 InSilicoSeq comes with 3 error models: `MiSeq`, `HiSeq` and `NovaSeq`.
 
@@ -53,6 +59,8 @@ For 10 million reads and a custom error model:
 ```shell
 iss generate -g genomes.fasta -n 10m --model my_model.npz --output my_reads
 ```
+
+granted you have built `my_model.npz` with `iss model` (see [below](#create-your-own-error-model))
 
 For more examples and a full list of options, please refer to the full
 [documentation](http://insilicoseq.readthedocs.io)
@@ -75,19 +83,22 @@ For more examples and a full list of options, please refer to the full [document
 
 If you do not wish to use the pre-computed error models provided with InSilicoSeq, it is possible to create your own.
 
+Say you have a reference metagenome called `genomes.fasta`, and read pairs `reads_R1.fastq.gz` and `reads_R2.fastq.gz`
+
 Align you reads against the reference:
 
 ```shell
-    bowtie2-build genomes.fasta genomes
-    bowtie2 -x genomes -1 reads_R1.fastq.gz -2 reads_R2.fastq.gz | \
-    samtools view -bS | samtools sort -o genomes.bam
-    samtools index genomes.bam
+bowtie2-build genomes.fasta genomes
+bowtie2 -x genomes -1 reads_R1.fastq.gz -2 reads_R2.fastq.gz | \
+samtools view -bS | samtools sort -o genomes.bam
+samtools index genomes.bam
 ```
+
 
 then build the model:
 
 ```shell
-    iss model -b genomes.bam -o genomes
+iss model -b genomes.bam -o genomes
 ```
 
 which will create a `genome.npz` file containing your newly built model
