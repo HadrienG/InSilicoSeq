@@ -9,7 +9,7 @@ InSilicoSeq comes with a set of pre-computed error models to allow the user to e
 - MiSeq
 - NovaSeq
 
-Per example generate 1 million MiSeq reads from a set of input genomes:
+Per example generate 1 million MiSeq reads from a set of input genomes called `genomes.fasta`:
 
 .. code-block:: bash
 
@@ -35,11 +35,16 @@ If you don't want to use a multi-fasta file or don't have one at hand but are eq
 
     iss generate --ncbi bacteria -u 10 --model miseq --output miseq_ncbi
 
-or for bacteria and viruses:
+The above command will generate reads from 10 random bacterial genomes from the NCBI
+
+Additionally, you can supply tab separated kingdoms if you wish to have mixed datasets:
 
 .. code-block:: bash
 
     iss generate -k bacteria viruses -u 10 4 --model miseq --output miseq_ncbi
+
+The above command will generate reads from 10 random bacteria and 4 random viruses.
+``--ncbi/-k`` accepts the following values: ``bacteria``, ``viruses`` and ``archaea``.
 
 In addition the the 2 fastq files and the abundance file, the downloaded genomes will be saved in `miseq_ncbi_genomes.fasta` in your current directory.
 

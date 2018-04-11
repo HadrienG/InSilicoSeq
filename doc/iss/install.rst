@@ -12,11 +12,12 @@ To install InSilicoSeq, type the following in your terminal:
 
 .. code-block:: bash
 
-    pip install InSilicoSeq
+    pip3 install InSilicoSeq
 
 It will install InSilicoSeq as well as the following dependencies:
 
 * biopython
+* joblib
 * numpy
 * pysam
 * scipy
@@ -28,13 +29,19 @@ Advanced options
 
 .. code-block:: bash
 
-    pip install --upgrade InSilicoSeq
+    pip3 install --upgrade InSilicoSeq
 
 * If you don't have administration rights on your machine:
 
 .. code-block:: bash
 
-    pip install --user InSilicoSeq
+    pip3 install --user InSilicoSeq
+
+* If you are using python2, have aliased ``pip3`` to ``pip`` or are in a virtualenv:
+
+.. code-block:: bash
+
+    pip install InSilicoSeq
 
 * if you wish to install InSilicoSeq at a custom location (i.e with a module system):
 
@@ -56,7 +63,7 @@ If you wish to use InSilicoSeq using docker
 
 .. code-block:: bash
 
-    docker pull hadrieng/insilicoseq:1.0.1
+    docker pull hadrieng/insilicoseq:1.1.0
 
 To use InSilicoSeq with docker, you need to provide a `volume` to the ``docker run`` command.
 Given with the ``-v`` option, the volume is your way to exchanging data (in this case, your input and output files) with the docker container.
