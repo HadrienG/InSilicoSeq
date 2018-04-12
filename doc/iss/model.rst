@@ -28,6 +28,26 @@ Build the model
 
 which will create a `my_model.npz` file containing your newly built model
 
+Pre-built models
+----------------
+
+The prebuilt models were built with the following commands:
+
+.. code-block:: bash
+
+    megahit -1 reads_R1.fastq -2 reads_R2.fastq -o asm
+    bowtie2-build asm/final.contigs.fa miseq_asm/final.contigs
+    bowtie2 -x asm/final.contigs -1 reads_R1.fastq \
+        -2 reads_R2.fastq | samtools view -bS | samtools sort -o mapping.bam
+    samtools index mapping.bam
+    iss model -b mapping.bam -o name_of_model
+
+
+The MiSeq model was built from an ocean metagenomics project in Kenya (sample accession number ERR1912174).
+
+The HiSeq and NovaSeq models were built from human run obtained via basespace.
+
+
 Full list of options
 --------------------
 
