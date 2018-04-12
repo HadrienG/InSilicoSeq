@@ -11,8 +11,16 @@ Primarily intended for simulating metagenomic samples, it can also be used to pr
 
 InSilicoSeq is written in python, and use kernel density estimators to model the read quality of real sequencing data.
 
-InSilicoSeq support substitution, insertion and deletion errors.
-If you don't have the use for insertion and deletion error a basic error model is provided.
+InSilicoSeq support substitution, insertion, deletion errors, and models gc bias and insert size distribution.
+
+Details
+-------
+
+**Authors:** Hadrien Gourlé, Juliette Hayer and Oskar E. Karlsson
+**Contact:** `hadrien.gourle@slu.se<hadrien.gourle@slu.se>`_
+**GitHub:** `https://github.com/HadrienG/InSilicoSeq<https://github.com/HadrienG/InSilicoSeq>`_
+**License:** MIT
+
 
 Contents
 --------
