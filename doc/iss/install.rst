@@ -22,8 +22,14 @@ It will install InSilicoSeq as well as the following dependencies:
 * pysam
 * scipy
 
-Advanced options
-^^^^^^^^^^^^^^^^
+Other installation options
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* If you can't / don't want to use python3:
+
+.. code-block:: bash
+
+    pip install InSilicoSeq
 
 * Upgrading InSilicoSeq to the latest version:
 
@@ -37,18 +43,12 @@ Advanced options
 
     pip3 install --user InSilicoSeq
 
-* If you are using python2, have aliased ``pip3`` to ``pip`` or are in a virtualenv:
-
-.. code-block:: bash
-
-    pip install InSilicoSeq
-
 * if you wish to install InSilicoSeq at a custom location (i.e with a module system):
 
 .. code-block:: bash
 
     prefix="/path/to/install/prefix"
-    pip install --install-option="--prefix=/$prefix" InSilicoSeq
+    pip3 install --install-option="--prefix=/$prefix" InSilicoSeq
 
 then add ``$prefix/bin`` to your ``PATH``, and
 ``$prefix/lib/pythonX.X/site-packages`` to your ``PYTHONPATH`` (replacing
