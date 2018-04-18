@@ -9,7 +9,7 @@ InSilicoSeq comes with a set of pre-computed error models to allow the user to e
 - MiSeq
 - NovaSeq
 
-Per example generate 1 million MiSeq reads from a set of input genomes called `genomes.fasta`:
+Per example generate 1 million MiSeq reads from a set of input genomes called `genomes.fasta` (not provided):
 
 .. code-block:: bash
 
@@ -17,11 +17,25 @@ Per example generate 1 million MiSeq reads from a set of input genomes called `g
 
 This will create 2 fastq files, `miseq_reads_R1.fastq` and `miseq_reads_R2.fastq` in your current directory, as well as `miseq_reads_abundance.txt`, a tab-delimited file containing the abundance of each genomes.
 
-If you have created your custom model, change ``--model miseq`` to your custom model file:
+InSilicoSeq will use 2 cpus by default. For multithreading, use ``--cpus``:
+
+.. code-block:: bash
+
+    iss generate --cpus 8 --genomes genomes.fasta --model hiseq --output hiseq_reads
+
+If you have created your custom model, give to ``--model`` the path of your custom model file:
 
 .. code-block:: bash
 
     iss generate --genomes genomes.fasta --model model.npz --output model_reads
+
+If your multi-fasta file contain more genomes than the number of organisms for which you wish to simulate reads, you can use the ``--n_genomes``/``-u`` parameter:
+
+.. code-block:: bash
+
+    iss generate --genomes genomes.fasta --n_genomes 5 --model novaseq --output novaseq_reads
+
+The above command will pick 5 random genomes in your multi-fasta and generate reads from them.
 
 
 Required input files
@@ -29,7 +43,7 @@ Required input files
 
 By default, InSilicoSeq only requires 1 file in order to start generating reads: 1 (multi-)fasta files containing your input genome(s).
 
-If you don't want to use a multi-fasta file or don't have one at hand but are equipped with an Internet connection, you can download random genomes from the ncbi:
+If you don't want to use a multi-fasta file or don't have one at hand but are equipped with an Internet connection, you can download random genomes from the ncbi with the ``--ncbi``/``-k`` parameter:
 
 .. code-block:: bash
 
@@ -55,7 +69,7 @@ In addition the the 2 fastq files and the abundance file, the downloaded genomes
 Abundance distribution
 ----------------------
 
-With default settings, the abundance of the input genomes is drwan from a log-normal distribution.
+With default settings, the abundance of the input genomes is drawn from a log-normal distribution.
 
 Alternatively, you can use other distributions with the ``--abundance`` parameter: `uniform`, `halfnormal`, `exponential` or `zero-inflated-lognormal`
 
@@ -78,6 +92,28 @@ For the abundance to make sense, the total abundance in your abundance file must
 .. figure:: distributions.png
 
     Histograms of the different distribution (drawn with 100 samples)
+
+GC bias
+-------
+
+InSilicoSeq can also model gc bias:
+
+.. code-block:: bash
+
+    iss generate -g genomes.fasta --model miseq --gc_bias --output reads
+
+
+Basic error model
+-----------------
+
+By default InSilicoSeq uses Kernel Density Estimators for generating reads.
+Both the pre-built models (miseq, hiseq and novaseq), as well as the model files you build yourselves are that way.
+
+If you wish to use a much simpler model (because you don't have the need for insertions and deletion errors per example), you can use ``--mode basic``
+
+.. code-block:: bash
+
+    iss generate -g genomes.fasta --mode basic --output basic_reads
 
 
 Full list of options
