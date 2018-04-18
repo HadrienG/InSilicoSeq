@@ -63,7 +63,7 @@ If you wish to use InSilicoSeq using docker
 
 .. code-block:: bash
 
-    docker pull hadrieng/insilicoseq:1.1.0
+    docker pull hadrieng/insilicoseq:1.1.1
 
 To use InSilicoSeq with docker, you need to provide a `volume` to the ``docker run`` command.
 Given with the ``-v`` option, the volume is your way to exchanging data (in this case, your input and output files) with the docker container.
@@ -71,7 +71,7 @@ Given with the ``-v`` option, the volume is your way to exchanging data (in this
 .. code-block:: bash
 
     docker run -v /Users/hadrien/data:/mnt/data -it --rm \
-        hadrieng/insilicoseq:1.0.1 iss generate \
+        hadrieng/insilicoseq:1.1.1 iss generate \
         --genomes /mnt/data/genomes.fasta -m miseq \
         -o /mnt/data/reads
 
