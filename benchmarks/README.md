@@ -21,7 +21,7 @@ See #49
 
 * GNU time (1.9)
 
-## Commands used
+## Commands used and time info
 
 ### iss
 
@@ -42,4 +42,8 @@ env time -v iss generate --genomes test_genomes.fasta -n 0.5m --model miseq --cp
 | 9 | 8:31.71 | 305276 |
 | 10 | 8:31.07 | 299068 |
 
-## BEAR
+### BEAR
+
+```bash
+env time -v bash run_bear.sh -g test_genomes.fasta -r reads -o bear/test_x
+```

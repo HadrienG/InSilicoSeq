@@ -33,9 +33,25 @@ while getopts "hg:r:o:" option
     done
 shift $((OPTIND-1))
 
+if [ -z "${reference+x}" ]
+    then
+        printf "%s\n\nEmply value for -g\n" "${usage}" >&2
+        exit 1
+fi
+if [ -z "${reads+x}" ]
+    then
+        printf "%s\n\nEmply value for -r\n" "${usage}" >&2
+        exit 1
+fi
+if [ -z "${output+x}" ]
+    then
+        printf "%s\n\Bad value for -o\n" "${usage}" >&2
+        exit 1
+fi
+
 module load bear
 
-parametric abundance.pl "${reference}" med "${output}.txt"
+parametric_abundance.pl "${reference}" med "${output}.txt"
 drisee.py --percent -n 3 -b 10000 -x 10000 -t fastq -s 500000 "${reads}" \
     "${output}_err"
 error quality.pl "${reads}" "${output}_err.uc"
