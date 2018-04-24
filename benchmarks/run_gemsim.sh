@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 usage="$(basename "${0}") [-h] [-g fasta] [-r reads] [-o output] --
-        Wrapper script around BEAR
+        Wrapper script around GemSIm
 
         options:
             -g <multifasta> reference genomes in fasta format
@@ -49,14 +49,6 @@ if [ -z "${output+x}" ]
         exit 1
 fi
 
-module load drisee
-module load bear
 
-parametric_abundance.pl "${reference}" med "${output}.txt"
-drisee.py --percent -n 3 -b 10000 -x 10000 -t fastq -s 500000 "${reads}" \
-    "${output}_err"
-error_quality.pl "${reads}" "${output}_err.uc"
-generate_reads.py -r "${reference}" -a "${output}.txt" -o "${output}.fastq" \
-    -t 500000 -l 300 -i 350 -s 10
-trim_reads.pl -i "${reads}" -f "${reference}" -o "${output}.fastq" -r \
-    "${output}_err.per" -q "${output}_err.err.qual" -m "${output}_err.err.matr"
+FASTQcharacterize.sh -input "${reads}" -reference
+FASTQspike.sh

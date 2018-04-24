@@ -47,3 +47,61 @@ env time -v iss generate --genomes test_genomes.fasta -n 0.5m --model miseq --cp
 ```bash
 env time -v bash run_bear.sh -g test_genomes.fasta -r reads -o bear/test_x
 ```
+
+*Failed to run*
+
+
+### FASTQSim
+
+```bash
+
+```
+
+*Failed to run*
+
+### GemSim
+
+#### Error model generation
+
+```bash
+env time -v python GemErr.py -f ../../MiSeq_300bp/final.contigs.fa -s ../../MiSeq_300bp/45_S1_L001_R1_001.fastq.bam -n test -i 21 -r 300
+```
+
+```bash
+env time -v
+```
+
+*Both failed to run*
+
+### Grinder
+
+```bash
+env time -v grinder -reference_file ../test_genomes.fasta -abundance_model powerlaw 0.1 -total_reads 500000 -rd 300 -md poly4 3e-3 3.3e-8 -ql 30 10 -fq 1 -insert_dist 350 normal 20 -bn test_1
+```
+
+| run | time (h:m:s) | memory (kb) |
+| --- | --- | --- |
+| 1 | 13:39:23 | 164332 |
+| 2 | 14:27:16 | 159760 |
+| 3 | 13:11:57 | 164344 |
+| 4 | 13:12:05 | 164332 |
+| 5 |
+
+### pIRS
+
+```bash
+env time -v pirs simulate -x 18 -l 300 -m 800 -t 4 ../test_genomes.fasta -B miseq_profile.count.matrix -I miseq_indel.InDel.matrix -G /opt/sw/pirs/2.0.2/Profiles/GC-depth_Profiles/humNew.gcdep_200.dat -s test_x
+```
+
+| run | time (m:s) | memory (kb) |
+| --- | --- | --- |
+| 1 | 0:36.08 | 36912 |
+| 2 | 0:35.72 | 37040 |
+| 3 | 0:36.06 | 35192 |
+| 4 | 0:36.36 | 35192 |
+| 5 | 0:36.43 | 35160 |
+| 6 | 0:36.53 | 35276 |
+| 7 | 0:35.68 | 36416 |
+| 8 | 0:36.03 | 35208 |
+| 9 | 0:36.70 | 36200 |
+| 10 | 0:36.06 | 36724 |
