@@ -16,10 +16,10 @@ InSilicoSeq support substitution, insertion, deletion errors, and models gc bias
 Details
 -------
 
-**Authors:** Hadrien Gourlé, Juliette Hayer, Oskar E. Karlsson and Erik Bomgcam-Rudloff
-**Contact:** `hadrien.gourle@slu.se<hadrien.gourle@slu.se>`_
-**GitHub:** `https://github.com/HadrienG/InSilicoSeq<https://github.com/HadrienG/InSilicoSeq>`_
-**License:** MIT
+* **Authors:** Hadrien Gourlé, Juliette Hayer, Oskar E. Karlsson and Erik Bomgcam-Rudloff
+* **Contact:** `hadrien.gourle@slu.se <hadrien.gourle@slu.se>`_
+* **GitHub:** `HadrienG/InSilicoSeq <https://github.com/HadrienG/InSilicoSeq>`_
+* **License:** MIT
 
 
 Contents
