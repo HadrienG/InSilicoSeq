@@ -91,7 +91,7 @@ def simulate_read(record, ErrorModel, i):
     insert_size = ErrorModel.random_insert_size()
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
-        assert read_length <= len(record.seq)
+        assert read_length < len(record.seq)
         forward_start = random.randrange(
             0, len(record.seq) - (2 * read_length + insert_size))
     except AssertionError as e:
@@ -131,9 +131,7 @@ def simulate_read(record, ErrorModel, i):
     except AssertionError as e:
         # we use random insert when the modelled template length distribution
         # is too large
-        reverse_end = len(record.seq) - random.randrange(
-            read_length, len(record.seq) - read_length
-        )
+        reverse_end = random.randrange(read_length, len(record.seq))
         reverse_start = reverse_end - read_length
     bounds = (reverse_start, reverse_end)
     # create a perfect read
