@@ -1,7 +1,0 @@
-future
-numpy
-scipy
-biopython
-nose
-pysam
-joblib
