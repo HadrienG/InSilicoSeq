@@ -4,6 +4,7 @@
 *.bam.bai
 *.bt2
 test_runs/
+benchmarks
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
