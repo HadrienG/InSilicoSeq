@@ -35,7 +35,10 @@ def generate_reads(args):
         logger.info('Using %s ErrorModel' % args.mode)
         if args.mode == 'kde':
             from iss.error_models import kde
-            if args.model.lower() == 'hiseq':
+            if args.model is None:
+                logger.error('--model is required in --mode kde')
+                sys.exit(1)
+            elif args.model.lower() == 'hiseq':
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/HiSeq')
@@ -47,9 +50,6 @@ def generate_reads(args):
                 npz = os.path.join(
                     os.path.dirname(__file__),
                     'profiles/MiSeq')
-            elif args.model is None:
-                logger.error('--model is required in --mode kde')
-                sys.exit(1)
             else:
                 npz = args.model
             err_mod = kde.KDErrorModel(npz)
