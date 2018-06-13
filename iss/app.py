@@ -113,6 +113,11 @@ def generate_reads(args):
         if args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
+        elif args.coverage:
+            if args.n_reads:
+                logger.warning('--coverage is present: ignoring --n_reads.')
+            logger.info('Using coverage file:%s' % args.coverage)
+            abundance_dic = abundance.parse_abundance_file(args.abundance_file)
         elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
             abundance_dic = abundance_dispatch[args.abundance](record_list)
@@ -124,8 +129,9 @@ def generate_reads(args):
         cpus = args.cpus
         logger.info('Using %s cpus for read generation' % cpus)
 
-        n_reads = util.convert_n_reads(args.n_reads)
-        logger.info('Generating %s reads' % n_reads)
+        if args.n_reads:
+            n_reads = util.convert_n_reads(args.n_reads)
+            logger.info('Generating %s reads' % n_reads)
 
         try:
             temp_file_list = []  # list holding the prefix of all temp files
@@ -149,12 +155,15 @@ def generate_reads(args):
                                     % record.id)
                         genome_size = len(record.seq)
 
-                        coverage = abundance.to_coverage(
-                            n_reads,
-                            species_abundance,
-                            err_mod.read_length,
-                            genome_size
-                            )
+                        if args.coverage:
+                            coverage = species_abundance
+                        else:
+                            coverage = abundance.to_coverage(
+                                n_reads,
+                                species_abundance,
+                                err_mod.read_length,
+                                genome_size
+                                )
                         n_pairs = int(round(
                             (coverage *
                                 len(record.seq)) / err_mod.read_length) / 2)
@@ -309,6 +318,12 @@ def main():
         '-b',
         metavar='<abundance.txt>',
         help='abundance file for coverage calculations (default: %(default)s).'
+    )
+    input_abundance.add_argument(
+        '--coverage',
+        '-C',
+        metavar='<coverage.txt>',
+        help='file containing coverage information (default: %(default)s).'
     )
     parser_gen.add_argument(
         '--n_reads',
