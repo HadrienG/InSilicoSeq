@@ -114,10 +114,9 @@ def generate_reads(args):
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
         elif args.coverage:
-            if args.n_reads:
-                logger.warning('--coverage is present: ignoring --n_reads.')
+            logger.warning('--coverage is an experimental feature')
             logger.info('Using coverage file:%s' % args.coverage)
-            abundance_dic = abundance.parse_abundance_file(args.abundance_file)
+            abundance_dic = abundance.parse_abundance_file(args.coverage)
         elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
             abundance_dic = abundance_dispatch[args.abundance](record_list)
@@ -129,7 +128,7 @@ def generate_reads(args):
         cpus = args.cpus
         logger.info('Using %s cpus for read generation' % cpus)
 
-        if args.n_reads:
+        if not args.coverage:
             n_reads = util.convert_n_reads(args.n_reads)
             logger.info('Generating %s reads' % n_reads)
 
