@@ -47,7 +47,7 @@ If you do not wish to use the pre-computed error models provided with InSilicoSe
 
 InSilicoSeq creates error models from .bam files. The input bam file should be a set of reads aligned against a reference genome or metagenome.
 
-Given you have two read files, `reads_R1.fastq.gz` and`reads_R2.fastq.gz`, and a referene metagenome `ref.fasta`:
+Given you have two read files, `reads_R1.fastq.gz` and`reads_R2.fastq.gz`, and a reference metagenome `ref.fasta`:
 
 Align you reads against the reference
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
