@@ -13,7 +13,8 @@ Per example generate 1 million MiSeq reads from a set of input genomes called `g
 
 .. code-block:: bash
 
-    iss generate --genomes genomes.fasta --model miseq --output miseq_reads
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    iss generate --genomes SRS121011.fasta --model miseq --output miseq_reads
 
 This will create 2 fastq files, `miseq_reads_R1.fastq` and `miseq_reads_R2.fastq` in your current directory, as well as `miseq_reads_abundance.txt`, a tab-delimited file containing the abundance of each genomes.
 
@@ -21,19 +22,22 @@ InSilicoSeq will use 2 cpus by default. For multithreading, use ``--cpus``:
 
 .. code-block:: bash
 
-    iss generate --cpus 8 --genomes genomes.fasta --model hiseq --output hiseq_reads
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    iss generate --cpus 8 --genomes SRS121011.fasta --model hiseq --output hiseq_reads
 
 If you have created your custom model, give to ``--model`` the path of your custom model file:
 
 .. code-block:: bash
 
-    iss generate --genomes genomes.fasta --model model.npz --output model_reads
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    iss generate --genomes SRS121011.fasta --model model.npz --output model_reads
 
 If your multi-fasta file contain more genomes than the number of organisms for which you wish to simulate reads, you can use the ``--n_genomes``/``-u`` parameter:
 
 .. code-block:: bash
 
-    iss generate --genomes genomes.fasta --n_genomes 5 --model novaseq --output novaseq_reads
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    iss generate --genomes SRS121011.fasta --n_genomes 5 --model novaseq --output novaseq_reads
 
 The above command will pick 5 random genomes in your multi-fasta and generate reads from them.
 
@@ -77,7 +81,8 @@ If you wish to fine-tune the distribution of your genomes, InSilicoSeq also acce
 
 .. code-block:: bash
 
-    iss generate -g genomes.fasta --abundance_file abundance.txt -m HiSeq -o HiSeq_reads
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    iss generate -g SRS121011.fasta --abundance_file abundance.txt -m HiSeq -o HiSeq_reads
 
 Example abundance file for a multi-fasta containing 2 genomes: genome_A and genome_B.
 
@@ -100,7 +105,8 @@ InSilicoSeq can also model gc bias:
 
 .. code-block:: bash
 
-    iss generate -g genomes.fasta --model miseq --gc_bias --output reads
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    iss generate -g SRS121011.fasta --model miseq --gc_bias --output reads
 
 
 Basic error model
@@ -113,7 +119,8 @@ If you wish to use a much simpler model (because you don't have the need for ins
 
 .. code-block:: bash
 
-    iss generate -g genomes.fasta --mode basic --output basic_reads
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    iss generate -g SRS121011.fasta --mode basic --output basic_reads
 
 
 Full list of options

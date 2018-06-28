@@ -47,7 +47,8 @@ InSilicoSeq comes with pre-computed error models that should be sufficient for m
 for generating 1 million reads modelling a MiSeq instrument:
 
 ```shell
-iss generate --genomes genomes.fasta --model miseq --output miseq_reads
+curl -O -J -L https://osf.io/thser/download  # download the example data
+iss generate --genomes SRS121011.fasta --model miseq --output miseq_reads
 ```
 
 where `genomes.fasta` should be replaced by a (multi-)fasta file containing the reference genome from which the simulated reads will be generated.
@@ -59,7 +60,8 @@ If you have built your own model, pass the `.npz` file to the `--model` argument
 For 10 million reads and a custom error model:
 
 ```shell
-iss generate -g genomes.fasta -n 10m --model my_model.npz --output my_reads
+curl -O -J -L https://osf.io/thser/download  # download the example data
+iss generate -g SRS121011.fasta -n 10m --model my_model.npz --output my_reads
 ```
 
 granted you have built `my_model.npz` with `iss model` (see [below](#create-your-own-error-model))
