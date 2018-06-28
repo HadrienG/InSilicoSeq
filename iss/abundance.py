@@ -12,9 +12,12 @@ import numpy as np
 
 
 def parse_abundance_file(abundance_file):
-    """Parse an abundance file
+    """Parse an abundance or coverage file
 
-    The abundance file is a flat file of the format "genome_id<TAB>abundance"
+    The abundance/coverage file is a flat file of the format
+    "genome_id<TAB>abundance"
+    or
+    "genome_id<TAB>coverage"
 
     Args:
         abundance_file (string): the path to the abundance file
