@@ -114,7 +114,7 @@ def simulate_read(record, ErrorModel, i):
         Seq(str(sequence[forward_start:forward_end]),
             IUPAC.unambiguous_dna
             ),
-        id='%s_%s_1' % (header, i),
+        id='%s_%s/1' % (header, i),
         description=''
     )
     # add the indels, the qual scores and modify the record accordingly
@@ -139,7 +139,7 @@ def simulate_read(record, ErrorModel, i):
         Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
             IUPAC.unambiguous_dna
             ),
-        id='%s_%s_2' % (header, i),
+        id='%s_%s/2' % (header, i),
         description=''
     )
     # add the indels, the qual scores and modify the record accordingly
