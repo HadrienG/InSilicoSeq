@@ -70,7 +70,8 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
 
 
 def simulate_read(record, ErrorModel, i):
-    """From a read pair from one genome (or sequence) according to an ErrorModel
+    """From a read pair from one genome (or sequence) according to an
+    ErrorModel
 
     Each read is a SeqRecord object
     returns a tuple containing the forward and reverse read.
