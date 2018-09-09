@@ -79,7 +79,7 @@ def quality_bins_to_histogram(bin_lists):
     cdf_bins = []
     i = 0
     for qual_bin in bin_lists:
-        if len(qual_bin) > 0:
+        if len(qual_bin) > 1:
             logger.debug('Transposing matrix for mean cluster #%s' % i)
             # quals = np.asarray(qual_bin).T  # seems to make clunkier models
             quals = [q for q in zip(*qual_bin)]
@@ -88,7 +88,7 @@ def quality_bins_to_histogram(bin_lists):
             cdfs_list = raw_qualities_to_histogram(quals)
             cdf_bins.append(cdfs_list)
         else:
-            logger.debug('Mean quality bin #%s of length 0. Skipping' % i)
+            logger.debug('Mean quality bin #%s of length < 1. Skipping' % i)
             cdf_bins.append([])
         i += 1
     return cdf_bins
