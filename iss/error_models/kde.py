@@ -86,7 +86,7 @@ class KDErrorModel(ErrorModel):
         for cdf in cdfs_bin:
             random_quality = np.searchsorted(cdf, np.random.rand())
             phred_list.append(random_quality)
-        return phred_list
+        return phred_list[:self.read_length]
 
     def random_insert_size(self):
         """Draw a random insert size from the insert size cdf

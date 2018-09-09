@@ -197,7 +197,13 @@ def to_model(bam_path, output):
 
     hists_f = modeller.quality_bins_to_histogram(quality_bins_f)
     hists_r = modeller.quality_bins_to_histogram(quality_bins_r)
-    read_length = len(hists_f[-1])  # the first low quality bin might be empty
+
+    # modern illumina instruments return reads of the same length
+    # in case our bam file contains aligned reads of different length,
+    # we coerce the model's read length to the smallest read of the bam file
+    length_forward = min((len(x) for x in hists_f if len(x) > 1))
+    length_reverse = min((len(x) for x in hists_r if len(x) > 1))
+    read_length = min(length_forward, length_reverse)
 
     # now we can resize the substitution and indel matrices before
     # doing operations on them
