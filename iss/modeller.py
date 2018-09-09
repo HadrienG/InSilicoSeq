@@ -327,6 +327,9 @@ def dispatch_indels(read):
                 #     '%s not in dispatch: %s' % (deletion, e), exc_info=True)
                 position -= cigar_length
                 continue
+        else:
+            logger.debug("CIGAR %s. Skipping read." % cigar_type)
+            continue
         yield dispatch_tuple
 
 
