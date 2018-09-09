@@ -121,6 +121,6 @@ We welcome contributions from the community! See our [Contributing](CONTRIBUTING
 
 ## Citation
 
-A paper will be on its way. In the meantime if you use InSilicoSeq in your research, please cite the poster
+If you use our software, please cite us!
 
-> Gourlé, Hadrien (2017): Simulating Illumina data with InSilicoSeq. figshare. https://doi.org/10.6084/m9.figshare.5053327.v1
+> Gourlé H, Karlsson-Lindsjö O, Hayer J and Bongcam+Rudloff E, Simulating Illumina data with InSilicoSeq. *Bioinformatics* (2018) doi:10.1093/bioinformatics/bty630
