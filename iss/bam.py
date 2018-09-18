@@ -35,7 +35,8 @@ def read_bam(bam_file, n_reads=1000000):
         random_fraction = n_reads / total_records
         bam = pysam.AlignmentFile(bam_file, 'rb')  # reopen the file
 
-    except (IOError, ValueError, pysam.utils.SamtoolsError) as e:
+    except (IOError, ValueError,
+            ZeroDivisionError, pysam.utils.SamtoolsError) as e:
         logger.error('Failed to read bam file: %s' % e)
         sys.exit(1)
     else:
