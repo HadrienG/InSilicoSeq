@@ -1,27 +1,20 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 future = "*"
 numpy = "*"
 scipy = "*"
 biopython = "*"
-pysam = "*"
 joblib = "*"
-
+pysam = "==0.15.1"
 
 [dev-packages]
-
 nose = "*"
 codecov = "*"
 
-
 [scripts]
-
 iss = "python -m iss"
 tests = "nosetests --with-coverage --cover-package=iss"
