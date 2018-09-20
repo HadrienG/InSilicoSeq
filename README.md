@@ -5,6 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/insilicoseq/badge/?version=latest)](http://insilicoseq.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/InSilicoSeq.svg)](https://badge.fury.io/py/InSilicoSeq)
 [![codecov](https://codecov.io/gh/HadrienG/InSilicoSeq/branch/master/graph/badge.svg)](https://codecov.io/gh/HadrienG/InSilicoSeq)
+[![doi](https://img.shields.io/badge/doi-10.1093%2Fbioinformatics%2Fbty630-blue.svg)](https://doi.org/10.1093/bioinformatics/bty630)
 [![LICENSE](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
 InSilicoSeq is a sequencing simulator producing realistic Illumina reads.
