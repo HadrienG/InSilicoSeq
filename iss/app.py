@@ -276,6 +276,7 @@ def main():
         '--genomes',
         '-g',
         metavar='<genomes.fasta>',
+        nargs="+",
         help='Input genome(s) from where the reads will originate'
     )
     input_genomes.add_argument(

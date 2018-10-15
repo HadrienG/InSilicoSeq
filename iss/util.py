@@ -12,6 +12,8 @@ import random
 import logging
 import numpy as np
 
+from shutil import copyfileobj
+
 
 def phred_to_prob(q):
     """Convert a phred score (Sanger or modern Illumina) in probabilty
@@ -189,3 +191,28 @@ def reservoir(records, record_list, n=None):
     else:
         for record in records:
             yield record
+
+
+def concatenate(file_list, output):
+    """Concatenate fasta files together
+
+    Outputs one file: .tmp.genomes.fasta
+
+    Args:
+        file_list (list): the list of input files
+        output (string): the output files prefix
+    """
+    logger = logging.getLogger(__name__)
+    logger.info('Stitching input genome files together')
+    # define name of output files
+    try:
+        out_file = open(output + '.iss.tmp.genomes.fasta', 'wb')
+    except PermissionError as e:
+        logger.error('Failed to open output file: %s' % e)
+        sys.exit(1)
+
+    with out_file:
+        for file_name in file_list:
+            if file_name is not None:
+                with open(file_name, 'rb') as f:
+                    copyfileobj(f, out_file)
