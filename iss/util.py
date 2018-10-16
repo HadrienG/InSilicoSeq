@@ -204,7 +204,7 @@ def concatenate(file_list, output):
     logger.info('Stitching input files together')
     try:
         out_file = open(output, 'wb')
-    except PermissionError as e:
+    except (IOError, OSError) as e:
         logger.error('Failed to open output file: %s' % e)
         sys.exit(1)
 

@@ -92,7 +92,7 @@ def to_fasta(genomes, output):
     # define name of output files
     try:
         f = open(output, 'a')
-    except PermissionError as e:
+    except (IOError, OSError) as e:
         logger.error('Failed to open output file: %s' % e)
         sys.exit(1)
     else:
