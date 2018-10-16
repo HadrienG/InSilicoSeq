@@ -139,5 +139,3 @@ def test_concatenate():
 def test_concatenate_read_only():
     genome_files = ['data/ecoli.fasta'] * 2
     util.concatenate(genome_files, 'data/read_only.fasta')
-    with open('data/read_only.fasta', 'rb') as f:
-        pass

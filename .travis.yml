@@ -11,6 +11,8 @@ matrix:
 install:
     - pip install pipenv
     - pipenv install --dev
+before_script:
+    - chmod -w data/read_only.fasta
 script:
     - pipenv run tests
 after_success:
