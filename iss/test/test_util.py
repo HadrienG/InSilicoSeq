@@ -133,3 +133,11 @@ def test_concatenate():
     util.concatenate(genome_files, 'test_concat.iss.tmp.genomes.fasta')
     with open('test_concat.iss.tmp.genomes.fasta', 'rb') as f:
         assert len(f.readlines()) == 40
+
+
+@raises(SystemExit)
+def test_concatenate_read_only():
+    genome_files = ['data/ecoli.fasta'] * 2
+    util.concatenate(genome_files, 'data/read_only.fasta')
+    with open('data/read_only.fasta', 'rb') as f:
+        pass
