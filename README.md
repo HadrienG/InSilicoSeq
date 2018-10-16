@@ -52,7 +52,7 @@ curl -O -J -L https://osf.io/thser/download  # download the example data
 iss generate --genomes SRS121011.fasta --model miseq --output miseq_reads
 ```
 
-where `genomes.fasta` should be replaced by a (multi-)fasta file containing the reference genome from which the simulated reads will be generated.
+where `genomes.fasta` should be replaced by a (multi-)fasta file containing the reference genome(s) from which the simulated reads will be generated.
 
 InSilicoSeq comes with 3 error models: `MiSeq`, `HiSeq` and `NovaSeq`.
 

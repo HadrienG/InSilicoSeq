@@ -41,6 +41,14 @@ If your multi-fasta file contain more genomes than the number of organisms for w
 
 The above command will pick 5 random genomes in your multi-fasta and generate reads from them.
 
+You can also provide multiple input files:
+
+.. code-block:: bash
+
+    curl -O -J -L https://osf.io/thser/download  # download the example data
+    curl -O -J -L https://osf.io/37kg8/download  # download another example file
+    iss generate --genomes SRS121011.fasta minigut.fasta --n_genomes 5 --model novaseq --output novaseq_reads
+
 
 Required input files
 --------------------

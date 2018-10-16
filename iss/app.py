@@ -65,7 +65,11 @@ def generate_reads(args):
 
     try:  # try to read genomes and generate reads
         if args.genomes:
-            genome_file = args.genomes
+            genome_files = args.genomes
+            genome_file = args.output + '.iss.tmp.genome'
+            util.concatenate(
+                args.genomes,
+                output=genome_file)
         elif args.ncbi and args.n_genomes:
             util.genome_file_exists(args.output + '_genomes.fasta')
             total_genomes = []
