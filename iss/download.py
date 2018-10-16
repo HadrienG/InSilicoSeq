@@ -83,22 +83,21 @@ def to_fasta(genomes, output):
 
     Args:
         genomes (list): list of genome records
-        output (string): the output file prefix
+        output (string): the output file name
 
     Returns:
         str: the file name
     """
     logger = logging.getLogger(__name__)
     # define name of output files
-    output_genomes = output + '_genomes.fasta'
     try:
-        f = open(output_genomes, 'a')
+        f = open(output, 'a')
     except PermissionError as e:
         logger.error('Failed to open output file: %s' % e)
         sys.exit(1)
     else:
-        logger.info('Writing genomes to %s' % output_genomes)
+        logger.info('Writing genomes to %s' % output)
         with f:
             for record in genomes:
                 SeqIO.write(record, f, 'fasta')
-    return output_genomes
+    return output

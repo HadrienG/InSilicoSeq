@@ -63,34 +63,49 @@ def generate_reads(args):
         logger.error('Failed to import ErrorModel module: %s' % e)
         sys.exit(1)
 
-    try:  # try to read genomes and generate reads
-        if args.genomes:
-            genome_files = args.genomes
-            genome_file = args.output + '.iss.tmp.genome'
-            util.concatenate(
-                args.genomes,
-                output=genome_file)
-        elif args.ncbi and args.n_genomes:
-            util.genome_file_exists(args.output + '_genomes.fasta')
-            total_genomes = []
-            try:
-                assert len(*args.ncbi) == len(*args.n_genomes)
-            except AssertionError as e:
-                logger.error(
-                    '--ncbi and --n_genomes of unequal lengths. Aborting')
-                sys.exit(1)
-            # for g, n in zip(*args.ncbi, *args.n_genomes):  # this is py3 only
-            # py2 compatibilty workaround
-            # TODO remove when we drop python2
-            args.ncbi = [x for y in args.ncbi for x in y]
-            args.n_genomes = [x for y in args.n_genomes for x in y]
-            for g, n in zip(args.ncbi, args.n_genomes):
-                genomes = download.ncbi(g, n)
-                total_genomes.extend(genomes)
-            genome_file = download.to_fasta(total_genomes, args.output)
+    try:  # try to read genomes and build the abundance file/dic
+        if args.genomes or args.draft or args.ncbi:
+            genome_files = []
+            if args.genomes:
+                genome_files.extend(args.genomes)
+            if args.draft:
+                logger.warning("--draft is not implemeted yet.")
+                # TODO
+            if args.ncbi and args.n_genomes_ncbi:
+                util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
+                total_genomes_ncbi = []
+                try:
+                    assert len(*args.ncbi) == len(*args.n_genomes_ncbi)
+                except AssertionError as e:
+                    logger.error(
+                        '--ncbi and --n_genomes_ncbi of unequal lengths. \
+                        Aborting')
+                    sys.exit(1)
+                # this is py3 only
+                # for g, n in zip(*args.ncbi, *args.n_genomes):
+                # py2 compatibilty workaround
+                # TODO switch to the more elegant solution when we drop python2
+                args.ncbi = [x for y in args.ncbi
+                             for x in y]
+                args.n_genomes_ncbi = [x for y in args.n_genomes_ncbi
+                                       for x in y]
+                for g, n in zip(args.ncbi, args.n_genomes_ncbi):
+                    genomes = download.ncbi(g, n)
+                    total_genomes_ncbi.extend(genomes)
+                genome_file_ncbi = download.to_fasta(
+                    total_genomes_ncbi,
+                    args.output + '_ncbi_genomes.fasta')
+                genome_files.append(genome_file_ncbi)
+
         else:
-            logger.error('Invalid input')  # TODO better error handling here
+            logger.error("One of --genomes/-g, --draft, --ncbi/-k is required")
             sys.exit(1)
+
+        genome_file = args.output + '.iss.tmp.genome'
+        print(genome_files)
+        util.concatenate(
+            genome_files,
+            output=genome_file)
 
         assert os.stat(genome_file).st_size != 0
         f = open(genome_file, 'r')
@@ -98,6 +113,7 @@ def generate_reads(args):
             record_list = util.count_records(f)
     except IOError as e:
         logger.error('Failed to open genome(s) file:%s' % e)
+        raise
         sys.exit(1)
     except AssertionError as e:
         logger.error('Genome(s) file seems empty: %s' % genome_file)
@@ -255,7 +271,8 @@ def main():
 
     # arguments form the read generator module
     param_logging = parser_gen.add_mutually_exclusive_group()
-    input_genomes = parser_gen.add_mutually_exclusive_group()
+    # --genomes and --ncbi should not be exclusive anymore
+    # input_genomes = parser_gen.add_mutually_exclusive_group()
     input_abundance = parser_gen.add_mutually_exclusive_group()
     param_logging.add_argument(
         '--quiet',
@@ -279,14 +296,30 @@ def main():
         metavar='<int>',
         help='number of cpus to use. (default: %(default)s).'
     )
-    input_genomes.add_argument(
+    parser_gen.add_argument(
         '--genomes',
         '-g',
         metavar='<genomes.fasta>',
         nargs="+",
         help='Input genome(s) from where the reads will originate'
     )
-    input_genomes.add_argument(
+    parser_gen.add_argument(
+        '--draft',
+        metavar='<draft.fasta>',
+        nargs="+",
+        help='Input draft genome(s) from where the reads will originate'
+    )
+    parser_gen.add_argument(
+        '--n_genomes',
+        '-u',
+        type=int,
+        action='append',
+        metavar='<int>',
+        help='How many genomes will be used for the simulation. is set with \
+            --genomes/-g or/and --draft to take random genomes from the \
+            input multifasta'
+    )
+    parser_gen.add_argument(
         '--ncbi',
         '-k',
         choices=['bacteria', 'viruses', 'archaea'],
@@ -298,17 +331,15 @@ def main():
             three (space-separated)'
     )
     parser_gen.add_argument(
-        '--n_genomes',
-        '-u',
+        '--n_genomes_ncbi',
+        '-U',
         type=int,
         action='append',
         metavar='<int>',
         nargs='*',
         help='How many genomes will be downloaded from NCBI. Required if\
             --ncbi/-k is set. If more than one kingdom is set with --ncbi,\
-            multiple values are necessary (space-separated). Can also be set \
-            with --genomes/-g in which case random genomes will be taken from \
-            the input multifasta'
+            multiple values are necessary (space-separated).'
     )
     input_abundance.add_argument(
         '--abundance',

@@ -149,7 +149,7 @@ def genome_file_exists(filename):
         assert os.path.exists(filename) is False
     except AssertionError as e:
         logger.error('%s already exists. Aborting.' % filename)
-        logger.error('Maybe use another --output prefix %s' % filename)
+        logger.error('Maybe use another --output prefix')
         sys.exit(1)
 
 
