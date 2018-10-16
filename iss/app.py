@@ -185,7 +185,10 @@ def generate_reads(args):
             # we remove the duplicates in case two records had the same header
             # and reads were appended to the same temp file.
             temp_file_unique = list(set(temp_file_list))
-            generator.concatenate(temp_file_unique, args.output)
+            temp_R1 = (temp_file + '_R1.fastq' for temp_file in temp_file_list)
+            temp_R2 = (temp_file + '_R2.fastq' for temp_file in temp_file_list)
+            util.concatenate(temp_R1, args.output + '_R1.fastq')
+            util.concatenate(temp_R2, args.output + '_R2.fastq')
             generator.cleanup(temp_file_unique)
             logger.info('Read generation complete')
 

@@ -194,19 +194,16 @@ def reservoir(records, record_list, n=None):
 
 
 def concatenate(file_list, output):
-    """Concatenate fasta files together
-
-    Outputs one file: .tmp.genomes.fasta
+    """Concatenate files together
 
     Args:
-        file_list (list): the list of input files
-        output (string): the output files prefix
+        file_list (list): the list of input files (can be a generator)
+        output (string): the output file name
     """
     logger = logging.getLogger(__name__)
-    logger.info('Stitching input genome files together')
-    # define name of output files
+    logger.info('Stitching input files together')
     try:
-        out_file = open(output + '.iss.tmp.genomes.fasta', 'wb')
+        out_file = open(output, 'wb')
     except PermissionError as e:
         logger.error('Failed to open output file: %s' % e)
         sys.exit(1)

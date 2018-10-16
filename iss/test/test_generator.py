@@ -34,13 +34,6 @@ def test_cleanup_fail():
 
 
 @with_setup(setup_function, teardown_function)
-def test_concatenate():
-    output = 'data/.test.iss.tmp.my_genome.0'
-    file_list = ['data/ecoli', 'data/ecoli']
-    generator.concatenate(file_list, output)
-
-
-@with_setup(setup_function, teardown_function)
 def test_simulate_and_save():
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(

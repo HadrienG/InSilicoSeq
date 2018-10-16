@@ -130,6 +130,6 @@ def test_reservoir_invalid_input():
 
 def test_concatenate():
     genome_files = ['data/ecoli.fasta'] * 2
-    util.concatenate(genome_files, 'test_concat')
+    util.concatenate(genome_files, 'test_concat.iss.tmp.genomes.fasta')
     with open('test_concat.iss.tmp.genomes.fasta', 'rb') as f:
         assert len(f.readlines()) == 40

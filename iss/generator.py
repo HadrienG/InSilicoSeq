@@ -180,37 +180,6 @@ def to_fastq(generator, output):
                 SeqIO.write(read_tuple[1], r, 'fastq-sanger')
 
 
-def concatenate(file_list, output):
-    """Concatenate fastq files together
-
-    Outputs two files: output_R1.fastq and output_R2.fastq
-
-    Args:
-        file_list (list): the list of input files prefix
-        output (string): the output files prefix
-    """
-    logger = logging.getLogger(__name__)
-    logger.info('Stitching temporary files together')
-    # define name of output files
-    output_forward = output + '_R1.fastq'
-    output_reverse = output + '_R2.fastq'
-    try:
-        out_f = open(output_forward, 'wb')
-        out_r = open(output_reverse, 'wb')
-    except PermissionError as e:
-        logger.error('Failed to open output file(s): %s' % e)
-        sys.exit(1)
-
-    with out_f, out_r:
-        for file_name in file_list:
-            if file_name is not None:
-                temp_f = file_name + '_R1.fastq'
-                temp_r = file_name + '_R2.fastq'
-                with open(temp_f, 'rb') as f, open(temp_r, 'rb') as r:
-                    copyfileobj(f, out_f)
-                    copyfileobj(r, out_r)
-
-
 def cleanup(file_list):
     """remove temporary files
 
