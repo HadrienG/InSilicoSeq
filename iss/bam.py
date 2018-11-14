@@ -208,10 +208,10 @@ def to_model(bam_path, output):
 
     # now we can resize the substitution and indel matrices before
     # doing operations on them
-    subst_matrix_f.resize([read_length, 16])
-    subst_matrix_r.resize([read_length, 16])
-    indel_matrix_f.resize([read_length, 9])
-    indel_matrix_r.resize([read_length, 9])
+    subst_matrix_f.resize([read_length, 16], refcheck=False)
+    subst_matrix_r.resize([read_length, 16], refcheck=False)
+    indel_matrix_f.resize([read_length, 9], refcheck=False)
+    indel_matrix_r.resize([read_length, 9], refcheck=False)
 
     logger.info('Calculating substitution rate')
     subst_f = modeller.subst_matrix_to_choices(subst_matrix_f, read_length)
