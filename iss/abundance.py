@@ -193,6 +193,12 @@ def draft(genomes, draft, distribution, output):
     """
     function to mix draft wit complete genomes
     """
+    # first we get a list of contig names in draft genomes
+    draft_records = []
+    for d in draft:
+        draft_records.extend(
+            [record.name for record in SeqIO.parse(d, 'fasta')])
+    genomes = list(set(genomes) - set(draft_records))
     abundance_dic = distribution(genomes + draft)
     complete_genomes_abundance = {k: v for
                                   k, v in abundance_dic.items()

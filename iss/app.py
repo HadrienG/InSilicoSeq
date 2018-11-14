@@ -71,9 +71,9 @@ def generate_reads(args):
             if args.draft:
                 logger.warning('--draft is in early experimental stage.')
                 logger.warning(
-                    '--draft disables any use of abundance and \
-                    coverage files. Defaulting to --abundance.')
-                genome_files.extend(args.genomes)
+                    '--draft disables --abundance_file and --coverage')
+                logger.warning('Defaulting to --abundance.')
+                genome_files.extend(args.draft)
             if args.ncbi and args.n_genomes_ncbi:
                 util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
                 total_genomes_ncbi = []
@@ -477,4 +477,4 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-        # raise  # extra traceback to uncomment if all hell breaks lose
+        raise  # extra traceback to uncomment if all hell breaks lose
