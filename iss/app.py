@@ -63,14 +63,23 @@ def generate_reads(args):
         logger.error('Failed to import ErrorModel module: %s' % e)
         sys.exit(1)
 
-    try:  # try to read genomes and build the abundance file/dic
+    try:  # try to read genomes and concatenate --genomes and --ncbi genomes
         if args.genomes or args.draft or args.ncbi:
             genome_files = []
             if args.genomes:
                 genome_files.extend(args.genomes)
             if args.draft:
-                logger.warning("--draft is not implemeted yet.")
-                # TODO
+                logger.warning('--draft is in early experimental stage.')
+                logger.warning(
+                    '--draft disables any use of abundance and \
+                    coverage files. Defaulting to --abundance.')
+                # - count the number of draft genomes.
+                # add column draft to abundance file
+                # - create the genome abundance dict (without writing genome
+                # to a file)
+                # - create a contig abundance file
+                # write all genomes to temp file
+                # generate reads
             if args.ncbi and args.n_genomes_ncbi:
                 util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
                 total_genomes_ncbi = []
@@ -102,7 +111,7 @@ def generate_reads(args):
             sys.exit(1)
 
         genome_file = args.output + '.iss.tmp.genome'
-        print(genome_files)
+        print(genome_files)  # the temp file will have to be removed
         util.concatenate(
             genome_files,
             output=genome_file)
@@ -110,7 +119,7 @@ def generate_reads(args):
         assert os.stat(genome_file).st_size != 0
         f = open(genome_file, 'r')
         with f:  # count the number of records
-            record_list = util.count_records(f)
+            genome_list = util.count_records(f)
     except IOError as e:
         logger.error('Failed to open genome(s) file:%s' % e)
         raise
@@ -130,17 +139,27 @@ def generate_reads(args):
             'zero_inflated_lognormal': abundance.zero_inflated_lognormal
         }
         # read the abundance file
-        if args.abundance_file:
+        if args.abundance_file and not args.draft:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
-        elif args.coverage:
+        elif args.coverage and not args.draft:
             logger.warning('--coverage is an experimental feature')
             logger.info('Using coverage file:%s' % args.coverage)
             abundance_dic = abundance.parse_abundance_file(args.coverage)
         elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance_dispatch[args.abundance](record_list)
-            abundance.to_file(abundance_dic, args.output)
+            if args.draft:
+                abundance_dic = abundance.draft(
+                    genome_list,
+                    args.draft,
+                    abundance_dispatch[args.abundance],
+                    args.output)
+                # TODO
+            else:
+                abundance_dic = abundance_dispatch[
+                    args.abundance](genome_list)
+                abundance.to_file(abundance_dic, args.output)
+            # TODO create abundance for draft
         else:
             logger.error('Could not get abundance')
             sys.exit(1)

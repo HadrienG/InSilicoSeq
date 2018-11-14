@@ -3,7 +3,7 @@
 
 from iss import util
 from iss import abundance
-from nose.tools import raises
+from nose.tools import raises, assert_almost_equal
 
 import numpy as np
 
@@ -64,3 +64,27 @@ def test_distributions():
     assert round(lognormal_dic['genome_T'], 2) == 0.19
     assert zero_inflated_lognormal_dic['genome_T'] == 0.0
     assert round(zero_inflated_lognormal_dic['genome_A'], 2) == 0.44
+
+
+def test_abunance_draft():
+    abundance_dic = {'genome_A': 0.15511887441170918,
+                     'genome_T': 0.08220476760848751,
+                     'genome_GC': 0.18039811160555874,
+                     'genome_ATCG': 0.4329003045949206,
+                     'genome_TA': 0.07468835777633397,
+                     'contig_1': 0.02776920430880394,
+                     'contig_2': 0.011490705231229217,
+                     'contig_3': 0.03542967446295675}
+    np.random.seed(42)
+    f = open('data/genomes.fasta', 'r')
+    with f:  # count the number of records
+        complete_genomes = util.count_records(f)
+    draft_genomes = ['data/draft.fasta']
+    ab = abundance.draft(
+        complete_genomes,
+        draft_genomes,
+        abundance.lognormal,
+        'test_abundance_draft.txt')
+    for tv, v in zip(abundance_dic.values(), ab.values()):
+        assert round(tv) == round(v)
+    # assert_almost_equal(ab, abundance_dic)
