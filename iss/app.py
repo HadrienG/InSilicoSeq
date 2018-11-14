@@ -13,8 +13,10 @@ from joblib import Parallel, delayed
 
 import os
 import sys
+import random
 import logging
 import argparse
+import numpy as np
 
 
 def generate_reads(args):
@@ -33,6 +35,10 @@ def generate_reads(args):
     try:  # try to import and load the correct error model
         logger.info('Starting iss generate')
         logger.info('Using %s ErrorModel' % args.mode)
+        if args.seed:
+            logger.info('Setting random seed to %i' % args.seed)
+            random.seed(args.seed)
+            np.random.seed(args.seed)
         if args.mode == 'kde':
             from iss.error_models import kde
             if args.model is None:
@@ -305,6 +311,13 @@ def main():
         action='store_true',
         default=False,
         help='Enable debug logging. (default: %(default)s).'
+    )
+    parser_gen.add_argument(
+        '--seed',
+        type=int,
+        metavar='<int>',
+        help='seed all the random number genertors',
+        default=None
     )
     parser_gen.add_argument(
         '--cpus',
