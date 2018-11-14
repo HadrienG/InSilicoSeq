@@ -73,13 +73,7 @@ def generate_reads(args):
                 logger.warning(
                     '--draft disables any use of abundance and \
                     coverage files. Defaulting to --abundance.')
-                # - count the number of draft genomes.
-                # add column draft to abundance file
-                # - create the genome abundance dict (without writing genome
-                # to a file)
-                # - create a contig abundance file
-                # write all genomes to temp file
-                # generate reads
+                genome_files.extend(args.genomes)
             if args.ncbi and args.n_genomes_ncbi:
                 util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
                 total_genomes_ncbi = []
@@ -110,8 +104,7 @@ def generate_reads(args):
             logger.error("One of --genomes/-g, --draft, --ncbi/-k is required")
             sys.exit(1)
 
-        genome_file = args.output + '.iss.tmp.genome'
-        print(genome_files)  # the temp file will have to be removed
+        genome_file = args.output + '.iss.tmp.genomes.fasta'
         util.concatenate(
             genome_files,
             output=genome_file)
@@ -154,7 +147,6 @@ def generate_reads(args):
                     args.draft,
                     abundance_dispatch[args.abundance],
                     args.output)
-                # TODO
             else:
                 abundance_dic = abundance_dispatch[
                     args.abundance](genome_list)
@@ -180,7 +172,7 @@ def generate_reads(args):
                     n = args.n_genomes[0][0]
                 else:
                     n = None
-                for record in util.reservoir(fasta_file, record_list, n):
+                for record in util.reservoir(fasta_file, genome_list, n):
                     # generate reads for records
                     try:
                         species_abundance = abundance_dic[record.id]
@@ -217,18 +209,25 @@ def generate_reads(args):
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
             logger.error('iss generate interrupted: %s' % e)
-            generator.cleanup(temp_file_list)
+            temp_file_unique = list(set(temp_file_list))
+            temp_R1 = [temp_file + '_R1.fastq' for temp_file in temp_file_list]
+            temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
+            full_tmp_list = temp_R1 + temp_R2
+            full_tmp_list.append(genome_file)
+            util.cleanup(full_tmp_list)
             sys.exit(1)
         else:
             # remove the duplicates in file list and cleanup
             # we remove the duplicates in case two records had the same header
             # and reads were appended to the same temp file.
             temp_file_unique = list(set(temp_file_list))
-            temp_R1 = (temp_file + '_R1.fastq' for temp_file in temp_file_list)
-            temp_R2 = (temp_file + '_R2.fastq' for temp_file in temp_file_list)
+            temp_R1 = [temp_file + '_R1.fastq' for temp_file in temp_file_list]
+            temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
             util.concatenate(temp_R1, args.output + '_R1.fastq')
             util.concatenate(temp_R2, args.output + '_R2.fastq')
-            generator.cleanup(temp_file_unique)
+            full_tmp_list = temp_R1 + temp_R2
+            full_tmp_list.append(genome_file)
+            util.cleanup(full_tmp_list)
             logger.info('Read generation complete')
 
 

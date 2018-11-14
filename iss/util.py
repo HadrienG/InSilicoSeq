@@ -213,3 +213,21 @@ def concatenate(file_list, output):
             if file_name is not None:
                 with open(file_name, 'rb') as f:
                     copyfileobj(f, out_file)
+
+
+def cleanup(file_list):
+    """remove temporary files
+
+    Args:
+        file_list (list): a list of files to be removed
+    """
+    logger = logging.getLogger(__name__)
+    logger.info('Cleaning up')
+    for temp_file in file_list:
+        if temp_file is not None:
+            try:
+                os.remove(temp_file)
+            except (IOError, OSError) as e:
+                logger.error('Could not read temporary file: %s' % temp_file)
+                logger.error('You may have to remove temporary files manually')
+                sys.exit(1)
