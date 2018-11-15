@@ -126,3 +126,16 @@ def test_reservoir_invalid_input():
         fasta_file = SeqIO.parse(f, 'fasta')
         for record in util.reservoir(fasta_file, record_list, n):
             pass
+
+
+def test_concatenate():
+    genome_files = ['data/ecoli.fasta'] * 2
+    util.concatenate(genome_files, 'test_concat.iss.tmp.genomes.fasta')
+    with open('test_concat.iss.tmp.genomes.fasta', 'rb') as f:
+        assert len(f.readlines()) == 40
+
+
+@raises(SystemExit)
+def test_concatenate_read_only():
+    genome_files = ['data/ecoli.fasta'] * 2
+    util.concatenate(genome_files, 'data/read_only.fasta')

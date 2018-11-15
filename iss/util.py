@@ -12,6 +12,8 @@ import random
 import logging
 import numpy as np
 
+from shutil import copyfileobj
+
 
 def phred_to_prob(q):
     """Convert a phred score (Sanger or modern Illumina) in probabilty
@@ -147,7 +149,7 @@ def genome_file_exists(filename):
         assert os.path.exists(filename) is False
     except AssertionError as e:
         logger.error('%s already exists. Aborting.' % filename)
-        logger.error('Maybe use another --output prefix %s' % filename)
+        logger.error('Maybe use another --output prefix')
         sys.exit(1)
 
 
@@ -189,3 +191,43 @@ def reservoir(records, record_list, n=None):
     else:
         for record in records:
             yield record
+
+
+def concatenate(file_list, output):
+    """Concatenate files together
+
+    Args:
+        file_list (list): the list of input files (can be a generator)
+        output (string): the output file name
+    """
+    logger = logging.getLogger(__name__)
+    logger.info('Stitching input files together')
+    try:
+        out_file = open(output, 'wb')
+    except (IOError, OSError) as e:
+        logger.error('Failed to open output file: %s' % e)
+        sys.exit(1)
+
+    with out_file:
+        for file_name in file_list:
+            if file_name is not None:
+                with open(file_name, 'rb') as f:
+                    copyfileobj(f, out_file)
+
+
+def cleanup(file_list):
+    """remove temporary files
+
+    Args:
+        file_list (list): a list of files to be removed
+    """
+    logger = logging.getLogger(__name__)
+    logger.info('Cleaning up')
+    for temp_file in file_list:
+        if temp_file is not None:
+            try:
+                os.remove(temp_file)
+            except (IOError, OSError) as e:
+                logger.error('Could not read temporary file: %s' % temp_file)
+                logger.error('You may have to remove temporary files manually')
+                sys.exit(1)

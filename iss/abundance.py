@@ -10,6 +10,8 @@ import sys
 import logging
 import numpy as np
 
+from Bio import SeqIO
+
 
 def parse_abundance_file(abundance_file):
     """Parse an abundance or coverage file
@@ -185,3 +187,52 @@ def to_file(abundance_dic, output):
         with f:
             for record, abundance in abundance_dic.items():
                 f.write('%s\t%s\n' % (record, abundance))
+
+
+def draft(genomes, draft, distribution, output):
+    """Computes the abundance dictionary for a mix of complete and
+    draft genomes
+
+    Args:
+        genomes (list): list of all input records
+        draft (list): draft genome files
+        distribution (function): distribution function to use
+        output (str): output file
+
+    Returns:
+        dict: the abundance dictionary
+    """
+    # first we get a list of contig names in draft genomes
+    draft_records = []
+    for d in draft:
+        draft_records.extend(
+            [record.name for record in SeqIO.parse(d, 'fasta')])
+    genomes = list(set(genomes) - set(draft_records))
+    abundance_dic = distribution(genomes + draft)
+    complete_genomes_abundance = {k: v for
+                                  k, v in abundance_dic.items()
+                                  if k not in draft}
+    to_file(abundance_dic, output)
+    for key, abundance in abundance_dic.items():
+        draft_dic = {}
+        if key in draft:
+            try:
+                f = open(key, 'r')
+                with f:
+                    fasta_file = SeqIO.parse(f, 'fasta')
+                    draft_records = [record for record in fasta_file]
+                    total_length = sum(len(record) for record in draft_records)
+            except Exception as e:
+                raise
+            else:
+                total_length = sum(len(record) for record in draft_records)
+                for record in draft_records:
+                    length = len(record)
+                    contig_abundance = abundance * (length / total_length)
+                    # print(key, record.id, contig_abundance)
+                    draft_dic[record.id] = contig_abundance
+    # python 3.5 +
+    # full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
+    full_abundance_dic = complete_genomes_abundance.copy()
+    full_abundance_dic.update(draft_dic)
+    return full_abundance_dic

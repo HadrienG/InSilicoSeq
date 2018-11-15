@@ -13,8 +13,10 @@ from joblib import Parallel, delayed
 
 import os
 import sys
+import random
 import logging
 import argparse
+import numpy as np
 
 
 def generate_reads(args):
@@ -33,6 +35,10 @@ def generate_reads(args):
     try:  # try to import and load the correct error model
         logger.info('Starting iss generate')
         logger.info('Using %s ErrorModel' % args.mode)
+        if args.seed:
+            logger.info('Setting random seed to %i' % args.seed)
+            random.seed(args.seed)
+            np.random.seed(args.seed)
         if args.mode == 'kde':
             from iss.error_models import kde
             if args.model is None:
@@ -63,37 +69,59 @@ def generate_reads(args):
         logger.error('Failed to import ErrorModel module: %s' % e)
         sys.exit(1)
 
-    try:  # try to read genomes and generate reads
-        if args.genomes:
-            genome_file = args.genomes
-        elif args.ncbi and args.n_genomes:
-            util.genome_file_exists(args.output + '_genomes.fasta')
-            total_genomes = []
-            try:
-                assert len(*args.ncbi) == len(*args.n_genomes)
-            except AssertionError as e:
-                logger.error(
-                    '--ncbi and --n_genomes of unequal lengths. Aborting')
-                sys.exit(1)
-            # for g, n in zip(*args.ncbi, *args.n_genomes):  # this is py3 only
-            # py2 compatibilty workaround
-            # TODO remove when we drop python2
-            args.ncbi = [x for y in args.ncbi for x in y]
-            args.n_genomes = [x for y in args.n_genomes for x in y]
-            for g, n in zip(args.ncbi, args.n_genomes):
-                genomes = download.ncbi(g, n)
-                total_genomes.extend(genomes)
-            genome_file = download.to_fasta(total_genomes, args.output)
+    try:  # try to read genomes and concatenate --genomes and --ncbi genomes
+        if args.genomes or args.draft or args.ncbi:
+            genome_files = []
+            if args.genomes:
+                genome_files.extend(args.genomes)
+            if args.draft:
+                logger.warning('--draft is in early experimental stage.')
+                logger.warning(
+                    '--draft disables --abundance_file and --coverage')
+                logger.warning('Defaulting to --abundance.')
+                genome_files.extend(args.draft)
+            if args.ncbi and args.n_genomes_ncbi:
+                util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
+                total_genomes_ncbi = []
+                try:
+                    assert len(*args.ncbi) == len(*args.n_genomes_ncbi)
+                except AssertionError as e:
+                    logger.error(
+                        '--ncbi and --n_genomes_ncbi of unequal lengths. \
+                        Aborting')
+                    sys.exit(1)
+                # this is py3 only
+                # for g, n in zip(*args.ncbi, *args.n_genomes):
+                # py2 compatibilty workaround
+                # TODO switch to the more elegant solution when we drop python2
+                args.ncbi = [x for y in args.ncbi
+                             for x in y]
+                args.n_genomes_ncbi = [x for y in args.n_genomes_ncbi
+                                       for x in y]
+                for g, n in zip(args.ncbi, args.n_genomes_ncbi):
+                    genomes = download.ncbi(g, n)
+                    total_genomes_ncbi.extend(genomes)
+                genome_file_ncbi = download.to_fasta(
+                    total_genomes_ncbi,
+                    args.output + '_ncbi_genomes.fasta')
+                genome_files.append(genome_file_ncbi)
+
         else:
-            logger.error('Invalid input')  # TODO better error handling here
+            logger.error("One of --genomes/-g, --draft, --ncbi/-k is required")
             sys.exit(1)
+
+        genome_file = args.output + '.iss.tmp.genomes.fasta'
+        util.concatenate(
+            genome_files,
+            output=genome_file)
 
         assert os.stat(genome_file).st_size != 0
         f = open(genome_file, 'r')
         with f:  # count the number of records
-            record_list = util.count_records(f)
+            genome_list = util.count_records(f)
     except IOError as e:
         logger.error('Failed to open genome(s) file:%s' % e)
+        raise
         sys.exit(1)
     except AssertionError as e:
         logger.error('Genome(s) file seems empty: %s' % genome_file)
@@ -110,17 +138,25 @@ def generate_reads(args):
             'zero_inflated_lognormal': abundance.zero_inflated_lognormal
         }
         # read the abundance file
-        if args.abundance_file:
+        if args.abundance_file and not args.draft:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
-        elif args.coverage:
+        elif args.coverage and not args.draft:
             logger.warning('--coverage is an experimental feature')
             logger.info('Using coverage file:%s' % args.coverage)
             abundance_dic = abundance.parse_abundance_file(args.coverage)
         elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
-            abundance_dic = abundance_dispatch[args.abundance](record_list)
-            abundance.to_file(abundance_dic, args.output)
+            if args.draft:
+                abundance_dic = abundance.draft(
+                    genome_list,
+                    args.draft,
+                    abundance_dispatch[args.abundance],
+                    args.output)
+            else:
+                abundance_dic = abundance_dispatch[
+                    args.abundance](genome_list)
+                abundance.to_file(abundance_dic, args.output)
         else:
             logger.error('Could not get abundance')
             sys.exit(1)
@@ -141,7 +177,7 @@ def generate_reads(args):
                     n = args.n_genomes[0][0]
                 else:
                     n = None
-                for record in util.reservoir(fasta_file, record_list, n):
+                for record in util.reservoir(fasta_file, genome_list, n):
                     # generate reads for records
                     try:
                         species_abundance = abundance_dic[record.id]
@@ -167,26 +203,42 @@ def generate_reads(args):
                             (coverage *
                                 len(record.seq)) / err_mod.read_length) / 2)
 
-                        # good enough approximation
-                        n_pairs_per_cpu = int(round(n_pairs / cpus))
+                        # exact n_reads for each cpus
+                        if n_pairs % cpus == 0:
+                            n_pairs_per_cpu = [(n_pairs // cpus)
+                                               for _ in range(cpus)]
+                        else:
+                            n_pairs_per_cpu = [(n_pairs // cpus)
+                                               for _ in range(cpus)]
+                            n_pairs_per_cpu[-1] += n_pairs % cpus
 
                         record_file_name_list = Parallel(n_jobs=cpus)(
                             delayed(generator.reads)(
                                 record, err_mod,
-                                n_pairs_per_cpu, i, args.output,
+                                n_pairs_per_cpu[i], i, args.output, args.seed,
                                 args.gc_bias) for i in range(cpus))
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
             logger.error('iss generate interrupted: %s' % e)
-            generator.cleanup(temp_file_list)
+            temp_file_unique = list(set(temp_file_list))
+            temp_R1 = [temp_file + '_R1.fastq' for temp_file in temp_file_list]
+            temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
+            full_tmp_list = temp_R1 + temp_R2
+            full_tmp_list.append(genome_file)
+            util.cleanup(full_tmp_list)
             sys.exit(1)
         else:
             # remove the duplicates in file list and cleanup
             # we remove the duplicates in case two records had the same header
             # and reads were appended to the same temp file.
             temp_file_unique = list(set(temp_file_list))
-            generator.concatenate(temp_file_unique, args.output)
-            generator.cleanup(temp_file_unique)
+            temp_R1 = [temp_file + '_R1.fastq' for temp_file in temp_file_list]
+            temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
+            util.concatenate(temp_R1, args.output + '_R1.fastq')
+            util.concatenate(temp_R2, args.output + '_R2.fastq')
+            full_tmp_list = temp_R1 + temp_R2
+            full_tmp_list.append(genome_file)
+            util.cleanup(full_tmp_list)
             logger.info('Read generation complete')
 
 
@@ -248,7 +300,8 @@ def main():
 
     # arguments form the read generator module
     param_logging = parser_gen.add_mutually_exclusive_group()
-    input_genomes = parser_gen.add_mutually_exclusive_group()
+    # --genomes and --ncbi should not be exclusive anymore
+    # input_genomes = parser_gen.add_mutually_exclusive_group()
     input_abundance = parser_gen.add_mutually_exclusive_group()
     param_logging.add_argument(
         '--quiet',
@@ -265,6 +318,13 @@ def main():
         help='Enable debug logging. (default: %(default)s).'
     )
     parser_gen.add_argument(
+        '--seed',
+        type=int,
+        metavar='<int>',
+        help='Seed all the random number generators',
+        default=None
+    )
+    parser_gen.add_argument(
         '--cpus',
         '-p',
         default=2,
@@ -272,13 +332,30 @@ def main():
         metavar='<int>',
         help='number of cpus to use. (default: %(default)s).'
     )
-    input_genomes.add_argument(
+    parser_gen.add_argument(
         '--genomes',
         '-g',
         metavar='<genomes.fasta>',
+        nargs="+",
         help='Input genome(s) from where the reads will originate'
     )
-    input_genomes.add_argument(
+    parser_gen.add_argument(
+        '--draft',
+        metavar='<draft.fasta>',
+        nargs="+",
+        help='Input draft genome(s) from where the reads will originate'
+    )
+    parser_gen.add_argument(
+        '--n_genomes',
+        '-u',
+        type=int,
+        action='append',
+        metavar='<int>',
+        help='How many genomes will be used for the simulation. is set with \
+            --genomes/-g or/and --draft to take random genomes from the \
+            input multifasta'
+    )
+    parser_gen.add_argument(
         '--ncbi',
         '-k',
         choices=['bacteria', 'viruses', 'archaea'],
@@ -290,17 +367,15 @@ def main():
             three (space-separated)'
     )
     parser_gen.add_argument(
-        '--n_genomes',
-        '-u',
+        '--n_genomes_ncbi',
+        '-U',
         type=int,
         action='append',
         metavar='<int>',
         nargs='*',
         help='How many genomes will be downloaded from NCBI. Required if\
             --ncbi/-k is set. If more than one kingdom is set with --ncbi,\
-            multiple values are necessary (space-separated). Can also be set \
-            with --genomes/-g in which case random genomes will be taken from \
-            the input multifasta'
+            multiple values are necessary (space-separated).'
     )
     input_abundance.add_argument(
         '--abundance',
@@ -420,4 +495,4 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-        # raise  # extra traceback to uncomment if all hell breaks lose
+        raise  # extra traceback to uncomment if all hell breaks lose

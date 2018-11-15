@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from iss import generator
+from iss.util import cleanup
 from iss.error_models import ErrorModel, basic, kde
 
 from Bio.Seq import Seq
@@ -25,19 +26,13 @@ def setup_function():
 
 
 def teardown_function():
-    generator.cleanup(['data/.test.iss.tmp.my_genome.0'])
+    cleanup(['data/.test.iss.tmp.my_genome.0_R1.fastq',
+             'data/.test.iss.tmp.my_genome.0_R2.fastq'])
 
 
 @raises(SystemExit)
 def test_cleanup_fail():
-    generator.cleanup('data/does_not_exist')
-
-
-@with_setup(setup_function, teardown_function)
-def test_concatenate():
-    output = 'data/.test.iss.tmp.my_genome.0'
-    file_list = ['data/ecoli', 'data/ecoli']
-    generator.concatenate(file_list, output)
+    cleanup('data/does_not_exist')
 
 
 @with_setup(setup_function, teardown_function)
@@ -50,11 +45,11 @@ def test_simulate_and_save():
         id='my_genome',
         description='test genome'
         )
-    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
 @with_setup(setup_function, teardown_function)
-def test_simulate_And_save_short():
+def test_simulate_and_save_short():
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(
         Seq(str('AACCC' * 100),
@@ -63,7 +58,7 @@ def test_simulate_And_save_short():
         id='my_genome',
         description='test genome'
         )
-    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
 @raises(SystemExit)
