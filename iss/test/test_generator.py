@@ -45,7 +45,7 @@ def test_simulate_and_save():
         id='my_genome',
         description='test genome'
         )
-    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
 @with_setup(setup_function, teardown_function)
@@ -58,7 +58,7 @@ def test_simulate_and_save_short():
         id='my_genome',
         description='test genome'
         )
-    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', True)
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
 @raises(SystemExit)

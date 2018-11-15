@@ -20,7 +20,8 @@ import logging
 import numpy as np
 
 
-def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
+def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
+          gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     This function makes use of the `simulate_read` function to simulate reads
@@ -40,6 +41,9 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, gc_bias=False):
         str: the name of the output file
     """
     logger = logging.getLogger(__name__)
+    if seed is not None:
+        random.seed(seed + cpu_number)
+        np.random.seed(seed + cpu_number)
     logger.debug(
         'Cpu #%s: Generating %s read pairs'
         % (cpu_number, n_pairs))
