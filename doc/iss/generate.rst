@@ -9,7 +9,7 @@ InSilicoSeq comes with a set of pre-computed error models to allow the user to e
 - MiSeq
 - NovaSeq
 
-Per example generate 1 million MiSeq reads from a set of input genomes called `genomes.fasta` (not provided):
+Per example generate 1 million MiSeq reads from a set of input genomes:
 
 .. code-block:: bash
 
@@ -49,6 +49,31 @@ You can also provide multiple input files:
     curl -O -J -L https://osf.io/37kg8/download  # download another example file
     iss generate --genomes SRS121011.fasta minigut.fasta --n_genomes 5 --model novaseq --output novaseq_reads
 
+Draft genomes
+-------------
+
+InSilicoseq's ``--genomes`` option assumes complete genomes in multifasta format.
+That is, each record in fasta files passed to the ``--genomes`` option is treated as a different genome
+If you have draft genome files containing contigs, you can give them to the ``--draft`` option:
+
+.. code-block:: bash
+
+    # input file not provided in this example
+    iss generate --draft my_draft_genome.fasta --model novaseq --output novaseq_reads
+
+Or if you have more than one draft:
+
+.. code-block:: bash
+
+    # input file not provided in this example
+    iss generate --draft draft1.fasta draft2.fasta draft3.fasta --model novaseq --output novaseq_reads
+
+You can also combine your drafts with complete genomes:
+
+.. code-block:: bash
+
+    # input file not provided in this example
+    iss generate -g complete_genomes.fasta --draft draft.fasta --model novaseq --output novaseq_reads
 
 Required input files
 --------------------
@@ -76,6 +101,8 @@ In addition the the 2 fastq files and the abundance file, the downloaded genomes
 
 *Note: If possible, I recommend using InSilicoSeq with a fasta file as input.*
 *The eutils utilities from the ncbi can be slow and quirky.*
+
+The ``--ncbi`` is compatible with ``--draft`` and ``--genomes`` so you can combine the 3 options.
 
 
 Abundance distribution
@@ -139,6 +166,11 @@ Full list of options
 
 Input genome(s) from where the reads will originate
 
+--draft
+^^^^^^^
+
+Input draft genome(s) from where the reads will originate
+
 --ncbi
 ^^^^^^
 
@@ -194,6 +226,11 @@ Does not guarantee --n_reads (default: False)
 ^^^^^^
 
 Number of cpus to use. (default: 2).
+
+--seed
+^^^^^^
+
+Seed all the random number generators
 
 --quiet
 ^^^^^^^

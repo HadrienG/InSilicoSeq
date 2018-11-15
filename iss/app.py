@@ -321,7 +321,7 @@ def main():
         '--seed',
         type=int,
         metavar='<int>',
-        help='seed all the random number genertors',
+        help='Seed all the random number generators',
         default=None
     )
     parser_gen.add_argument(
