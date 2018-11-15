@@ -190,8 +190,17 @@ def to_file(abundance_dic, output):
 
 
 def draft(genomes, draft, distribution, output):
-    """
-    function to mix draft wit complete genomes
+    """Computes the abundance dictionary for a mix of complete and
+    draft genomes
+
+    Args:
+        genomes (list): list of all input records
+        draft (list): draft genome files
+        distribution (function): distribution function to use
+        output (str): output file
+
+    Returns:
+        dict: the abundance dictionary
     """
     # first we get a list of contig names in draft genomes
     draft_records = []

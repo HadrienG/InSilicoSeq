@@ -34,6 +34,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
         cpu_number (int): an int indentifying the cpu that is used by the
             function. Is used for naming the output file
         output (str): the output file prefix
+        seed (int): random seed to use
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
 
@@ -50,7 +51,6 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
     read_tuple_list = []
     i = 0
     while i < n_pairs:
-    # for i in range(n_pairs):
         # try:
         #     forward, reverse = simulate_read(record, ErrorModel, i)
         # except ValueError as e:

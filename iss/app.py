@@ -157,7 +157,6 @@ def generate_reads(args):
                 abundance_dic = abundance_dispatch[
                     args.abundance](genome_list)
                 abundance.to_file(abundance_dic, args.output)
-            # TODO create abundance for draft
         else:
             logger.error('Could not get abundance')
             sys.exit(1)
