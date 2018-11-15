@@ -204,13 +204,19 @@ def generate_reads(args):
                             (coverage *
                                 len(record.seq)) / err_mod.read_length) / 2)
 
-                        # good enough approximation
-                        n_pairs_per_cpu = int(round(n_pairs / cpus))
+                        # exact n_reads for each cpus
+                        if n_pairs % cpus == 0:
+                            n_pairs_per_cpu = [(n_pairs // cpus)
+                                               for _ in range(cpus)]
+                        else:
+                            n_pairs_per_cpu = [(n_pairs // cpus)
+                                               for _ in range(cpus)]
+                            n_pairs_per_cpu[-1] += n_pairs % cpus
 
                         record_file_name_list = Parallel(n_jobs=cpus)(
                             delayed(generator.reads)(
                                 record, err_mod,
-                                n_pairs_per_cpu, i, args.output, args.seed,
+                                n_pairs_per_cpu[i], i, args.output, args.seed,
                                 args.gc_bias) for i in range(cpus))
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
