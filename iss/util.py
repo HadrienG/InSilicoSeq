@@ -58,9 +58,10 @@ def rev_comp(s):
     """
     bases = {
         "a": "t", "c": "g", "g": "c", "t": "a", "y": "r", "r": "y", "w": "w",
-        "s": "s", "k": "m", "m": "k", "n": "n", "A": "T", "C": "G", "G": "C",
-        "T": "A", "Y": "R", "R": "Y", "W": "W", "S": "S", "K": "M", "M": "K",
-        "N": "N"}
+        "s": "s", "k": "m", "m": "k", "n": "n", "b": "v", "v": "b", "d": "h",
+        "h": "d", "A": "T", "C": "G", "G": "C", "T": "A", "Y": "R", "R": "Y",
+        "W": "W", "S": "S", "K": "M", "M": "K", "N": "N", "B": "V", "V": "B",
+        "D": "H", "H": "D"}
     sequence = list(s)
     complement = "".join([bases[b] for b in sequence])
     reverse_complement = complement[::-1]
