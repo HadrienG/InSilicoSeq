@@ -172,14 +172,14 @@ class ErrorModel(object):
         for nucl in range(self.read_length - 1):
             try:
                 # skip ambiguous nucleotides
-                if mutable_seq[nucl] in 'RYWSMKHBVDN':
+                if mutable_seq[nucl].upper() in 'RYWSMKHBVDN':
                     position += 1
                     continue
                 for nucl_to_insert, prob in insertions[position].items():
                     if random.random() < prob:
                         # we want to insert after the base read
                         mutable_seq.insert(position + 1, str(nucl_to_insert))
-                if random.random() < deletions[position][mutable_seq[nucl]]:
+                if random.random() < deletions[position][mutable_seq[nucl].upper()]:
                     mutable_seq.pop(position)
                 position += 1
             except IndexError as e:
