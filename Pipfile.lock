@@ -94,6 +94,7 @@
         },
         "pysam": {
             "hashes": [
+                "sha256:1173a05c88752f2b871cc902fa33769a85c052f28bf0a94946f4a1576e300bce",
                 "sha256:658421124c2f3de1b7445e03ca8413df0077f67ea9980abdaab0d1b5f7a8936f",
                 "sha256:8616649ad4e3538236636d068361bc9716ad45700f65bd46b7508cbc69ca49d7",
                 "sha256:c54403c26490afdfc5db68a0ca1e846b94daa8ee0f571e278efda428257016af",
