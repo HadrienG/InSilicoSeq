@@ -21,7 +21,7 @@ def ncbi(kingdom, n_genomes):
         list: a list of genome records
     """
     logger = logging.getLogger(__name__)
-    Entrez.email = ''
+    Entrez.email = 'hadrien.gourle@slu.se'
     Entrez.tool = 'InSilicoSeq'
     full_id_list = Entrez.read(Entrez.esearch(
         'genome', term='%s[Organism]' % kingdom, retmax=100000))['IdList']
@@ -64,7 +64,7 @@ def ncbi(kingdom, n_genomes):
                     logger.warning('NCBI closed the connection. Skipping.')
                     time.sleep(1)
                     continue
-                except urllib.error.HTTPError as e:
+                except (urllib.error.HTTPError, HTTPError) as e:
                     logger.warning('Too many requests. Taking a break.')
                     time.sleep(1)
                     continue
