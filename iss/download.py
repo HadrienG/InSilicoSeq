@@ -59,6 +59,9 @@ def ncbi(kingdom, n_genomes):
                         '%s only contains Ns. Skipping'
                         % nucleotide_info['AccessionVersion'])
                     continue
+                except RuntimeError as e:
+                    logger.warning('NCBI closed the connection. Skipping.')
+                    continue
                 genomes.append(record)
                 n += 1
             else:
