@@ -23,6 +23,7 @@ def ncbi(kingdom, n_genomes):
     logger = logging.getLogger(__name__)
     Entrez.email = 'hadrien.gourle@slu.se'
     Entrez.tool = 'InSilicoSeq'
+    Entrez.api_key = 'd784b36672ca73601f4a19c3865775a17207'
     full_id_list = Entrez.read(Entrez.esearch(
         'genome', term='%s[Organism]' % kingdom, retmax=100000))['IdList']
     genomes = []
@@ -33,12 +34,17 @@ def ncbi(kingdom, n_genomes):
         genome_info = Entrez.read(
             Entrez.esummary(db='genome', id=ident))[0]
         if genome_info['Assembly_Accession']:  # TODO: IndexError
-            nucleotide_id = Entrez.read(Entrez.elink(
-                dbfrom='genome',
-                db='nucleotide',
-                id=ident))[0]['LinkSetDb'][0]['Link'][0]['Id']
-            nucleotide_info = Entrez.read(
-                Entrez.esummary(db='nucleotide', id=nucleotide_id))[0]
+            try:
+                nucleotide_id = Entrez.read(Entrez.elink(
+                    dbfrom='genome',
+                    db='nucleotide',
+                    id=ident))[0]['LinkSetDb'][0]['Link'][0]['Id']
+                nucleotide_info = Entrez.read(
+                    Entrez.esummary(db='nucleotide', id=nucleotide_id))[0]
+            except (urllib.error.HTTPError, HTTPError) as e:
+                logger.warning('Too many requests. Taking a 2s break.')
+                time.sleep(2)
+                continue
             if not nucleotide_info['AccessionVersion'].startswith('NZ'):
                 logger.info('Downloading %s'
                             % nucleotide_info['AccessionVersion'])
@@ -62,10 +68,6 @@ def ncbi(kingdom, n_genomes):
                     continue
                 except RuntimeError as e:
                     logger.warning('NCBI closed the connection. Skipping.')
-                    time.sleep(1)
-                    continue
-                except (urllib.error.HTTPError, HTTPError) as e:
-                    logger.warning('Too many requests. Taking a break.')
                     time.sleep(1)
                     continue
                 genomes.append(record)
