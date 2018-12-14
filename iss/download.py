@@ -4,6 +4,7 @@
 from Bio import SeqIO
 from Bio import Entrez
 
+import time
 import http.client
 import random
 import logging
@@ -61,6 +62,11 @@ def ncbi(kingdom, n_genomes):
                     continue
                 except RuntimeError as e:
                     logger.warning('NCBI closed the connection. Skipping.')
+                    time.sleep(1)
+                    continue
+                except urllib.error.HTTPError as e:
+                    logger.warning('Too many requests. Taking a break.')
+                    time.sleep(1)
                     continue
                 genomes.append(record)
                 n += 1
