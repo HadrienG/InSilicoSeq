@@ -33,7 +33,7 @@ pip install InSilicoSeq
 Alternatively, with docker:
 
 ```shell
-docker pull hadrieng/insilicoseq:1.3.2
+docker pull hadrieng/insilicoseq:latest
 ```
 
 For more installation options, please refer to the full [documentation](http://insilicoseq.readthedocs.io)
