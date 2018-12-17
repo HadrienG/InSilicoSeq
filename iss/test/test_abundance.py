@@ -3,9 +3,17 @@
 
 from iss import util
 from iss import abundance
-from nose.tools import raises, assert_almost_equal
+from nose.tools import raises, assert_almost_equal, with_setup
 
 import numpy as np
+
+
+def setup_function():
+    output_file_prefix = 'data/.test'
+
+
+def teardown_function():
+    util.cleanup(['data/test_abundance.txt'])
 
 
 def test_parsing():
@@ -16,7 +24,7 @@ def test_parsing():
         'genome_A': 0.2,
         'genome_GC': 0.4,
         'genome_T': 0.2
-        }
+    }
 
 
 @raises(SystemExit)
@@ -40,7 +48,7 @@ def test_cov_calc():
         0.08,
         150,
         4639221
-        )
+    )
     assert round(coverage_ecoli, 3) == 25.866
 
 
@@ -66,6 +74,7 @@ def test_distributions():
     assert round(zero_inflated_lognormal_dic['genome_A'], 2) == 0.44
 
 
+@with_setup(setup_function, teardown_function)
 def test_abunance_draft():
     abundance_dic = {'genome_A': 0.15511887441170918,
                      'genome_T': 0.08220476760848751,
@@ -84,7 +93,7 @@ def test_abunance_draft():
         complete_genomes,
         draft_genomes,
         abundance.lognormal,
-        'test_abundance_draft.txt')
+        'data/test')
     for tv, v in zip(abundance_dic.values(), ab.values()):
         assert round(tv) == round(v)
     # assert_almost_equal(ab, abundance_dic)
