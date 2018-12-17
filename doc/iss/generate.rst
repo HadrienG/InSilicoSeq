@@ -99,9 +99,6 @@ The above command will generate reads from 10 random bacteria and 4 random virus
 
 In addition the the 2 fastq files and the abundance file, the downloaded genomes will be saved in `miseq_ncbi_genomes.fasta` in your current directory.
 
-*Note: If possible, I recommend using InSilicoSeq with a fasta file as input.*
-*The eutils utilities from the ncbi can be slow and quirky.*
-
 The ``--ncbi`` is compatible with ``--draft`` and ``--genomes`` so you can combine the 3 options.
 
 
