@@ -10,6 +10,7 @@ scipy = "*"
 biopython = "*"
 joblib = "*"
 pysam = "==0.15.1"
+requests = "*"
 
 [dev-packages]
 nose = "*"

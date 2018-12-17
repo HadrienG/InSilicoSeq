@@ -1,6 +1,6 @@
 FROM python:3
 
-MAINTAINER Hadrien Gourlé <gourlehadrien@gmail.com>
+LABEL maintainer "Hadrien Gourlé <gourlehadrien@gmail.com>"
 
 WORKDIR /usr/src/app
 

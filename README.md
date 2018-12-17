@@ -1,4 +1,5 @@
 # InSilicoSeq
+
 ## A sequencing simulator
 
 [![Build Status](https://travis-ci.org/HadrienG/InSilicoSeq.svg?branch=master)](https://travis-ci.org/HadrienG/InSilicoSeq)
@@ -32,7 +33,7 @@ pip install InSilicoSeq
 Alternatively, with docker:
 
 ```shell
-docker pull hadrieng/insilicoseq:1.3.1
+docker pull hadrieng/insilicoseq:1.3.2
 ```
 
 For more installation options, please refer to the full [documentation](http://insilicoseq.readthedocs.io)
@@ -99,7 +100,6 @@ samtools view -bS | samtools sort -o genomes.bam
 samtools index genomes.bam
 ```
 
-
 then build the model:
 
 ```shell
@@ -124,4 +124,4 @@ We welcome contributions from the community! See our [Contributing](CONTRIBUTING
 
 If you use our software, please cite us!
 
-> Gourlé H, Karlsson-Lindsjö O, Hayer J and Bongcam+Rudloff E, Simulating Illumina data with InSilicoSeq. *Bioinformatics* (2018) doi:10.1093/bioinformatics/bty630
+> Gourlé H, Karlsson-Lindsjö O, Hayer J and Bongcam+Rudloff E, Simulating Illumina data with InSilicoSeq. _Bioinformatics_ (2018) doi:10.1093/bioinformatics/bty630

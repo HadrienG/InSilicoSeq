@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from nose.tools import raises
+from nose.tools import raises, with_setup
 
 from iss import util
 
 from Bio import SeqIO
 
 import random
+
+
+def setup_function():
+    output_file_prefix = 'data/.test'
+
+
+def teardown_function():
+    util.cleanup(['data/test_concat.iss.tmp.genomes.fasta'])
 
 
 def test_phred_conversions():
@@ -128,10 +136,11 @@ def test_reservoir_invalid_input():
             pass
 
 
+@with_setup(setup_function, teardown_function)
 def test_concatenate():
     genome_files = ['data/ecoli.fasta'] * 2
-    util.concatenate(genome_files, 'test_concat.iss.tmp.genomes.fasta')
-    with open('test_concat.iss.tmp.genomes.fasta', 'rb') as f:
+    util.concatenate(genome_files, 'data/test_concat.iss.tmp.genomes.fasta')
+    with open('data/test_concat.iss.tmp.genomes.fasta', 'rb') as f:
         assert len(f.readlines()) == 40
 
 

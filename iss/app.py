@@ -99,12 +99,9 @@ def generate_reads(args):
                 args.n_genomes_ncbi = [x for y in args.n_genomes_ncbi
                                        for x in y]
                 for g, n in zip(args.ncbi, args.n_genomes_ncbi):
-                    genomes = download.ncbi(g, n)
-                    total_genomes_ncbi.extend(genomes)
-                genome_file_ncbi = download.to_fasta(
-                    total_genomes_ncbi,
-                    args.output + '_ncbi_genomes.fasta')
-                genome_files.append(genome_file_ncbi)
+                    genomes_ncbi = download.ncbi(
+                        g, n, args.output + '_ncbi_genomes.fasta')
+                genome_files.append(genomes_ncbi)
 
         else:
             logger.error("One of --genomes/-g, --draft, --ncbi/-k is required")
@@ -198,7 +195,7 @@ def generate_reads(args):
                                 species_abundance,
                                 err_mod.read_length,
                                 genome_size
-                                )
+                            )
                         n_pairs = int(round(
                             (coverage *
                                 len(record.seq)) / err_mod.read_length) / 2)
@@ -281,8 +278,8 @@ def main():
         help='print software version and exit'
     )
     subparsers = parser.add_subparsers(
-            title='available subcommands',
-            metavar=''
+        title='available subcommands',
+        metavar=''
     )
 
     parser_mod = subparsers.add_parser(

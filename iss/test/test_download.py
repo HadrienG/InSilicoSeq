@@ -6,20 +6,25 @@ from Bio.Alphabet import IUPAC
 from Bio.SeqRecord import SeqRecord
 
 from iss import download
+from iss.util import cleanup
+
+from nose.tools import with_setup
 
 
-def test_to_fasta():
-    ref_genome = SeqRecord(
-        Seq(str('ATATA' * 100),
-            IUPAC.unambiguous_dna
-            ),
-        id='ref_genome',
-        description='test reference'
-        )
-    genome_list = [ref_genome, ref_genome]
-    download.to_fasta(genome_list, 'test_genomes.fasta')
+def setup_function():
+    output_file_prefix = 'data/.test'
 
 
+def teardown_function():
+    cleanup(['data/test_download.fasta'])
+
+
+@with_setup(setup_function, teardown_function)
+def download_to_fasta():
+    ftp_url = 'ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/737/615/GCF_000737615.1_ASM73761v1/GCF_000737615.1_ASM73761v1_genomic.fna.gz'
+    download.assembly_to_fasta(ftp_url, 'data/test_download.fasta')
+
+
+@with_setup(setup_function, teardown_function)
 def test_ncbi():
-    genome_list = download.ncbi('bacteria', 2)
-    assert len(genome_list) == 2
+    genome_list = download.ncbi('bacteria', 2, 'data/test_download.fasta')

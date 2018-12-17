@@ -4,100 +4,98 @@
 from Bio import SeqIO
 from Bio import Entrez
 
-import http.client
+import io
+import zlib
 import random
 import logging
 
 
-def ncbi(kingdom, n_genomes):
-    """download random genomes sequences from ncbi genomes with entrez eutils.
+import requests
+
+
+def ncbi(kingdom, n_genomes, output):
+    """download random genomes sequences from ncbi genomes with entrez eutils
+        and requests.
 
     Args:
         kingdom (string): the kingdom from which the sequences are from
         n_genomes (int): the number of genomes to download
 
     Returns:
-        list: a list of genome records
+        str: the output file
     """
     logger = logging.getLogger(__name__)
-    Entrez.email = ''
+    Entrez.email = 'hadrien.gourle@slu.se'
     Entrez.tool = 'InSilicoSeq'
+    Entrez.api_key = 'd784b36672ca73601f4a19c3865775a17207'
     full_id_list = Entrez.read(Entrez.esearch(
-        'genome', term='%s[Organism]' % kingdom, retmax=100000))['IdList']
+        'assembly',
+        term='%s[Organism] AND "latest refseq"[filter] AND "complete genome"[filter]'
+        % kingdom, retmax=100000))['IdList']
     genomes = []
     n = 0
     logger.info('Searching for %s to download' % kingdom)
     while n < n_genomes:
         ident = random.choice(full_id_list)
         genome_info = Entrez.read(
-            Entrez.esummary(db='genome', id=ident))[0]
-        if genome_info['Assembly_Accession']:  # TODO: IndexError
-            nucleotide_id = Entrez.read(Entrez.elink(
-                dbfrom='genome',
-                db='nucleotide',
-                id=ident))[0]['LinkSetDb'][0]['Link'][0]['Id']
-            nucleotide_info = Entrez.read(
-                Entrez.esummary(db='nucleotide', id=nucleotide_id))[0]
-            if not nucleotide_info['AccessionVersion'].startswith('NZ'):
-                logger.info('Downloading %s'
-                            % nucleotide_info['AccessionVersion'])
-                genome_record = Entrez.efetch(
-                    'nucleotide',
-                    id=nucleotide_id,
-                    rettype='fasta',
-                    retmode='txt')
-                try:
-                    record = SeqIO.read(genome_record, 'fasta')
-                    n_count = record.seq.count('N') + record.seq.count('n')
-                    assert n_count / len(record) != 1.0
-                except http.client.IncompleteRead as e:
-                    logger.warning(
-                        'Failed to read downloaded genome. Skipping')
-                    continue
-                except AssertionError as e:
-                    logger.warning(
-                        '%s only contains Ns. Skipping'
-                        % nucleotide_info['AccessionVersion'])
-                    continue
-                genomes.append(record)
-                n += 1
-            else:
-                logger.debug(
-                    'Found %s but no record associated. Skipping'
-                    % genome_info['Assembly_Accession'])
-                continue
-        else:
-            logger.debug(
-                'Organism with ID %s has no associated Assembly. Skipping'
-                % ident)
-            continue
-
-    return genomes
+            Entrez.esummary(
+                db='assembly',
+                id=ident))["DocumentSummarySet"]["DocumentSummary"][0]
+        if genome_info['FtpPath_RefSeq']:
+            url = genome_info['FtpPath_RefSeq']
+            url = "%s/%s_%s_genomic.fna.gz" \
+                % (genome_info['FtpPath_RefSeq'],
+                   genome_info['AssemblyAccession'],
+                   genome_info['AssemblyName'])
+            logger.info('Downloading %s' % genome_info['AssemblyAccession'])
+            assembly_to_fasta(url, output)
+            n += 1
+    return output
 
 
-def to_fasta(genomes, output):
-    """Write genomes to a fasta file
+def assembly_to_fasta(url, output, chunk_size=1024):
+    """download an assembly from the ncbi ftp and append
+    the chromosome sequence to a fasta file.
 
-    Take a list of genome records and write them to a fasta file named
-    output_genomes.fasta
+    This function discards the plsamid sequences!
 
     Args:
-        genomes (list): list of genome records
+        url (string): an url to a fasta file
         output (string): the output file name
 
     Returns:
         str: the file name
     """
     logger = logging.getLogger(__name__)
-    # define name of output files
-    try:
-        f = open(output, 'a')
-    except (IOError, OSError) as e:
-        logger.error('Failed to open output file: %s' % e)
-        sys.exit(1)
-    else:
-        logger.info('Writing genomes to %s' % output)
-        with f:
-            for record in genomes:
-                SeqIO.write(record, f, 'fasta')
+    if url.startswith("ftp://"):  # requests doesnt support ftp
+        url = url.replace("ftp://", "https://")
+    if url:
+        request = requests.get(url)
+        request = zlib.decompress(
+            request.content, zlib.MAX_WBITS | 32).decode()
+
+    with io.StringIO(request) as fasta_io:
+        seq_handle = SeqIO.parse(fasta_io, 'fasta')
+        chromosome = filter_plasmids(seq_handle)
+
+        try:
+            f = open(output, 'a')
+        except (IOError, OSError) as e:
+            logger.error('Failed to open output file: %s' % e)
+            sys.exit(1)
+        else:
+            logger.debug('Writing genome to %s' % output)
+            with f:
+                SeqIO.write(chromosome, f, 'fasta')
     return output
+
+
+def filter_plasmids(handle):
+    """returns the largest sequence from a sequence handle
+    """
+    n = 0
+    for record in handle:
+        if len(record) > n:
+            n = len(record)
+            largest = record
+    return largest

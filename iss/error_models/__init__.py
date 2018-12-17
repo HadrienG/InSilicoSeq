@@ -95,10 +95,10 @@ class ErrorModel(object):
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
             if random.random() > util.phred_to_prob(qual) \
-                    and nucl not in 'RYWSMKHBVDN':
+                    and nucl.upper() not in 'RYWSMKHBVDN':
                 mutable_seq[position] = str(np.random.choice(
-                    nucl_choices[position][nucl][0],
-                    p=nucl_choices[position][nucl][1]))
+                    nucl_choices[position][nucl.upper()][0],
+                    p=nucl_choices[position][nucl.upper()][1]))
             position += 1
         return mutable_seq.toseq()
 
