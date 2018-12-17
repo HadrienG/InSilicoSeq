@@ -4,9 +4,11 @@
 from Bio import SeqIO
 from Bio import Entrez
 
+import io
 import zlib
 import random
 import logging
+
 
 import requests
 
@@ -33,7 +35,7 @@ def ncbi(kingdom, n_genomes, output):
     genomes = []
     n = 0
     logger.info('Searching for %s to download' % kingdom)
-    while n <= n_genomes:
+    while n < n_genomes:
         ident = random.choice(full_id_list)
         genome_info = Entrez.read(
             Entrez.esummary(
@@ -46,13 +48,16 @@ def ncbi(kingdom, n_genomes, output):
                    genome_info['AssemblyAccession'],
                    genome_info['AssemblyName'])
             logger.info('Downloading %s' % genome_info['AssemblyAccession'])
-            download_to_fasta(url, output)
+            assembly_to_fasta(url, output)
             n += 1
     return output
 
 
-def download_to_fasta(url, output, chunk_size=1024):
-    """download an url and append to a fasta file
+def assembly_to_fasta(url, output, chunk_size=1024):
+    """download an assembly from the ncbi ftp and append
+    the chromosome sequence to a fasta file.
+
+    This function discards the plsamid sequences!
 
     Args:
         url (string): an url to a fasta file
@@ -66,15 +71,31 @@ def download_to_fasta(url, output, chunk_size=1024):
         url = url.replace("ftp://", "https://")
     if url:
         request = requests.get(url)
-        request = zlib.decompress(request.content, zlib.MAX_WBITS | 32)
+        request = zlib.decompress(
+            request.content, zlib.MAX_WBITS | 32).decode()
 
-    try:
-        f = open(output, 'ab')
-    except (IOError, OSError) as e:
-        logger.error('Failed to open output file: %s' % e)
-        sys.exit(1)
-    else:
-        logger.debug('Writing genome to %s' % output)
-        with f:
-            f.write(request)
+    with io.StringIO(request) as fasta_io:
+        seq_handle = SeqIO.parse(fasta_io, 'fasta')
+        chromosome = filter_plasmids(seq_handle)
+
+        try:
+            f = open(output, 'a')
+        except (IOError, OSError) as e:
+            logger.error('Failed to open output file: %s' % e)
+            sys.exit(1)
+        else:
+            logger.debug('Writing genome to %s' % output)
+            with f:
+                SeqIO.write(chromosome, f, 'fasta')
     return output
+
+
+def filter_plasmids(handle):
+    """returns the largest sequence from a sequence handle
+    """
+    n = 0
+    for record in handle:
+        if len(record) > n:
+            n = len(record)
+            largest = record
+    return largest
