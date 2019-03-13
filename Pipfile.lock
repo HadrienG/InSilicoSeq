@@ -78,11 +78,11 @@
         },
         "joblib": {
             "hashes": [
-                "sha256:651fdd4888cdefa39f65c942e33ba1a610d395acd9c1d787adbda1a6beb22218",
-                "sha256:9002b53b88ae0adb3872164e0846a489b7e112c50087c5e3e1bcee35f18424c4"
+                "sha256:21e0c34a69ad7fde4f2b1f3402290e9ec46f545f15f1541c582edfe05d87b63a",
+                "sha256:315d6b19643ec4afd4c41c671f9f2d65ea9d787da093487a81ead7b0bac94524"
             ],
             "index": "pypi",
-            "version": "==0.13.0"
+            "version": "==0.13.2"
         },
         "numpy": {
             "hashes": [
