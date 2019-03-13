@@ -36,3 +36,6 @@ venv_iss/
 
 # fastqc reports
 *fastqc*
+
+# editor configs
+.vscode/
