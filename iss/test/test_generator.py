@@ -44,7 +44,7 @@ def test_simulate_and_save():
             ),
         id='my_genome',
         description='test genome'
-        )
+    )
     generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
@@ -57,7 +57,7 @@ def test_simulate_and_save_short():
             ),
         id='my_genome',
         description='test genome'
-        )
+    )
     generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
@@ -70,8 +70,8 @@ def test_small_input():
             ),
         id='my_genome',
         description='test genome'
-        )
-    generator.simulate_read(ref_genome, err_mod, 1)
+    )
+    generator.simulate_read(ref_genome, err_mod, 1, 0)
 
 
 def test_basic():
@@ -85,8 +85,8 @@ def test_basic():
                 ),
             id='my_genome',
             description='test genome'
-            )
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1)
+        )
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0)
         big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
         assert big_read[-15:] == 'TTTTGGGGGTTTTTG'
 
@@ -102,24 +102,24 @@ def test_kde():
                 ),
             id='my_genome',
             description='test genome'
-            )
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1)
+        )
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0)
         big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
         assert big_read[:15] == 'CCGTTTCAACCCGTT'
 
 
 def test_kde_short():
-        if sys.version_info > (3,):
-            random.seed(42)
-            np.random.seed(42)
-            err_mod = kde.KDErrorModel('data/ecoli.npz')
-            ref_genome = SeqRecord(
-                Seq(str('AAACC' * 100),
-                    IUPAC.unambiguous_dna
-                    ),
-                id='my_genome',
-                description='test genome'
-                )
-            read_tuple = generator.simulate_read(ref_genome, err_mod, 1)
-            big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
-            assert big_read == 'ACCAAACCAAACCAAACCAAGGTTTGGTTTGGTTTGGTGT'
+    if sys.version_info > (3,):
+        random.seed(42)
+        np.random.seed(42)
+        err_mod = kde.KDErrorModel('data/ecoli.npz')
+        ref_genome = SeqRecord(
+            Seq(str('AAACC' * 100),
+                IUPAC.unambiguous_dna
+                ),
+            id='my_genome',
+            description='test genome'
+        )
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0)
+        big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
+        assert big_read == 'ACCAAACCAAACCAAACCAAGGTTTGGTTTGGTTTGGTGT'

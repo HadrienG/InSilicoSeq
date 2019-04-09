@@ -9,7 +9,7 @@ numpy = "*"
 scipy = "*"
 biopython = "*"
 joblib = "*"
-pysam = "==0.15.1"
+pysam = "==0.15.2"
 requests = "*"
 
 [dev-packages]

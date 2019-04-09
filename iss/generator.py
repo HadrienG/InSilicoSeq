@@ -56,7 +56,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
         # except ValueError as e:
         #     logger.error('Skipping this record: %s' % record.id)
         #     return
-        forward, reverse = simulate_read(record, ErrorModel, i)
+        forward, reverse = simulate_read(record, ErrorModel, i, cpu_number)
         if gc_bias:
             stiched_seq = forward.seq + reverse.seq
             gc_content = GC(stiched_seq)
@@ -78,7 +78,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
     return temp_file_name
 
 
-def simulate_read(record, ErrorModel, i):
+def simulate_read(record, ErrorModel, i, cpu_number):
     """From a read pair from one genome (or sequence) according to an
     ErrorModel
 
@@ -89,6 +89,7 @@ def simulate_read(record, ErrorModel, i):
         record (SeqRecord): sequence or genome of reference
         ErrorModel (ErrorModel): an ErrorModel class
         i (int): a number identifying the read
+        cpu_number (int): cpu number. Is added to the read id.
 
     Returns:
         tuple: tuple containg a forward read and a reverse read
@@ -124,7 +125,7 @@ def simulate_read(record, ErrorModel, i):
         Seq(str(sequence[forward_start:forward_end]),
             IUPAC.unambiguous_dna
             ),
-        id='%s_%s/1' % (header, i),
+        id='%s_%s_%s/1' % (header, i, cpu_number),
         description=''
     )
     # add the indels, the qual scores and modify the record accordingly
@@ -149,7 +150,7 @@ def simulate_read(record, ErrorModel, i):
         Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
             IUPAC.unambiguous_dna
             ),
-        id='%s_%s/2' % (header, i),
+        id='%s_%s_%s/2' % (header, i, cpu_number),
         description=''
     )
     # add the indels, the qual scores and modify the record accordingly
