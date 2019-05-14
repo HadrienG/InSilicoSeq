@@ -18,13 +18,21 @@ InSilicoSeq support substitution, insertion and deletion errors. If you don't ha
 
 ## Installation
 
-To install InSilicoSeq, type the following in your terminal:
+Insilicoseq is Available in [bioconda](https://bioconda.github.io/).
+
+To install with conda:
+
+```shell
+conda install -c bioconda insilicoseq
+```
+
+Or with pip:
 
 ```shell
 pip3 install InSilicoSeq
 ```
 
-or if you want to use python2, or are using python3 and pip3 aliased to python and pip:
+If you want to use python2, or are using python3 and pip3 aliased to python and pip:
 
 ```bash
 pip install InSilicoSeq
