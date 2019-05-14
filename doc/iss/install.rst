@@ -25,6 +25,12 @@ It will install InSilicoSeq as well as the following dependencies:
 Other installation options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* With conda:
+
+.. code-block:: bash
+
+    conda install -c bioconda insilicoseq
+
 * If you can't / don't want to use python3:
 
 .. code-block:: bash

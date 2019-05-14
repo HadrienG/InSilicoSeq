@@ -36,7 +36,7 @@ class ErrorModel(object):
                 for error model construction
         """
         try:
-            error_profile = np.load(npz_path)
+            error_profile = np.load(npz_path, allow_pickle=True)
             assert error_profile['model'] == model
         except (OSError, IOError) as e:
             self.logger.error('Failed to read ErrorModel file: %s' % e)
