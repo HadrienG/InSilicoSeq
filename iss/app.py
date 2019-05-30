@@ -236,6 +236,9 @@ def generate_reads(args):
             full_tmp_list = temp_R1 + temp_R2
             full_tmp_list.append(genome_file)
             util.cleanup(full_tmp_list)
+            if args.compress:
+                util.compress(args.output + '_R1.fastq')
+                util.compress(args.output + '_R2.fastq')
             logger.info('Read generation complete')
 
 
@@ -429,7 +432,14 @@ def main():
         action='store_true',
         default=False,
         help='If set, may fail to sequence reads with abnormal GC content. \
-        Does not guarantee --n_reads (default: %(default)s)'
+        (default: %(default)s)'
+    )
+    parser_gen.add_argument(
+        '--compress',
+        '-z',
+        action='store_true',
+        default=False,
+        help='Compress the output in gzip format (default: %(default)s).'
     )
     parser_gen.add_argument(
         '--output',

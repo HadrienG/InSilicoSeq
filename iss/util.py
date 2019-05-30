@@ -8,6 +8,7 @@ from Bio import SeqIO
 
 import os
 import sys
+import gzip
 import random
 import logging
 import numpy as np
@@ -232,3 +233,17 @@ def cleanup(file_list):
                 logger.error('Could not read temporary file: %s' % temp_file)
                 logger.error('You may have to remove temporary files manually')
                 sys.exit(1)
+
+
+def compress(filename):
+    """gzip a file
+
+    Args:
+        filename (string): name of file to be compressed
+    """
+    logger = logging.getLogger(__name__)
+    logger.info('Compressing %s' % filename)
+    outfile = filename + '.gz'
+    with open(filename, 'rb') as i, gzip.open(outfile, 'wb') as o:
+        copyfileobj(i, o)
+    return outfile
