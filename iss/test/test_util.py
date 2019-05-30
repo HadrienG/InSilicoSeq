@@ -18,6 +18,10 @@ def teardown_function():
     util.cleanup(['data/test_concat.iss.tmp.genomes.fasta'])
 
 
+def teardown_compress():
+    util.cleanup(['data/ecoli.fasta.gz'])
+
+
 def test_phred_conversions():
     assert util.phred_to_prob(40) == 0.9999
     assert util.phred_to_prob(30) == 0.999
@@ -148,3 +152,9 @@ def test_concatenate():
 def test_concatenate_read_only():
     genome_files = ['data/ecoli.fasta'] * 2
     util.concatenate(genome_files, 'data/read_only.fasta')
+
+
+@with_setup(setup_function, teardown_compress)
+def test_compress():
+    genome_file = 'data/ecoli.fasta'
+    util.compress(genome_file)
