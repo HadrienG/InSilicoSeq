@@ -65,6 +65,12 @@ def generate_reads(args):
                     args.model, args.mode))
             from iss.error_models import basic
             err_mod = basic.BasicErrorModel()
+        elif args.mode == 'perfect':
+            if args.model is not None:
+                logger.warning('--model %s will be ignored in --mode %s' % (
+                    args.model, args.mode))
+            from iss.error_models import perfect
+            err_mod = perfect.PerfectErrorModel()
     except ImportError as e:
         logger.error('Failed to import ErrorModel module: %s' % e)
         sys.exit(1)
@@ -414,10 +420,10 @@ def main():
         '--mode',
         '-e',
         metavar='<str>',
-        choices=['kde', 'basic'],
+        choices=['kde', 'basic', 'perfect'],
         default='kde',
         help='Error model. If not specified, using kernel density estimation \
-        (default: %(default)s). Can be kde or basic.'
+        (default: %(default)s). Can be kde, basic or perfect'
     )
     parser_gen.add_argument(
         '--model',
@@ -427,7 +433,8 @@ def main():
         help='Error model file. (default: %(default)s). Use HiSeq, NovaSeq or \
         MiSeq for a pre-computed error model provided with the software, or a \
         file generated with iss model. If you do not wish to use a model, use \
-        --mode basic. The name of the built-in models is case insensitive.'
+        --mode basic or --mode perfect. The name of the built-in models are  \
+        case insensitive.'
     )
     parser_gen.add_argument(
         '--gc_bias',
