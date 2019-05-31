@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss.error_models import ErrorModel, basic, kde
+from iss.error_models import ErrorModel, basic, kde, perfect
 
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
@@ -10,6 +10,13 @@ from nose.tools import raises
 
 import random
 import numpy as np
+
+
+def test_perfect_phred():
+    err_mod = perfect.PerfectErrorModel()
+
+    distribution = err_mod.gen_phred_scores(20, 'forward')[:10]
+    assert distribution == [40, 40, 40, 40, 40, 40, 40, 40, 40, 40]
 
 
 def test_basic_phred():
@@ -38,7 +45,7 @@ def test_introduce_errors():
             ),
         id='read_1',
         description='test read'
-        )
+    )
     read = err_mod.introduce_error_scores(read, 'forward')
     qualities = read.letter_annotations["phred_quality"][:10]
     assert qualities == [40, 26, 40, 40, 25, 25, 40, 40, 22, 40]
@@ -56,38 +63,38 @@ def test_mut_sequence():
             ),
         id='read_1',
         description='test read'
-        )
+    )
     read.letter_annotations["phred_quality"] = [5] * 125
     read.seq = err_mod.mut_sequence(read, 'forward')
     assert str(read.seq[:10]) == 'AAAACAGAAA'
 
 
 def test_introduce_indels():
-        random.seed(42)
-        np.random.seed(42)
+    random.seed(42)
+    np.random.seed(42)
 
-        err_mod = basic.BasicErrorModel()
-        err_mod.ins_for[1]['G'] = 1.0
-        err_mod.del_for[0]['A'] = 1.0
-        bounds = (5, 130)
-        read = SeqRecord(
-            Seq(str('ATATA' * 25),
-                IUPAC.unambiguous_dna
-                ),
-            id='read_1',
-            description='test read'
-            )
-        ref_genome = SeqRecord(
-            Seq(str('ATATA' * 100),
-                IUPAC.unambiguous_dna
-                ),
-            id='ref_genome',
-            description='test reference'
-            )
-        read.seq = err_mod.introduce_indels(
-            read, 'forward', ref_genome, bounds)
-        assert len(read.seq) == 125
-        assert read.seq[:10] == 'ATGATAATAT'
+    err_mod = basic.BasicErrorModel()
+    err_mod.ins_for[1]['G'] = 1.0
+    err_mod.del_for[0]['A'] = 1.0
+    bounds = (5, 130)
+    read = SeqRecord(
+        Seq(str('ATATA' * 25),
+            IUPAC.unambiguous_dna
+            ),
+        id='read_1',
+        description='test read'
+    )
+    ref_genome = SeqRecord(
+        Seq(str('ATATA' * 100),
+            IUPAC.unambiguous_dna
+            ),
+        id='ref_genome',
+        description='test reference'
+    )
+    read.seq = err_mod.introduce_indels(
+        read, 'forward', ref_genome, bounds)
+    assert len(read.seq) == 125
+    assert read.seq[:10] == 'ATGATAATAT'
 
 
 @raises(SystemExit)
