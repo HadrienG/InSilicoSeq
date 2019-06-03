@@ -108,8 +108,9 @@ def generate_reads(args):
                     genomes_ncbi = download.ncbi(
                         g, n, args.output + '_ncbi_genomes.fasta')
                 genome_files.append(genomes_ncbi)
-            else:
-                logger.error('Incompatible input options. Aborting.')
+            if args.ncbi and not args.n_genomes_ncbi:
+                logger.error(
+                    '--ncbi/-k requires --n_genomes_ncbi/-U. Aborting.')
                 sys.exit(1)
 
         else:
