@@ -213,8 +213,8 @@ def draft(genomes, draft, distribution, output):
                                   k, v in abundance_dic.items()
                                   if k not in draft}
     to_file(abundance_dic, output)
+    draft_dic = {}
     for key, abundance in abundance_dic.items():
-        draft_dic = {}
         if key in draft:
             try:
                 f = open(key, 'r')
