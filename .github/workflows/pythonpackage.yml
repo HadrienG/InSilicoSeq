@@ -26,6 +26,13 @@ jobs:
       run: |
         chmod -w data/read_only.fasta
         pipenv run tests
+            - name: Upload coverage to Codecov  
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v1.0.2
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+      run: |
+        pipenv run codecov
     - name: Test install
       run: |
         pip install -e .
