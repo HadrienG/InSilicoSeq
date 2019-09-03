@@ -28,8 +28,8 @@ jobs:
             - name: Upload to Codecov
               uses: codecov/codecov-action@v1.0.2
               with:
-                  token: ${{secrets.CODECOV_TOKEN}}
-                file: .coverage
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  file: .coverage
             - name: Test install
               run: |
                   pip install -e .
