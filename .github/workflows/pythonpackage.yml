@@ -24,6 +24,7 @@ jobs:
         pipenv install --dev
     - name: Test with nose
       run: |
+        chmod -w data/read_only.fasta
         pipenv run tests
     - name: Test install
       run: |
