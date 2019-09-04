@@ -2,7 +2,7 @@
 
 ## A sequencing simulator
 
-[![Build Status](https://travis-ci.org/HadrienG/InSilicoSeq.svg?branch=master)](https://travis-ci.org/HadrienG/InSilicoSeq)
+[![Build Status](https://github.com/HadrienG/InsilicoSeq/workflows/CI/badge.svg)](https://github.com/HadrienG/InSilicoSeq/actions)
 [![Documentation Status](https://readthedocs.org/projects/insilicoseq/badge/?version=latest)](http://insilicoseq.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/InSilicoSeq.svg)](https://badge.fury.io/py/InSilicoSeq)
 [![codecov](https://codecov.io/gh/HadrienG/InSilicoSeq/branch/master/graph/badge.svg)](https://codecov.io/gh/HadrienG/InSilicoSeq)
