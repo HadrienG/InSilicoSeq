@@ -4,7 +4,7 @@
 from __future__ import division, unicode_literals
 from builtins import range
 
-from iss.util import rev_comp
+from iss.util import load, rev_comp
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -20,7 +20,7 @@ import logging
 import numpy as np
 
 
-def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
+def reads(record_mmap, ErrorModel, n_pairs, cpu_number, output, seed,
           gc_bias=False):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
@@ -42,6 +42,10 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
         str: the name of the output file
     """
     logger = logging.getLogger(__name__)
+
+    # load the record from disk
+    record = load(record_mmap)
+
     if seed is not None:
         random.seed(seed + cpu_number)
         np.random.seed(seed + cpu_number)

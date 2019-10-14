@@ -9,10 +9,12 @@ from iss import generator
 from iss.version import __version__
 
 from Bio import SeqIO
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, load, dump
 
+import gc
 import os
 import sys
+import pickle
 import random
 import logging
 import argparse
@@ -219,11 +221,24 @@ def generate_reads(args):
                                                for _ in range(cpus)]
                             n_pairs_per_cpu[-1] += n_pairs % cpus
 
-                        record_file_name_list = Parallel(n_jobs=cpus)(
-                            delayed(generator.reads)(
-                                record, err_mod,
-                                n_pairs_per_cpu[i], i, args.output, args.seed,
-                                args.gc_bias) for i in range(cpus))
+                        # test mem mapping
+                        record_mmap = "%s.memmap" % args.output
+                        if os.path.exists(record_mmap):
+                            os.unlink(record_mmap)
+                        util.dump(record, record_mmap)
+                        del record
+                        gc.collect()
+
+                        record_file_name_list = Parallel(
+                            n_jobs=cpus,
+                            backend="multiprocessing",
+                            max_nbytes=None,
+                            mmap_mode='r+')(
+                                delayed(generator.reads)(
+                                    record_mmap, err_mod,
+                                    n_pairs_per_cpu[i], i, args.output,
+                                    args.seed,
+                                    args.gc_bias) for i in range(cpus))
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
             logger.error('iss generate interrupted: %s' % e)
@@ -232,6 +247,7 @@ def generate_reads(args):
             temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
             full_tmp_list = temp_R1 + temp_R2
             full_tmp_list.append(genome_file)
+            full_tmp_list.append(record_mmap)
             util.cleanup(full_tmp_list)
             sys.exit(1)
         else:
@@ -245,6 +261,7 @@ def generate_reads(args):
             util.concatenate(temp_R2, args.output + '_R2.fastq')
             full_tmp_list = temp_R1 + temp_R2
             full_tmp_list.append(genome_file)
+            full_tmp_list.append(record_mmap)
             util.cleanup(full_tmp_list)
             if args.compress:
                 util.compress(args.output + '_R1.fastq')
