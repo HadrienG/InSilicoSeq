@@ -20,8 +20,8 @@ import logging
 import numpy as np
 
 
-def reads(record_mmap, ErrorModel, n_pairs, cpu_number, output, seed,
-          gc_bias=False):
+def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
+          gc_bias=False, mode="default"):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     This function makes use of the `simulate_read` function to simulate reads
@@ -43,8 +43,10 @@ def reads(record_mmap, ErrorModel, n_pairs, cpu_number, output, seed,
     """
     logger = logging.getLogger(__name__)
 
-    # load the record from disk
-    record = load(record_mmap)
+    # load the record from disk if mode is memmap
+    if mode == "memmap":
+        record_mmap = load(record)
+        record = record_mmap
 
     if seed is not None:
         random.seed(seed + cpu_number)

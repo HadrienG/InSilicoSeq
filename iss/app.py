@@ -211,6 +211,9 @@ def generate_reads(args):
                         n_pairs = int(round(
                             (coverage *
                                 len(record.seq)) / err_mod.read_length) / 2)
+                        # skip record if n_reads == 0
+                        if n_pairs == 0:
+                            continue
 
                         # exact n_reads for each cpus
                         if n_pairs % cpus == 0:
@@ -221,24 +224,34 @@ def generate_reads(args):
                                                for _ in range(cpus)]
                             n_pairs_per_cpu[-1] += n_pairs % cpus
 
-                        # test mem mapping
-                        record_mmap = "%s.memmap" % args.output
-                        if os.path.exists(record_mmap):
-                            os.unlink(record_mmap)
-                        util.dump(record, record_mmap)
-                        del record
-                        gc.collect()
+                        # due to a bug in multiprocessing
+                        # https://bugs.python.org/issue17560
+                        # we can't send records taking more than 2**31 bytes
+                        # through serialisation.
+                        # In those cases we use memmapping
+                        if sys.getsizeof(str(record.seq)) >= 2**31 - 1:
+                            logger.warning(
+                                "record %s unusually big." % record.id)
+                            logger.warning("Using a memory map.")
+                            mode = "memmap"
+
+                            record_mmap = "%s.memmap" % args.output
+                            if os.path.exists(record_mmap):
+                                os.unlink(record_mmap)
+                            util.dump(record, record_mmap)
+                            del record
+                            record = record_mmap
+                            gc.collect()
+                        else:
+                            mode = "default"
 
                         record_file_name_list = Parallel(
-                            n_jobs=cpus,
-                            backend="multiprocessing",
-                            max_nbytes=None,
-                            mmap_mode='r+')(
+                            n_jobs=cpus)(
                                 delayed(generator.reads)(
-                                    record_mmap, err_mod,
+                                    record, err_mod,
                                     n_pairs_per_cpu[i], i, args.output,
                                     args.seed,
-                                    args.gc_bias) for i in range(cpus))
+                                    args.gc_bias, mode) for i in range(cpus))
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
             logger.error('iss generate interrupted: %s' % e)
@@ -247,7 +260,8 @@ def generate_reads(args):
             temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
             full_tmp_list = temp_R1 + temp_R2
             full_tmp_list.append(genome_file)
-            full_tmp_list.append(record_mmap)
+            if os.path.exists("%s.memmap" % args.output):
+                full_tmp_list.append("%s.memmap" % args.output)
             util.cleanup(full_tmp_list)
             sys.exit(1)
         else:
@@ -261,7 +275,8 @@ def generate_reads(args):
             util.concatenate(temp_R2, args.output + '_R2.fastq')
             full_tmp_list = temp_R1 + temp_R2
             full_tmp_list.append(genome_file)
-            full_tmp_list.append(record_mmap)
+            if os.path.exists("%s.memmap" % args.output):
+                full_tmp_list.append("%s.memmap" % args.output)
             util.cleanup(full_tmp_list)
             if args.compress:
                 util.compress(args.output + '_R1.fastq')
