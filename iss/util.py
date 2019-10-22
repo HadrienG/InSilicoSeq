@@ -9,6 +9,7 @@ from Bio import SeqIO
 import os
 import sys
 import gzip
+import pickle
 import random
 import logging
 import numpy as np
@@ -247,3 +248,39 @@ def compress(filename):
     with open(filename, 'rb') as i, gzip.open(outfile, 'wb') as o:
         copyfileobj(i, o)
     return outfile
+
+
+def dump(object, output):
+    """dump an object, like pickle.dump.
+    This function uses pickle.dumps to dump large objects
+
+    Args:
+        object (object): a python object
+    """
+    MAX_BYTES = 2**31 - 1
+    pickled_object = pickle.dumps(object, protocol=pickle.HIGHEST_PROTOCOL)
+    size = sys.getsizeof(pickled_object)
+
+    with open(output, 'wb') as out_file:
+        for i in range(0, size, MAX_BYTES):
+            out_file.write(pickled_object[i:i + MAX_BYTES])
+
+
+def load(filename):
+    """load a pickle from disk
+    This function uses pickle.loads to load large objects
+
+    Args:
+        filename (string): the path of the pickle to load
+    """
+    MAX_BYTES = 2**31 - 1
+
+    size = os.path.getsize(filename)
+    bytes = bytearray(0)
+
+    with open(filename, 'rb') as f:
+        for _ in range(0, size, MAX_BYTES):
+            bytes += f.read(MAX_BYTES)
+    object = pickle.loads(bytes)
+
+    return object
