@@ -17,6 +17,7 @@ build/
 # Unit test / coverage reports
 .cache
 .coverage
+coverage.xml
 
 # files needed for tests
 !SRR1660402_mapped.bam

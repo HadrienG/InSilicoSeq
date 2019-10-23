@@ -20,4 +20,4 @@ pycodestyle = "*"
 
 [scripts]
 iss = "python -m iss"
-tests = "nosetests --with-coverage --cover-package=iss"
+tests = "nosetests --with-coverage --cover-package=iss --cover-xml"
