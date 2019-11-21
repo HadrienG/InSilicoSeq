@@ -130,7 +130,6 @@ def generate_reads(args):
             genome_list = util.count_records(f)
     except IOError as e:
         logger.error('Failed to open genome(s) file:%s' % e)
-        raise
         sys.exit(1)
     except AssertionError as e:
         logger.error('Genome(s) file seems empty: %s' % genome_file)
