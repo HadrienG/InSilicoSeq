@@ -182,7 +182,7 @@ def generate_reads(args):
             with f:
                 fasta_file = SeqIO.parse(f, 'fasta')
                 if args.n_genomes and not args.ncbi:
-                    n = args.n_genomes[0][0]
+                    n = args.n_genomes
                 else:
                     n = None
                 for record in util.reservoir(fasta_file, genome_list, n):
@@ -390,7 +390,6 @@ def main():
         '--n_genomes',
         '-u',
         type=int,
-        action='append',
         metavar='<int>',
         help='How many genomes will be used for the simulation. is set with \
             --genomes/-g or/and --draft to take random genomes from the \
