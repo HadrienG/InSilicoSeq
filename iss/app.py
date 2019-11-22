@@ -85,7 +85,7 @@ def generate_reads(args):
             if args.draft:
                 logger.warning('--draft is in early experimental stage.')
                 logger.warning(
-                    '--draft disables --abundance_file and --coverage')
+                    'disabling --abundance_file, --coverage and --n_genomes')
                 logger.warning('Defaulting to --abundance.')
                 genome_files.extend(args.draft)
             if args.ncbi and args.n_genomes_ncbi:
@@ -123,6 +123,16 @@ def generate_reads(args):
         util.concatenate(
             genome_files,
             output=genome_file)
+
+        # for n_genomes we use reservoir sampling to draw random genomes
+        # from the concatenated genome file. We then override the file.
+        if args.n_genomes and not args.draft and not args.ncbi:
+            genome_count = util.count_records(genome_file)
+            genome_files = [genome for genome in util.reservoir(
+                SeqIO.parse(genome_file, 'fasta'),
+                genome_count,
+                args.n_genomes)]
+            SeqIO.write(genome_files, genome_file, 'fasta')
 
         assert os.stat(genome_file).st_size != 0
         f = open(genome_file, 'r')
@@ -181,11 +191,8 @@ def generate_reads(args):
             f = open(genome_file, 'r')  # re-opens the file
             with f:
                 fasta_file = SeqIO.parse(f, 'fasta')
-                if args.n_genomes and not args.ncbi:
-                    n = args.n_genomes
-                else:
-                    n = None
-                for record in util.reservoir(fasta_file, genome_list, n):
+
+                for record in fasta_file:
                     # generate reads for records
                     try:
                         species_abundance = abundance_dic[record.id]
@@ -543,4 +550,4 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-        # raise  # extra traceback to uncomment if all hell breaks lose
+        raise  # extra traceback to uncomment if all hell breaks lose
