@@ -29,6 +29,7 @@ class KDErrorModel(ErrorModel):
     - the substitution for each nucleotide at each position (for R1 and R2)
     - the insertion and deletion rates for each position (for R1 and R2)
     """
+
     def __init__(self, npz_path):
         super().__init__()
         self.npz_path = npz_path
@@ -74,7 +75,8 @@ class KDErrorModel(ErrorModel):
             mean = self.mean_reverse
 
         norm_mean = mean / sum(mean)
-        quality_bin = np.searchsorted(norm_mean, np.random.rand())
+        # quality_bin = np.searchsorted(norm_mean, np.random.rand())
+        quality_bin = np.random.choice(range(len(norm_mean)), p=norm_mean)
         # downgrades index out of bound (ex rand is 1, last bin in searchsorted
         # is 0.95) to best quality bin
         if quality_bin == 4:
