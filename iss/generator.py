@@ -62,21 +62,30 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
         # except ValueError as e:
         #     logger.error('Skipping this record: %s' % record.id)
         #     return
-        forward, reverse = simulate_read(record, ErrorModel, i, cpu_number)
-        if gc_bias:
-            stiched_seq = forward.seq + reverse.seq
-            gc_content = GC(stiched_seq)
-            if 40 < gc_content < 60:
-                read_tuple_list.append((forward, reverse))
-                i += 1
-            elif np.random.rand() < 0.90:
-                read_tuple_list.append((forward, reverse))
-                i += 1
-            else:
-                continue
+        try:
+            forward, reverse = simulate_read(record, ErrorModel, i, cpu_number)
+        except AssertionError as e:
+            logger.warning(
+                '%s shorter than read length for this ErrorModel' % record.id)
+            logger.warning(
+                'Skipping %s. You will have less reads than specified'
+                % record.id)
+            break
         else:
-            read_tuple_list.append((forward, reverse))
-            i += 1
+            if gc_bias:
+                stiched_seq = forward.seq + reverse.seq
+                gc_content = GC(stiched_seq)
+                if 40 < gc_content < 60:
+                    read_tuple_list.append((forward, reverse))
+                    i += 1
+                elif np.random.rand() < 0.90:
+                    read_tuple_list.append((forward, reverse))
+                    i += 1
+                else:
+                    continue
+            else:
+                read_tuple_list.append((forward, reverse))
+                i += 1
 
     temp_file_name = output + '.iss.tmp.%s.%s' % (record.id, cpu_number)
     to_fastq(read_tuple_list, temp_file_name)
@@ -112,10 +121,7 @@ def simulate_read(record, ErrorModel, i, cpu_number):
         forward_start = random.randrange(
             0, len(record.seq) - (2 * read_length + insert_size))
     except AssertionError as e:
-        logger.error(
-            '%s shorter than read length for this ErrorModel:%s'
-            % (e, record.id))
-        sys.exit(1)
+        raise
     except ValueError as e:
         logger.debug(
             '%s shorter than template length for this ErrorModel:%s'

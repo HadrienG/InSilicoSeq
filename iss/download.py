@@ -5,12 +5,21 @@ from Bio import SeqIO
 from Bio import Entrez
 
 import io
+import sys
+import time
 import zlib
 import random
 import logging
 
-
 import requests
+
+
+class BadRequestError(Exception):
+    """Exception to raise when a http request does not return 200
+    """
+
+    def __init__(self, url, status_code):
+        super().__init__('%s returned %d' % (url, status_code))
 
 
 def ncbi(kingdom, n_genomes, output):
@@ -32,7 +41,6 @@ def ncbi(kingdom, n_genomes, output):
         'assembly',
         term='%s[Organism] AND "latest refseq"[filter] AND "complete genome"[filter]'
         % kingdom, retmax=100000))['IdList']
-    genomes = []
     n = 0
     logger.info('Searching for %s to download' % kingdom)
     while n < n_genomes:
@@ -48,8 +56,16 @@ def ncbi(kingdom, n_genomes, output):
                    genome_info['AssemblyAccession'],
                    genome_info['AssemblyName'])
             logger.info('Downloading %s' % genome_info['AssemblyAccession'])
-            assembly_to_fasta(url, output)
-            n += 1
+            try:
+                assembly_to_fasta(url, output)
+            except BadRequestError as e:
+                logger.debug('Could not download %s' %
+                             genome_info['AssemblyAccession'])
+                logger.debug('Skipping and waiting two seconds')
+                time.sleep(2)
+            else:
+                n += 1
+                full_id_list.remove(ident)
     return output
 
 
@@ -71,8 +87,11 @@ def assembly_to_fasta(url, output, chunk_size=1024):
         url = url.replace("ftp://", "https://")
     if url:
         request = requests.get(url)
-        request = zlib.decompress(
-            request.content, zlib.MAX_WBITS | 32).decode()
+        if request.status_code == 200:
+            request = zlib.decompress(
+                request.content, zlib.MAX_WBITS | 32).decode()
+        else:
+            raise BadRequestError(url, request.status_code)
 
     with io.StringIO(request) as fasta_io:
         seq_handle = SeqIO.parse(fasta_io, 'fasta')

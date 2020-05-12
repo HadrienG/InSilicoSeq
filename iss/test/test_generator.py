@@ -61,7 +61,7 @@ def test_simulate_and_save_short():
     generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
-@raises(SystemExit)
+@raises(AssertionError)
 def test_small_input():
     err_mod = kde.KDErrorModel('data/ecoli.npz')
     ref_genome = SeqRecord(
