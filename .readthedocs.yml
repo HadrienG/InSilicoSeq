@@ -1,0 +1,5 @@
+python:
+    install:
+        - method: pip
+        extra_requirements:
+            - cython
