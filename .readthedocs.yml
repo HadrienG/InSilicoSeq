@@ -1,5 +1,4 @@
 python:
     install:
+        - requirements: doc/requirements.txt
         - method: pip
-          extra_requirements:
-              - cython
