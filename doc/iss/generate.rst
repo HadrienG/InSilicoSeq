@@ -242,4 +242,4 @@ Enable debug logging
 --output
 ^^^^^^^^
 
-Output file prefix (Required)
+Output file path and prefix (Required)

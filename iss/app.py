@@ -493,7 +493,7 @@ def main():
         '--output',
         '-o',
         metavar='<fastq>',
-        help='Output file prefix (Required)',
+        help='Output file path and prefix (Required)',
         required=True
     )
     parser_gen._optionals.title = 'arguments'
@@ -525,7 +525,7 @@ def main():
         '--output',
         '-o',
         metavar='<npz>',
-        help='Output file prefix (Required)',
+        help='Output file path and prefix (Required)',
         required=True
     )
     parser_mod._optionals.title = 'arguments'
