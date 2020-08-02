@@ -164,8 +164,14 @@ def generate_reads(args):
         elif args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
-        elif args.coverage and not args.draft:
-            logger.warning('--coverage is an experimental feature')
+        elif args.coverage and args.draft:
+            logger.info('Using coverage file:%s' % args.coverage)
+            abundance_dic_genome = abundance.parse_abundance_file(args.coverage)
+            abundance_dic = {}
+            for d in args.draft:
+                for record in SeqIO.parse(d, 'fasta'):
+                    abundance_dic[record.id] = abundance_dic_genome[d]
+        elif args.coverage:
             logger.info('Using coverage file:%s' % args.coverage)
             abundance_dic = abundance.parse_abundance_file(args.coverage)
         elif args.abundance in abundance_dispatch:
