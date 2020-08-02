@@ -83,10 +83,6 @@ def generate_reads(args):
             if args.genomes:
                 genome_files.extend(args.genomes)
             if args.draft:
-                logger.warning('--draft is in early experimental stage.')
-                logger.warning(
-                    'disabling --abundance_file, --coverage and --n_genomes')
-                logger.warning('Defaulting to --abundance.')
                 genome_files.extend(args.draft)
             if args.ncbi and args.n_genomes_ncbi:
                 util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
@@ -156,7 +152,16 @@ def generate_reads(args):
             'zero_inflated_lognormal': abundance.zero_inflated_lognormal
         }
         # read the abundance file
-        if args.abundance_file and not args.draft:
+        if args.abundance_file and args.draft:
+            logger.info('Using abundance file:%s' % args.abundance_file)
+            abundance_dic_genome = abundance.parse_abundance_file(args.abundance_file)
+            abundance_dic = {}
+            for d in args.draft:
+                draft_records = [record for record in SeqIO.parse(d, 'fasta')]
+                total_length = sum(len(record) for record in draft_records)
+                for record in draft_records:
+                    abundance_dic[record.id] = (len(record) / total_length) * abundance_dic_genome[d]
+        elif args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
         elif args.coverage and not args.draft:
@@ -203,11 +208,11 @@ def generate_reads(args):
                     else:
                         logger.info('Generating reads for record: %s'
                                     % record.id)
-                        genome_size = len(record.seq)
-
                         if args.coverage:
                             coverage = species_abundance
                         else:
+                            genome_size = len(record.seq)
+
                             coverage = abundance.to_coverage(
                                 n_reads,
                                 species_abundance,
@@ -221,13 +226,10 @@ def generate_reads(args):
                         if n_pairs == 0:
                             continue
 
+                        n_pairs_per_cpu = [(n_pairs // cpus)
+                                           for _ in range(cpus)]
                         # exact n_reads for each cpus
-                        if n_pairs % cpus == 0:
-                            n_pairs_per_cpu = [(n_pairs // cpus)
-                                               for _ in range(cpus)]
-                        else:
-                            n_pairs_per_cpu = [(n_pairs // cpus)
-                                               for _ in range(cpus)]
+                        if n_pairs % cpus != 0:
                             n_pairs_per_cpu[-1] += n_pairs % cpus
 
                         # due to a bug in multiprocessing
