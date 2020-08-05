@@ -159,7 +159,7 @@ def generate_reads(args):
         if args.abundance_file and not args.draft:
             logger.info('Using abundance file:%s' % args.abundance_file)
             abundance_dic = abundance.parse_abundance_file(args.abundance_file)
-        elif args.coverage and not args.draft:
+        elif args.coverage_file and not args.draft:
             logger.warning('--coverage is an experimental feature')
             logger.info('Using coverage file:%s' % args.coverage)
             abundance_dic = abundance.parse_abundance_file(args.coverage)
@@ -175,6 +175,13 @@ def generate_reads(args):
                 abundance_dic = abundance_dispatch[
                     args.abundance](genome_list)
                 abundance.to_file(abundance_dic, args.output)
+        elif args.coverage in abundance_dispatch and not args.draft:
+            logger.info('Using %s coverage distribution' % args.coverage)
+            abundance_dic = abundance_dispatch[
+                args.coverage](genome_list)
+            print(abundance_dic)
+            sys.exit("debug")
+            abundance.to_file(abundance_dic, args.output)
         else:
             logger.error('Could not get abundance')
             sys.exit(1)
@@ -443,6 +450,15 @@ def main():
     input_abundance.add_argument(
         '--coverage',
         '-C',
+        choices=['uniform', 'halfnormal',
+                 'exponential', 'lognormal', 'zero_inflated_lognormal'],
+        metavar='<str>',
+        help='coverage distribution. Can be uniform,\
+            halfnormal, exponential, lognormal or zero-inflated-lognormal.'
+    )
+    input_abundance.add_argument(
+        '--coverage_file',
+        '-D',
         metavar='<coverage.txt>',
         help='file containing coverage information (default: %(default)s).'
     )
