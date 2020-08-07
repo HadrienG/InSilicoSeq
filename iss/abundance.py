@@ -169,7 +169,42 @@ def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
     return coverage
 
 
-def to_file(abundance_dic, output):
+def coverage_scaling(total_n_reads, abundance_dic, genome_file, read_length):
+    """Scale coverage distribution according to the n_reads parameter
+
+    Args:
+        total_n_reads (int): total amount of reads to simulate
+        abundance_dic (dict): a dictionary with records as keys, coverage as
+            values
+        genome_file (str): path to input fasta file containing genomes
+        read_length (int): length of the reads in the dataset
+
+    Returns:
+        dict: scaled coverage dictionary
+    """
+    total_reads = 0
+    f = open(genome_file, 'r')  # re-opens the file
+    with f:
+        fasta_file = SeqIO.parse(f, 'fasta')
+        for record in fasta_file:
+            try:
+                species_coverage = abundance_dic[record.id]
+            except KeyError as e:
+                logger.error(
+                    'Fasta record not found in abundance file: %s' % e)
+                sys.exit(1)
+
+            genome_size = len(record.seq)
+            reads_g = species_coverage * genome_size / read_length / 2
+            total_reads += reads_g
+
+    scale_factor = total_n_reads / total_reads
+    for key in abundance_dic:
+        abundance_dic[key] *= scale_factor
+    return abundance_dic
+
+
+def to_file(abundance_dic, output, mode="abundance"):
     """Write the abundance dictionary to a file
 
     Args:
@@ -177,7 +212,10 @@ def to_file(abundance_dic, output):
         output (str): the output file name
     """
     logger = logging.getLogger(__name__)
-    output_abundance = output + '_abundance.txt'
+    if mode == "abundance":
+        output_abundance = output + '_abundance.txt'
+    else:
+        output_abundance = output + '_coverage.txt'
     try:
         f = open(output_abundance, 'w')
     except PermissionError as e:

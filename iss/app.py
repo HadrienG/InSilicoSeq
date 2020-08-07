@@ -163,6 +163,19 @@ def generate_reads(args):
             logger.warning('--coverage is an experimental feature')
             logger.info('Using coverage file:%s' % args.coverage)
             abundance_dic = abundance.parse_abundance_file(args.coverage)
+        elif args.coverage in abundance_dispatch and not args.draft:
+            logger.warning('--coverage is an experimental feature')
+            logger.info('Using %s coverage distribution' % args.coverage)
+            abundance_dic = abundance_dispatch[
+                args.coverage](genome_list)
+            if args.n_reads:
+                n_reads = util.convert_n_reads(args.n_reads)
+                logger.info('scaling coverage to %s reads' % n_reads)
+                abundance_dic = abundance.coverage_scaling(n_reads,
+                                                           abundance_dic,
+                                                           genome_file,
+                                                           err_mod.read_length)
+            abundance.to_file(abundance_dic, args.output, mode="coverage")
         elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
             if args.draft:
@@ -175,13 +188,6 @@ def generate_reads(args):
                 abundance_dic = abundance_dispatch[
                     args.abundance](genome_list)
                 abundance.to_file(abundance_dic, args.output)
-        elif args.coverage in abundance_dispatch and not args.draft:
-            logger.info('Using %s coverage distribution' % args.coverage)
-            abundance_dic = abundance_dispatch[
-                args.coverage](genome_list)
-            print(abundance_dic)
-            sys.exit("debug")
-            abundance.to_file(abundance_dic, args.output)
         else:
             logger.error('Could not get abundance')
             sys.exit(1)

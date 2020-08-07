@@ -97,3 +97,15 @@ def test_abunance_draft():
     for tv, v in zip(abundance_dic.values(), ab.values()):
         assert round(tv) == round(v)
     # assert_almost_equal(ab, abundance_dic)
+
+
+def test_coverage_scaling():
+    abundance_dic = abundance.parse_abundance_file('data/abundance.txt')
+    coverage_dic = abundance.coverage_scaling(10000, abundance_dic,
+                                              'data/genomes.fasta', 25)
+    assert coverage_dic == {'genome_A': 136.6120218579235,
+                            'genome_T': 136.6120218579235,
+                            'genome_GC': 273.224043715847,
+                            'genome_ATCG': 68.30601092896175,
+                            'genome_TA': 68.30601092896175
+                            }
