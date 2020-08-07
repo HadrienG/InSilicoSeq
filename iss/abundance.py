@@ -33,10 +33,10 @@ def parse_abundance_file(abundance_file):
         assert os.stat(abundance_file).st_size != 0
         f = open(abundance_file, 'r')
     except (IOError, OSError) as e:
-        logger.error('Failed to open abundance file:%s' % e)
+        logger.error('Failed to open file:%s' % e)
         sys.exit(1)
     except AssertionError as e:
-        logger.error('Abundance file seems empty: %s' % abundance_file)
+        logger.error('File seems empty: %s' % abundance_file)
         sys.exit(1)
     else:
         with f:
@@ -45,11 +45,11 @@ def parse_abundance_file(abundance_file):
                     genome_id = line.split()[0]
                     abundance = float(line.split()[1])
                 except IndexError as e:
-                    logger.error('Failed to read abundance file: %s' % e)
+                    logger.error('Failed to read file: %s' % e)
                     sys.exit(1)
                 else:
                     abundance_dic[genome_id] = abundance
-    logger.info('Loaded abundance file: %s' % abundance_file)
+    logger.info('Loaded abundance/coverage file: %s' % abundance_file)
     return abundance_dic
 
 
