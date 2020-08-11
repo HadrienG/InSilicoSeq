@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division
-
+from Bio import SeqIO
 from scipy import stats
 
 import os
 import sys
 import logging
 import numpy as np
-
-from Bio import SeqIO
 
 
 def parse_abundance_file(abundance_file):
@@ -269,8 +266,5 @@ def draft(genomes, draft, distribution, output):
                     contig_abundance = abundance * (length / total_length)
                     # print(key, record.id, contig_abundance)
                     draft_dic[record.id] = contig_abundance
-    # python 3.5 +
-    # full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
-    full_abundance_dic = complete_genomes_abundance.copy()
-    full_abundance_dic.update(draft_dic)
+    full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
     return full_abundance_dic

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
-from builtins import dict, range, zip
-
 from iss import util
 
 import sys

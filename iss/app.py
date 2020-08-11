@@ -98,15 +98,7 @@ def generate_reads(args):
                         '--ncbi and --n_genomes_ncbi of unequal lengths. \
                         Aborting')
                     sys.exit(1)
-                # this is py3 only
-                # for g, n in zip(*args.ncbi, *args.n_genomes):
-                # py2 compatibilty workaround
-                # TODO switch to the more elegant solution when we drop python2
-                args.ncbi = [x for y in args.ncbi
-                             for x in y]
-                args.n_genomes_ncbi = [x for y in args.n_genomes_ncbi
-                                       for x in y]
-                for g, n in zip(args.ncbi, args.n_genomes_ncbi):
+                for g, n in zip(*args.ncbi, *args.n_genomes):
                     genomes_ncbi = download.ncbi(
                         g, n, args.output + '_ncbi_genomes.fasta')
                 genome_files.append(genomes_ncbi)

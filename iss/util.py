@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division
-from builtins import dict
-
 from Bio import SeqIO
 
 import os
@@ -181,14 +178,9 @@ def reservoir(records, record_list, n=None):
             for sample in samples:
                 while x < sample:
                     x += 1
-                    if sys.version_info > (3,):
-                        _ = records.__next__()
-                    else:
-                        _ = records.next()  # I hate python2
-                if sys.version_info > (3,):
-                    record = records.__next__()
-                else:
-                    record = records.next()
+                    _ = records.__next__()
+
+                record = records.__next__()
                 x += 1
                 yield record
     else:

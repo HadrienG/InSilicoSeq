@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division
-from builtins import dict, range, zip
-
 from iss import util
 from scipy import stats
 from joblib import Parallel, delayed
