@@ -83,10 +83,7 @@ def generate_reads(args):
             if args.genomes:
                 genome_files.extend(args.genomes)
             if args.draft:
-                logger.warning('--draft is in early experimental stage.')
-                logger.warning(
-                    'disabling --abundance_file, --coverage and --n_genomes')
-                logger.warning('Defaulting to --abundance.')
+                logger.warning('--draft is in experimental stage.')
                 genome_files.extend(args.draft)
             if args.ncbi and args.n_genomes_ncbi:
                 util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
@@ -148,9 +145,22 @@ def generate_reads(args):
             'zero_inflated_lognormal': abundance.zero_inflated_lognormal
         }
         # read the abundance file
-        if args.abundance_file and not args.draft:
+        if args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
-            abundance_dic = abundance.parse_abundance_file(args.abundance_file)
+            if args.draft:
+                abundance_dic_short = abundance.parse_abundance_file(
+                    args.abundance_file)
+                complete_genomes_dic = {k: v for
+                                        k, v in abundance_dic_short.items()
+                                        if k not in args.draft}
+                draft_dic = abundance.expand_draft_abundance(
+                    abundance_dic_short,
+                    args.draft)
+                abundance_dic = {**complete_genomes_dic,
+                                 **draft_dic}
+            else:
+                abundance_dic = abundance.parse_abundance_file(
+                    args.abundance_file)
         elif args.coverage_file and not args.draft:
             logger.warning('--coverage_file is an experimental feature')
             logger.warning('--coverage_file disables --n_reads')

@@ -248,6 +248,24 @@ def draft(genomes, draft, distribution, output):
                                   k, v in abundance_dic.items()
                                   if k not in draft}
     to_file(abundance_dic, output)
+    draft_dic = expand_draft_abundance(abundance_dic, draft)
+    full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
+    return full_abundance_dic
+
+
+def expand_draft_abundance(abundance_dic, draft):
+    """Calculate abundance for each contig of a draft genome
+    The function takes the abundance dictionary and automatically
+    detects draft genomes
+
+    Args:
+        abundance_dic (dict): dict with genome (paths or id) as key and
+            abundance as value
+        draft (list): draft genome files
+
+    Returns:
+        dict: abundance dictionary with abundance value for each contig
+    """
     draft_dic = {}
     for key, abundance in abundance_dic.items():
         if key in draft:
@@ -266,5 +284,4 @@ def draft(genomes, draft, distribution, output):
                     contig_abundance = abundance * (length / total_length)
                     # print(key, record.id, contig_abundance)
                     draft_dic[record.id] = contig_abundance
-    full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
-    return full_abundance_dic
+    return draft_dic
