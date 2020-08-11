@@ -228,7 +228,7 @@ def cleanup(file_list):
                 sys.exit(1)
 
 
-def compress(filename):
+def compress(filename, remove=True):
     """gzip a file
 
     Args:
@@ -239,6 +239,8 @@ def compress(filename):
     outfile = filename + '.gz'
     with open(filename, 'rb') as i, gzip.open(outfile, 'wb') as o:
         copyfileobj(i, o)
+    if remove:
+        cleanup([filename])
     return outfile
 
 
