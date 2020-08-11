@@ -83,7 +83,6 @@ def generate_reads(args):
             if args.genomes:
                 genome_files.extend(args.genomes)
             if args.draft:
-                logger.warning('--draft is in experimental stage.')
                 genome_files.extend(args.draft)
             if args.ncbi and args.n_genomes_ncbi:
                 util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
