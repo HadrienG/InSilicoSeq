@@ -98,7 +98,7 @@ def generate_reads(args):
                         '--ncbi and --n_genomes_ncbi of unequal lengths. \
                         Aborting')
                     sys.exit(1)
-                for g, n in zip(*args.ncbi, *args.n_genomes):
+                for g, n in zip(*args.ncbi, *args.n_genomes_ncbi):
                     genomes_ncbi = download.ncbi(
                         g, n, args.output + '_ncbi_genomes.fasta')
                 genome_files.append(genomes_ncbi)
