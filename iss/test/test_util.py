@@ -157,4 +157,4 @@ def test_concatenate_read_only():
 @with_setup(setup_function, teardown_compress)
 def test_compress():
     genome_file = 'data/ecoli.fasta'
-    util.compress(genome_file)
+    util.compress(genome_file, remove=False)
