@@ -20,6 +20,7 @@ Details
 * **Contact:** `hadrien.gourle@slu.se <hadrien.gourle@slu.se>`_
 * **GitHub:** `HadrienG/InSilicoSeq <https://github.com/HadrienG/InSilicoSeq>`_
 * **License:** MIT
+* **Article:** `10.1093/bioinformatics/bty630 <https://academic.oup.com/bioinformatics/article/35/3/521/5055123>`_
 
 
 Contents
