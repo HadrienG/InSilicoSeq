@@ -29,14 +29,10 @@ conda install -c bioconda insilicoseq
 Or with pip:
 
 ```shell
-pip3 install InSilicoSeq
-```
-
-If you want to use python2, or are using python3 and pip3 aliased to python and pip:
-
-```bash
 pip install InSilicoSeq
 ```
+
+_Note:_ Insilicoseq requires python >= 3.5 
 
 Alternatively, with docker:
 
