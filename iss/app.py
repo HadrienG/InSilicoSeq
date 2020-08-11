@@ -160,11 +160,37 @@ def generate_reads(args):
             else:
                 abundance_dic = abundance.parse_abundance_file(
                     args.abundance_file)
-        elif args.coverage_file and not args.draft:
+        elif args.coverage_file:
             logger.warning('--coverage_file is an experimental feature')
             logger.warning('--coverage_file disables --n_reads')
             logger.info('Using coverage file:%s' % args.coverage_file)
-            abundance_dic = abundance.parse_abundance_file(args.coverage_file)
+            if args.draft:
+                coverage_dic = abundance.parse_abundance_file(
+                    args.coverage_file)
+                complete_genomes_dic = {k: v for
+                                        k, v in coverage_dic.items()
+                                        if k not in args.draft}
+                draft_dic = {}
+                # the coverage value should be the same for all contigs
+                for key, coverage in coverage_dic.items():
+                    if key in args.draft:
+                        try:
+                            f = open(key, 'r')
+                            with f:
+                                fasta_file = SeqIO.parse(f, 'fasta')
+                                draft_records = [record for record in
+                                                 fasta_file]
+                        except Exception as e:
+                            logger.error('Failed to open file:%s' % e)
+                            sys.exit(1)
+                        else:
+                            for record in draft_records:
+                                draft_dic[record.id] = coverage
+                abundance_dic = {**complete_genomes_dic,
+                                 **draft_dic}
+            else:
+                abundance_dic = abundance.parse_abundance_file(
+                    args.coverage_file)
         elif args.coverage in abundance_dispatch and not args.draft:
             logger.warning('--coverage is an experimental feature')
             logger.info('Using %s coverage distribution' % args.coverage)

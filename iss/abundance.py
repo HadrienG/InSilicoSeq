@@ -284,4 +284,5 @@ def expand_draft_abundance(abundance_dic, draft):
                     contig_abundance = abundance * (length / total_length)
                     # print(key, record.id, contig_abundance)
                     draft_dic[record.id] = contig_abundance
+    print(draft_dic)
     return draft_dic
