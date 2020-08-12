@@ -170,32 +170,29 @@ def generate_reads(args):
                 complete_genomes_dic = {k: v for
                                         k, v in coverage_dic.items()
                                         if k not in args.draft}
-                draft_dic = {}
-                # the coverage value should be the same for all contigs
-                for key, coverage in coverage_dic.items():
-                    if key in args.draft:
-                        try:
-                            f = open(key, 'r')
-                            with f:
-                                fasta_file = SeqIO.parse(f, 'fasta')
-                                draft_records = [record for record in
-                                                 fasta_file]
-                        except Exception as e:
-                            logger.error('Failed to open file:%s' % e)
-                            sys.exit(1)
-                        else:
-                            for record in draft_records:
-                                draft_dic[record.id] = coverage
+                draft_dic = abundance.expand_draft_abundance(
+                    abundance_dic_short,
+                    args.draft,
+                    mode="coverage")
                 abundance_dic = {**complete_genomes_dic,
                                  **draft_dic}
             else:
                 abundance_dic = abundance.parse_abundance_file(
                     args.coverage_file)
-        elif args.coverage in abundance_dispatch and not args.draft:
+        elif args.coverage in abundance_dispatch:
+            # todo coverage distribution with --draft
             logger.warning('--coverage is an experimental feature')
             logger.info('Using %s coverage distribution' % args.coverage)
-            abundance_dic = abundance_dispatch[
-                args.coverage](genome_list)
+            if args.draft:
+                abundance_dic = abundance.draft(
+                    genome_list,
+                    args.draft,
+                    abundance_dispatch[args.abundance],
+                    args.output,
+                    mode="coverage")
+            else:
+                abundance_dic = abundance_dispatch[
+                    args.coverage](genome_list)
             if args.n_reads:
                 n_reads = util.convert_n_reads(args.n_reads)
                 logger.info('scaling coverage to %s reads' % n_reads)

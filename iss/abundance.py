@@ -46,7 +46,7 @@ def parse_abundance_file(abundance_file):
                     sys.exit(1)
                 else:
                     abundance_dic[genome_id] = abundance
-    logger.info('Loaded abundance/coverage file: %s' % abundance_file)
+    logger.debug('Loaded abundance/coverage file: %s' % abundance_file)
     return abundance_dic
 
 
@@ -224,7 +224,7 @@ def to_file(abundance_dic, output, mode="abundance"):
                 f.write('%s\t%s\n' % (record, abundance))
 
 
-def draft(genomes, draft, distribution, output):
+def draft(genomes, draft, distribution, output, mode="abundance"):
     """Computes the abundance dictionary for a mix of complete and
     draft genomes
 
@@ -248,20 +248,23 @@ def draft(genomes, draft, distribution, output):
                                   k, v in abundance_dic.items()
                                   if k not in draft}
     to_file(abundance_dic, output)
-    draft_dic = expand_draft_abundance(abundance_dic, draft)
+    draft_dic = expand_draft_abundance(abundance_dic, draft, mode)
     full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
     return full_abundance_dic
 
 
-def expand_draft_abundance(abundance_dic, draft):
+def expand_draft_abundance(abundance_dic, draft, mode="abundance"):
     """Calculate abundance for each contig of a draft genome
     The function takes the abundance dictionary and automatically
-    detects draft genomes
+    detects draft genomes. In coverage mode the function simply assign
+    the coverage value to each contig
 
     Args:
         abundance_dic (dict): dict with genome (paths or id) as key and
             abundance as value
         draft (list): draft genome files
+        mode (str): abundance or coverage
+
 
     Returns:
         dict: abundance dictionary with abundance value for each contig
@@ -280,9 +283,11 @@ def expand_draft_abundance(abundance_dic, draft):
             else:
                 total_length = sum(len(record) for record in draft_records)
                 for record in draft_records:
-                    length = len(record)
-                    contig_abundance = abundance * (length / total_length)
-                    # print(key, record.id, contig_abundance)
-                    draft_dic[record.id] = contig_abundance
-    print(draft_dic)
+                    if mode == "abundance":
+                        length = len(record)
+                        contig_abundance = abundance * (length / total_length)
+                        # print(key, record.id, contig_abundance)
+                        draft_dic[record.id] = contig_abundance
+                    elif mode == "coverage":
+                        draft_dic[record.id] = abundance
     return draft_dic
