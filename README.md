@@ -29,14 +29,10 @@ conda install -c bioconda insilicoseq
 Or with pip:
 
 ```shell
-pip3 install InSilicoSeq
-```
-
-If you want to use python2, or are using python3 and pip3 aliased to python and pip:
-
-```bash
 pip install InSilicoSeq
 ```
+
+_Note:_ Insilicoseq requires python >= 3.5 
 
 Alternatively, with docker:
 
@@ -71,7 +67,7 @@ For 10 million reads and a custom error model:
 
 ```shell
 curl -O -J -L https://osf.io/thser/download  # download the example data
-iss generate -g SRS121011.fasta -n 10m --model my_model.npz --output my_reads
+iss generate -g SRS121011.fasta -n 10m --model my_model.npz --output /path/to/my_reads
 ```
 
 granted you have built `my_model.npz` with `iss model` (see [below](#create-your-own-error-model))

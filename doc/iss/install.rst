@@ -8,11 +8,12 @@ Installing InSilicoSeq
 Using pip
 ---------
 
+InSilicoSeq requires python>=3.5.
 To install InSilicoSeq, type the following in your terminal:
 
 .. code-block:: bash
 
-    pip3 install InSilicoSeq
+    pip install InSilicoSeq
 
 It will install InSilicoSeq as well as the following dependencies:
 
@@ -31,17 +32,11 @@ Other installation options
 
     conda install -c bioconda insilicoseq
 
-* If you can't / don't want to use python3:
-
-.. code-block:: bash
-
-    pip install InSilicoSeq
-
 * Upgrading InSilicoSeq to the latest version:
 
 .. code-block:: bash
 
-    pip3 install --upgrade InSilicoSeq
+    pip install --upgrade InSilicoSeq
 
 * If you don't have administration rights on your machine:
 
@@ -54,11 +49,11 @@ Other installation options
 .. code-block:: bash
 
     prefix="/path/to/install/prefix"
-    pip3 install --install-option="--prefix=/$prefix" InSilicoSeq
+    pip install --install-option="--prefix=/$prefix" InSilicoSeq
 
 then add ``$prefix/bin`` to your ``PATH``, and
-``$prefix/lib/pythonX.X/site-packages`` to your ``PYTHONPATH`` (replacing
-pythonX.X with your python version)
+``$prefix/lib/python3.X/site-packages`` to your ``PYTHONPATH`` (replacing
+python3.X with your python version)
 
 .. _using_docker:
 

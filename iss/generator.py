@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals
-from builtins import range
-
 from iss.util import load, rev_comp
 
 from Bio import SeqIO

@@ -130,6 +130,18 @@ For the abundance to make sense, the total abundance in your abundance file must
 
     Histograms of the different distribution (drawn with 100 samples)
 
+Coverage distribution
+---------------------
+
+In the context of InSilicoSeq, the `abundance` is the proportion of reads in a sample, which since it does not acount for the length of the genome, does not necessarily reflect the number of organisms present in a sample.
+
+The `coverage`and `coverage_file` options allow for simulating reads according to a coverage distribution instead of abundance.
+
+.. code-block:: bash
+
+    iss generate --ncbi bacteria -U 50 --coverage lognormal -n 25M \
+        --model novaseq --output reads
+
 GC bias
 -------
 
@@ -193,6 +205,16 @@ Can be uniform, halfnormal, exponential, lognormal or zero_inflated_lognormal.
 
 Abundance file for coverage calculations (default: None).
 
+--coverage
+^^^^^^^^^^
+
+coverage distribution. Can be uniform, halfnormal, exponential, lognormal or zero-inflated-lognormal.
+
+--coverage_file
+^^^^^^^^^^^^^^^
+
+file containing coverage information (default: None).
+
 --n_reads
 ^^^^^^^^^
 
@@ -242,4 +264,9 @@ Enable debug logging
 --output
 ^^^^^^^^
 
-Output file prefix (Required)
+Output file path and prefix (Required)
+
+--compress
+^^^^^^^^^^
+
+Compress the output in gzip format (default: False).

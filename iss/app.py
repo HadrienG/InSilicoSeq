@@ -83,10 +83,6 @@ def generate_reads(args):
             if args.genomes:
                 genome_files.extend(args.genomes)
             if args.draft:
-                logger.warning('--draft is in early experimental stage.')
-                logger.warning(
-                    'disabling --abundance_file, --coverage and --n_genomes')
-                logger.warning('Defaulting to --abundance.')
                 genome_files.extend(args.draft)
             if args.ncbi and args.n_genomes_ncbi:
                 util.genome_file_exists(args.output + '_ncbi_genomes.fasta')
@@ -98,15 +94,7 @@ def generate_reads(args):
                         '--ncbi and --n_genomes_ncbi of unequal lengths. \
                         Aborting')
                     sys.exit(1)
-                # this is py3 only
-                # for g, n in zip(*args.ncbi, *args.n_genomes):
-                # py2 compatibilty workaround
-                # TODO switch to the more elegant solution when we drop python2
-                args.ncbi = [x for y in args.ncbi
-                             for x in y]
-                args.n_genomes_ncbi = [x for y in args.n_genomes_ncbi
-                                       for x in y]
-                for g, n in zip(args.ncbi, args.n_genomes_ncbi):
+                for g, n in zip(*args.ncbi, *args.n_genomes_ncbi):
                     genomes_ncbi = download.ncbi(
                         g, n, args.output + '_ncbi_genomes.fasta')
                 genome_files.append(genomes_ncbi)
@@ -156,13 +144,63 @@ def generate_reads(args):
             'zero_inflated_lognormal': abundance.zero_inflated_lognormal
         }
         # read the abundance file
-        if args.abundance_file and not args.draft:
+        if args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
-            abundance_dic = abundance.parse_abundance_file(args.abundance_file)
-        elif args.coverage and not args.draft:
+            if args.draft:
+                abundance_dic_short = abundance.parse_abundance_file(
+                    args.abundance_file)
+                complete_genomes_dic = {k: v for
+                                        k, v in abundance_dic_short.items()
+                                        if k not in args.draft}
+                draft_dic = abundance.expand_draft_abundance(
+                    abundance_dic_short,
+                    args.draft)
+                abundance_dic = {**complete_genomes_dic,
+                                 **draft_dic}
+            else:
+                abundance_dic = abundance.parse_abundance_file(
+                    args.abundance_file)
+        elif args.coverage_file:
+            logger.warning('--coverage_file is an experimental feature')
+            logger.warning('--coverage_file disables --n_reads')
+            logger.info('Using coverage file:%s' % args.coverage_file)
+            if args.draft:
+                coverage_dic = abundance.parse_abundance_file(
+                    args.coverage_file)
+                complete_genomes_dic = {k: v for
+                                        k, v in coverage_dic.items()
+                                        if k not in args.draft}
+                draft_dic = abundance.expand_draft_abundance(
+                    abundance_dic_short,
+                    args.draft,
+                    mode="coverage")
+                abundance_dic = {**complete_genomes_dic,
+                                 **draft_dic}
+            else:
+                abundance_dic = abundance.parse_abundance_file(
+                    args.coverage_file)
+        elif args.coverage in abundance_dispatch:
+            # todo coverage distribution with --draft
             logger.warning('--coverage is an experimental feature')
-            logger.info('Using coverage file:%s' % args.coverage)
-            abundance_dic = abundance.parse_abundance_file(args.coverage)
+            logger.info('Using %s coverage distribution' % args.coverage)
+            if args.draft:
+                abundance_dic = abundance.draft(
+                    genome_list,
+                    args.draft,
+                    abundance_dispatch[args.abundance],
+                    args.output,
+                    mode="coverage")
+            else:
+                abundance_dic = abundance_dispatch[
+                    args.coverage](genome_list)
+            if args.n_reads:
+                n_reads = util.convert_n_reads(args.n_reads)
+                logger.info('scaling coverage to %s reads' % n_reads)
+                abundance_dic = abundance.coverage_scaling(n_reads,
+                                                           abundance_dic,
+                                                           genome_file,
+                                                           err_mod.read_length)
+            abundance.to_file(abundance_dic, args.output, mode="coverage")
         elif args.abundance in abundance_dispatch:
             logger.info('Using %s abundance distribution' % args.abundance)
             if args.draft:
@@ -182,7 +220,7 @@ def generate_reads(args):
         cpus = args.cpus
         logger.info('Using %s cpus for read generation' % cpus)
 
-        if not args.coverage:
+        if not (args.coverage or args.coverage_file):
             n_reads = util.convert_n_reads(args.n_reads)
             logger.info('Generating %s reads' % n_reads)
 
@@ -205,7 +243,7 @@ def generate_reads(args):
                                     % record.id)
                         genome_size = len(record.seq)
 
-                        if args.coverage:
+                        if args.coverage or args.coverage_file:
                             coverage = species_abundance
                         else:
                             coverage = abundance.to_coverage(
@@ -443,6 +481,15 @@ def main():
     input_abundance.add_argument(
         '--coverage',
         '-C',
+        choices=['uniform', 'halfnormal',
+                 'exponential', 'lognormal', 'zero_inflated_lognormal'],
+        metavar='<str>',
+        help='coverage distribution. Can be uniform,\
+            halfnormal, exponential, lognormal or zero-inflated-lognormal.'
+    )
+    input_abundance.add_argument(
+        '--coverage_file',
+        '-D',
         metavar='<coverage.txt>',
         help='file containing coverage information (default: %(default)s).'
     )
@@ -493,7 +540,7 @@ def main():
         '--output',
         '-o',
         metavar='<fastq>',
-        help='Output file prefix (Required)',
+        help='Output file path and prefix (Required)',
         required=True
     )
     parser_gen._optionals.title = 'arguments'
@@ -525,7 +572,7 @@ def main():
         '--output',
         '-o',
         metavar='<npz>',
-        help='Output file prefix (Required)',
+        help='Output file path and prefix (Required)',
         required=True
     )
     parser_mod._optionals.title = 'arguments'
@@ -550,4 +597,4 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-        raise  # extra traceback to uncomment if all hell breaks lose
+        # raise  # extra traceback to uncomment if all hell breaks lose

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-from builtins import int, dict, range
-
 from iss import util
 from iss import modeller
 

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from builtins import super
-
 from iss import util
 from iss.error_models import ErrorModel
 

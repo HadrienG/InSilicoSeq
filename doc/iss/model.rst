@@ -88,7 +88,7 @@ Error model to build. If not specified, using kernel density estimation
 --output
 ^^^^^^^^
 
- Output file prefix (Required)
+ Output file path and prefix (Required)
 
 --quiet
 ^^^^^^^

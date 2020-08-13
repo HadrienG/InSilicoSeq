@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division
-
+from Bio import SeqIO
 from scipy import stats
 
 import os
 import sys
 import logging
 import numpy as np
-
-from Bio import SeqIO
 
 
 def parse_abundance_file(abundance_file):
@@ -33,10 +30,10 @@ def parse_abundance_file(abundance_file):
         assert os.stat(abundance_file).st_size != 0
         f = open(abundance_file, 'r')
     except (IOError, OSError) as e:
-        logger.error('Failed to open abundance file:%s' % e)
+        logger.error('Failed to open file:%s' % e)
         sys.exit(1)
     except AssertionError as e:
-        logger.error('Abundance file seems empty: %s' % abundance_file)
+        logger.error('File seems empty: %s' % abundance_file)
         sys.exit(1)
     else:
         with f:
@@ -45,11 +42,11 @@ def parse_abundance_file(abundance_file):
                     genome_id = line.split()[0]
                     abundance = float(line.split()[1])
                 except IndexError as e:
-                    logger.error('Failed to read abundance file: %s' % e)
+                    logger.error('Failed to read file: %s' % e)
                     sys.exit(1)
                 else:
                     abundance_dic[genome_id] = abundance
-    logger.info('Loaded abundance file: %s' % abundance_file)
+    logger.debug('Loaded abundance/coverage file: %s' % abundance_file)
     return abundance_dic
 
 
@@ -169,7 +166,42 @@ def to_coverage(total_n_reads, species_abundance, read_length, genome_size):
     return coverage
 
 
-def to_file(abundance_dic, output):
+def coverage_scaling(total_n_reads, abundance_dic, genome_file, read_length):
+    """Scale coverage distribution according to the n_reads parameter
+
+    Args:
+        total_n_reads (int): total amount of reads to simulate
+        abundance_dic (dict): a dictionary with records as keys, coverage as
+            values
+        genome_file (str): path to input fasta file containing genomes
+        read_length (int): length of the reads in the dataset
+
+    Returns:
+        dict: scaled coverage dictionary
+    """
+    total_reads = 0
+    f = open(genome_file, 'r')  # re-opens the file
+    with f:
+        fasta_file = SeqIO.parse(f, 'fasta')
+        for record in fasta_file:
+            try:
+                species_coverage = abundance_dic[record.id]
+            except KeyError as e:
+                logger.error(
+                    'Fasta record not found in abundance file: %s' % e)
+                sys.exit(1)
+
+            genome_size = len(record.seq)
+            reads_g = species_coverage * genome_size / read_length / 2
+            total_reads += reads_g
+
+    scale_factor = total_n_reads / total_reads
+    for key in abundance_dic:
+        abundance_dic[key] *= scale_factor
+    return abundance_dic
+
+
+def to_file(abundance_dic, output, mode="abundance"):
     """Write the abundance dictionary to a file
 
     Args:
@@ -177,7 +209,10 @@ def to_file(abundance_dic, output):
         output (str): the output file name
     """
     logger = logging.getLogger(__name__)
-    output_abundance = output + '_abundance.txt'
+    if mode == "abundance":
+        output_abundance = output + '_abundance.txt'
+    else:
+        output_abundance = output + '_coverage.txt'
     try:
         f = open(output_abundance, 'w')
     except PermissionError as e:
@@ -189,7 +224,7 @@ def to_file(abundance_dic, output):
                 f.write('%s\t%s\n' % (record, abundance))
 
 
-def draft(genomes, draft, distribution, output):
+def draft(genomes, draft, distribution, output, mode="abundance"):
     """Computes the abundance dictionary for a mix of complete and
     draft genomes
 
@@ -213,6 +248,27 @@ def draft(genomes, draft, distribution, output):
                                   k, v in abundance_dic.items()
                                   if k not in draft}
     to_file(abundance_dic, output)
+    draft_dic = expand_draft_abundance(abundance_dic, draft, mode)
+    full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
+    return full_abundance_dic
+
+
+def expand_draft_abundance(abundance_dic, draft, mode="abundance"):
+    """Calculate abundance for each contig of a draft genome
+    The function takes the abundance dictionary and automatically
+    detects draft genomes. In coverage mode the function simply assign
+    the coverage value to each contig
+
+    Args:
+        abundance_dic (dict): dict with genome (paths or id) as key and
+            abundance as value
+        draft (list): draft genome files
+        mode (str): abundance or coverage
+
+
+    Returns:
+        dict: abundance dictionary with abundance value for each contig
+    """
     draft_dic = {}
     for key, abundance in abundance_dic.items():
         if key in draft:
@@ -227,12 +283,11 @@ def draft(genomes, draft, distribution, output):
             else:
                 total_length = sum(len(record) for record in draft_records)
                 for record in draft_records:
-                    length = len(record)
-                    contig_abundance = abundance * (length / total_length)
-                    # print(key, record.id, contig_abundance)
-                    draft_dic[record.id] = contig_abundance
-    # python 3.5 +
-    # full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
-    full_abundance_dic = complete_genomes_abundance.copy()
-    full_abundance_dic.update(draft_dic)
-    return full_abundance_dic
+                    if mode == "abundance":
+                        length = len(record)
+                        contig_abundance = abundance * (length / total_length)
+                        # print(key, record.id, contig_abundance)
+                        draft_dic[record.id] = contig_abundance
+                    elif mode == "coverage":
+                        draft_dic[record.id] = abundance
+    return draft_dic
