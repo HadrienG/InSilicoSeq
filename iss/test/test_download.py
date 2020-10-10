@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
 from Bio.SeqRecord import SeqRecord
 
 from iss import download

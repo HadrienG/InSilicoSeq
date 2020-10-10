@@ -6,7 +6,6 @@ from iss.util import load, rev_comp
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqUtils import GC
-from Bio.Alphabet import IUPAC
 from Bio.SeqRecord import SeqRecord
 from shutil import copyfileobj
 
@@ -131,9 +130,7 @@ def simulate_read(record, ErrorModel, i, cpu_number):
     bounds = (forward_start, forward_end)
     # create a perfect read
     forward = SeqRecord(
-        Seq(str(sequence[forward_start:forward_end]),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str(sequence[forward_start:forward_end])),
         id='%s_%s_%s/1' % (header, i, cpu_number),
         description=''
     )
@@ -156,9 +153,7 @@ def simulate_read(record, ErrorModel, i, cpu_number):
     bounds = (reverse_start, reverse_end)
     # create a perfect read
     reverse = SeqRecord(
-        Seq(rev_comp(str(sequence[reverse_start:reverse_end])),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(rev_comp(str(sequence[reverse_start:reverse_end]))),
         id='%s_%s_%s/2' % (header, i, cpu_number),
         description=''
     )

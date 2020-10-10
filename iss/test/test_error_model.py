@@ -4,7 +4,6 @@
 from iss.error_models import ErrorModel, basic, kde, perfect
 
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
 from Bio.SeqRecord import SeqRecord
 from nose.tools import raises
 
@@ -40,9 +39,7 @@ def test_introduce_errors():
     err_mod = basic.BasicErrorModel()
 
     read = SeqRecord(
-        Seq(str('AATGC' * 25),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str('AATGC' * 25)),
         id='read_1',
         description='test read'
     )
@@ -58,9 +55,7 @@ def test_mut_sequence():
     err_mod = basic.BasicErrorModel()
 
     read = SeqRecord(
-        Seq(str('AAAAA' * 25),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str('AAAAA' * 25)),
         id='read_1',
         description='test read'
     )
@@ -78,16 +73,12 @@ def test_introduce_indels():
     err_mod.del_for[0]['A'] = 1.0
     bounds = (5, 130)
     read = SeqRecord(
-        Seq(str('ATATA' * 25),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str('ATATA' * 25)),
         id='read_1',
         description='test read'
     )
     ref_genome = SeqRecord(
-        Seq(str('ATATA' * 100),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str('ATATA' * 100)),
         id='ref_genome',
         description='test reference'
     )
