@@ -8,7 +8,6 @@ from iss.util import cleanup
 from iss.error_models import ErrorModel, basic, kde
 
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
 from Bio.SeqRecord import SeqRecord
 from nose.tools import with_setup, raises
 
@@ -39,9 +38,7 @@ def test_cleanup_fail():
 def test_simulate_and_save():
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(
-        Seq(str('AAAAACCCCC' * 100),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str('AAAAACCCCC' * 100)),
         id='my_genome',
         description='test genome'
     )
@@ -52,9 +49,7 @@ def test_simulate_and_save():
 def test_simulate_and_save_short():
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(
-        Seq(str('AACCC' * 100),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str('AACCC' * 100)),
         id='my_genome',
         description='test genome'
     )
@@ -65,9 +60,7 @@ def test_simulate_and_save_short():
 def test_small_input():
     err_mod = kde.KDErrorModel('data/ecoli.npz')
     ref_genome = SeqRecord(
-        Seq(str('AAAAACCCCC'),
-            IUPAC.unambiguous_dna
-            ),
+        Seq(str('AAAAACCCCC')),
         id='my_genome',
         description='test genome'
     )
@@ -80,9 +73,7 @@ def test_basic():
         np.random.seed(42)
         err_mod = basic.BasicErrorModel()
         ref_genome = SeqRecord(
-            Seq(str('AAAAACCCCC' * 100),
-                IUPAC.unambiguous_dna
-                ),
+            Seq(str('AAAAACCCCC' * 100)),
             id='my_genome',
             description='test genome'
         )
@@ -97,9 +88,7 @@ def test_kde():
         np.random.seed(42)
         err_mod = kde.KDErrorModel('data/ecoli.npz')
         ref_genome = SeqRecord(
-            Seq(str('CGTTTCAACC' * 400),
-                IUPAC.unambiguous_dna
-                ),
+            Seq(str('CGTTTCAACC' * 400)),
             id='my_genome',
             description='test genome'
         )
@@ -114,9 +103,7 @@ def test_kde_short():
         np.random.seed(42)
         err_mod = kde.KDErrorModel('data/ecoli.npz')
         ref_genome = SeqRecord(
-            Seq(str('AAACC' * 100),
-                IUPAC.unambiguous_dna
-                ),
+            Seq(str('AAACC' * 100)),
             id='my_genome',
             description='test genome'
         )
