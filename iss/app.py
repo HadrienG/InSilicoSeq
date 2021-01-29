@@ -229,7 +229,8 @@ def generate_reads(args):
             f = open(genome_file, 'r')  # re-opens the file
             with f:
                 fasta_file = SeqIO.parse(f, 'fasta')
-
+                total_reads_generated = 0
+                total_reads_generated_unrouned = 0
                 for record in fasta_file:
                     # generate reads for records
                     try:
@@ -252,9 +253,22 @@ def generate_reads(args):
                                 err_mod.read_length,
                                 genome_size
                             )
-                        n_pairs = int(round(
-                            (coverage *
-                                len(record.seq)) / err_mod.read_length) / 2)
+                        n_pairs_unrounded = (
+                            (coverage * len(record.seq)) /
+                            err_mod.read_length) / 2
+                        n_pairs = round(n_pairs_unrounded)
+
+                        # check that the rounding does not cause to drop
+                        # read pairs
+                        total_reads_generated_unrouned += n_pairs_unrounded
+                        total_reads_generated += n_pairs
+                        if round(total_reads_generated_unrouned) > \
+                                total_reads_generated:
+                            logger.debug(
+                                "Adding a pair to correct rounding error")
+                            n_pairs += 1
+                            total_reads_generated += 1
+
                         # skip record if n_reads == 0
                         if n_pairs == 0:
                             continue
