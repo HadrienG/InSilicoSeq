@@ -135,12 +135,27 @@ Coverage distribution
 
 In the context of InSilicoSeq, the `abundance` is the proportion of reads in a sample, which since it does not acount for the length of the genome, does not necessarily reflect the number of organisms present in a sample.
 
-The `coverage`and `coverage_file` options allow for simulating reads according to a coverage distribution instead of abundance.
+The ``coverage`` and ``coverage_file`` options allow for simulating reads according to a coverage distribution instead of abundance.
 
 .. code-block:: bash
 
     iss generate --ncbi bacteria -U 50 --coverage lognormal -n 25M \
         --model novaseq --output reads
+
+The ``coverage_file`` option works similarly to the ``abundance_file`` option.
+For two genomes A and B:
+
+.. code-block:: bash
+
+    iss generate --genomes genomes.fasta --coverage_file coverage.txt \
+        --model novaseq --output reads
+
+with, for a coverage of 20x for genome_A and 100x for genome_B, the coverage file `coverage.txt` will be:
+
+.. code-block:: bash
+
+    genome_A    20
+    genome_B    100
 
 GC bias
 -------
