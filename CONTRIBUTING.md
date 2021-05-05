@@ -12,7 +12,7 @@ all. If you wish to contribute, you are expected to adhere to a
 
 This project is still at an early stage and open to suggestions of any kind.
 Chat with us by
-[opening and issue](https://github.com/HadrienG/InSilicoSeq/issues) or fork
+[opening an issue](https://github.com/HadrienG/InSilicoSeq/issues) or fork
 the repository and
 [open a pull request](https://github.com/HadrienG/InSilicoSeq/pulls)
 
