@@ -48,7 +48,8 @@ def ncbi(kingdom, n_genomes, output):
         genome_info = Entrez.read(
             Entrez.esummary(
                 db='assembly',
-                id=ident))["DocumentSummarySet"]["DocumentSummary"][0]
+                id=ident),
+            validate=False)["DocumentSummarySet"]["DocumentSummary"][0]
         if genome_info['FtpPath_RefSeq']:
             url = genome_info['FtpPath_RefSeq']
             url = "%s/%s_%s_genomic.fna.gz" \
