@@ -50,7 +50,17 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
     logger.debug(
         'Cpu #%s: Generating %s read pairs'
         % (cpu_number, n_pairs))
-    read_tuple_list = []
+
+    temp_file_name = output + '.iss.tmp.%s.%s' % (record.id, cpu_number)
+    to_fastq(
+        reads_generator(n_pairs, record, ErrorModel, cpu_number, gc_bias),
+        temp_file_name
+    )
+
+    return temp_file_name
+
+
+def reads_generator(n_pairs, record, ErrorModel, cpu_number, gc_bias):
     i = 0
     while i < n_pairs:
         # try:
@@ -75,18 +85,13 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
                     read_tuple_list.append((forward, reverse))
                     i += 1
                 elif np.random.rand() < 0.90:
-                    read_tuple_list.append((forward, reverse))
+                    yield (forward, reverse)
                     i += 1
                 else:
                     continue
             else:
-                read_tuple_list.append((forward, reverse))
+                yield (forward, reverse)
                 i += 1
-
-    temp_file_name = output + '.iss.tmp.%s.%s' % (record.id, cpu_number)
-    to_fastq(read_tuple_list, temp_file_name)
-
-    return temp_file_name
 
 
 def simulate_read(record, ErrorModel, i, cpu_number):
