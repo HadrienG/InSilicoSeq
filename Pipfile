@@ -11,6 +11,7 @@ biopython = "==1.78"
 joblib = "*"
 pysam = "==0.15.4"
 requests = "*"
+urllib3 = ">=1.26.5"
 
 [dev-packages]
 nose = "*"
