@@ -16,7 +16,7 @@ import logging
 import numpy as np
 
 
-def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
+def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type, quality_bin,
           gc_bias=False, mode="default"):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
@@ -31,6 +31,9 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
             function. Is used for naming the output file
         output (str): the output file prefix
         seed (int): random seed to use
+	    sequencing_type (str): metagenomics or amplicon sequencing used
+        quality_bin (string): level of quality for the quality scores. 
+            Can be 'auto', 'low', 'middle_low', 'middle_high', 'high' (default: 'auto').
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
 
@@ -59,7 +62,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
         #     logger.error('Skipping this record: %s' % record.id)
         #     return
         try:
-            forward, reverse = simulate_read(record, ErrorModel, i, cpu_number)
+            forward, reverse = simulate_read(record, ErrorModel, i, cpu_number, sequence_type, quality_bin)
         except AssertionError as e:
             logger.warning(
                 '%s shorter than read length for this ErrorModel' % record.id)
@@ -89,7 +92,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
     return temp_file_name
 
 
-def simulate_read(record, ErrorModel, i, cpu_number):
+def simulate_read(record, ErrorModel, i, cpu_number, sequence_type, quality_bin):
     """From a read pair from one genome (or sequence) according to an
     ErrorModel
 
@@ -101,6 +104,9 @@ def simulate_read(record, ErrorModel, i, cpu_number):
         ErrorModel (ErrorModel): an ErrorModel class
         i (int): a number identifying the read
         cpu_number (int): cpu number. Is added to the read id.
+        sequence_type (str): metagenomics or amplicon sequencing used
+        quality_bin (string): level of quality for the quality scores. 
+            Can be 'auto', 'low', 'middle_low', 'middle_high', 'high' (default: 'auto').
 
     Returns:
         tuple: tuple containg a forward read and a reverse read
@@ -114,8 +120,14 @@ def simulate_read(record, ErrorModel, i, cpu_number):
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
         assert read_length < len(record.seq)
-        forward_start = random.randrange(
-            0, len(record.seq) - (2 * read_length + insert_size))
+        # assign the start position of the forward read
+        # if sequence_type == metagenomics, get a random start position
+        # if sequence_type == amplicon, start position is the start of the read
+        if sequence_type == 'metagenomics':
+            forward_start = random.randrange(
+                0, len(record.seq) - (2 * read_length + insert_size))
+        elif sequence_type == 'amplicon':
+            forward_start = 0
     except AssertionError as e:
         raise
     except ValueError as e:
@@ -137,13 +149,20 @@ def simulate_read(record, ErrorModel, i, cpu_number):
     # add the indels, the qual scores and modify the record accordingly
     forward.seq = ErrorModel.introduce_indels(
         forward, 'forward', sequence, bounds)
-    forward = ErrorModel.introduce_error_scores(forward, 'forward')
+    forward = ErrorModel.introduce_error_scores(forward, 'forward', quality_bin)
     forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
     # generate the reverse read
     try:
-        reverse_start = forward_end + insert_size
-        reverse_end = reverse_start + read_length
+        # assign start position reverse read
+        # if sequence_type == metagenomics, get a start position based on insert_size
+        # if sequence_type == amplicon, start position is the end of the read
+        if sequence_type == 'metagenomics':
+            reverse_start = forward_end + insert_size
+            reverse_end = reverse_start + read_length
+        elif sequence_type == 'amplicon':
+            reverse_start = len(record.seq) - read_length
+            reverse_end = reverse_start + read_length - 1
         assert reverse_end < len(record.seq)
     except AssertionError as e:
         # we use random insert when the modelled template length distribution
@@ -152,15 +171,22 @@ def simulate_read(record, ErrorModel, i, cpu_number):
         reverse_start = reverse_end - read_length
     bounds = (reverse_start, reverse_end)
     # create a perfect read
-    reverse = SeqRecord(
-        Seq(rev_comp(str(sequence[reverse_start:reverse_end]))),
-        id='%s_%s_%s/2' % (header, i, cpu_number),
-        description=''
-    )
+    if sequence_type == 'metagenomics':
+        reverse = SeqRecord(
+            Seq(rev_comp(str(sequence[reverse_start:reverse_end]))),
+            id='%s_%s_%s/2' % (header, i, cpu_number),
+            description=''
+        )
+    elif sequence_type == 'amplicon':
+        reverse = SeqRecord(
+            Seq(rev_comp(str(sequence[reverse_start:reverse_end+1]))),
+            id='%s_%s_%s/2' % (header, i, cpu_number),
+            description=''
+        )
     # add the indels, the qual scores and modify the record accordingly
     reverse.seq = ErrorModel.introduce_indels(
         reverse, 'reverse', sequence, bounds)
-    reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
+    reverse = ErrorModel.introduce_error_scores(reverse, 'reverse', quality_bin)
     reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
 
     return (forward, reverse)

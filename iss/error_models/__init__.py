@@ -47,23 +47,25 @@ class ErrorModel(object):
             self.logger.debug('Loaded ErrorProfile: %s' % npz_path)
         return error_profile
 
-    def introduce_error_scores(self, record, orientation):
+    def introduce_error_scores(self, record, orientation, quality_bin):
         """Add phred scores to a SeqRecord according to the error_model
 
         Args:
             record (SeqRecord): a read record
             orientation (string): orientation of the read. Can be 'forward' or
                 'reverse'
+            quality_bin (string): level of quality for the quality scores. 
+                Can be 'auto', 'low', 'middle_low', 'middle_high', 'high' (default: 'auto').
 
         Returns:
             SeqRecord: a read record with error scores
         """
         if orientation == 'forward':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_forward, 'forward')
+                self.quality_forward, 'forward', quality_bin)
         elif orientation == 'reverse':
             record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_reverse, 'reverse')
+                self.quality_reverse, 'reverse', quality_bin)
         return record
 
     def mut_sequence(self, record, orientation):
