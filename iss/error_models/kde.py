@@ -92,20 +92,20 @@ class KDErrorModel(ErrorModel):
 
             quality_bin = bin_types.index(quality_bin)
 
-            #checks if the quality bin is not empty.
+            # checks if the quality bin is not empty.
             if quality_bin not in full_bins:
                 quality_bin = full_bins[quality_bin]
 
                 if not full_bins:
-                    raise ValueError('Error: the model doesn\'t contain any cdfs.')
+                    raise ValueError("Error: the model doesn't contain any cdfs.")
 
                 start_bin = quality_bin
-                #if bin is empty, look for the first available bin of lower quality
-                #in the case of the starting bin being 0, will look for the first available bin of higher quality
+                # if bin is empty, look for the first available bin of lower quality
+                # in the case of the starting bin being 0, will look for the first available bin of higher quality
                 while len(cdfs[quality_bin]) == 0:
                     if start_bin == 0:
                         quality_bin += 1
-                    #if the lowest possible bin is reached, cycle back to the highest possible bin
+                    # if the lowest possible bin is reached, cycle back to the highest possible bin
                     elif quality_bin == 0:
                         quality_bin == 3
                     else:

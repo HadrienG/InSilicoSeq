@@ -31,8 +31,8 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type, 
             function. Is used for naming the output file
         output (str): the output file prefix
         seed (int): random seed to use
-	    sequencing_type (str): metagenomics or amplicon sequencing used
-        quality_bin (string): level of quality for the quality scores. 
+        sequencing_type (str): metagenomics or amplicon sequencing used
+        quality_bin (string): level of quality for the quality scores.
             Can be 'auto', 'low', 'middle_low', 'middle_high', 'high' (default: 'auto').
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
@@ -105,7 +105,7 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type, quality_bin)
         i (int): a number identifying the read
         cpu_number (int): cpu number. Is added to the read id.
         sequence_type (str): metagenomics or amplicon sequencing used
-        quality_bin (string): level of quality for the quality scores. 
+        quality_bin (string): level of quality for the quality scores.
             Can be 'auto', 'low', 'middle_low', 'middle_high', 'high' (default: 'auto').
 
     Returns:
