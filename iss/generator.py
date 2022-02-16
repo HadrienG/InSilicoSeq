@@ -16,7 +16,7 @@ import logging
 import numpy as np
 
 
-def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
+def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
           gc_bias=False, mode="default"):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
@@ -31,6 +31,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
             function. Is used for naming the output file
         output (str): the output file prefix
         seed (int): random seed to use
+        sequencing_type (str): metagenomics or amplicon sequencing used
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
 
@@ -59,7 +60,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
         #     logger.error('Skipping this record: %s' % record.id)
         #     return
         try:
-            forward, reverse = simulate_read(record, ErrorModel, i, cpu_number)
+            forward, reverse = simulate_read(record, ErrorModel, i, cpu_number, sequence_type)
         except AssertionError as e:
             logger.warning(
                 '%s shorter than read length for this ErrorModel' % record.id)
@@ -89,7 +90,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
     return temp_file_name
 
 
-def simulate_read(record, ErrorModel, i, cpu_number):
+def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
     """From a read pair from one genome (or sequence) according to an
     ErrorModel
 
@@ -101,6 +102,7 @@ def simulate_read(record, ErrorModel, i, cpu_number):
         ErrorModel (ErrorModel): an ErrorModel class
         i (int): a number identifying the read
         cpu_number (int): cpu number. Is added to the read id.
+        sequence_type (str): metagenomics or amplicon sequencing used
 
     Returns:
         tuple: tuple containg a forward read and a reverse read
@@ -111,11 +113,18 @@ def simulate_read(record, ErrorModel, i, cpu_number):
 
     read_length = ErrorModel.read_length
     insert_size = ErrorModel.random_insert_size()
+    print(sequence_type)
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
         assert read_length < len(record.seq)
-        forward_start = random.randrange(
-            0, len(record.seq) - (2 * read_length + insert_size))
+        # assign the start position of the forward read
+        # if sequence_type == metagenomics, get a random start position
+        # if sequence_type == amplicon, start position is the start of the read
+        if sequence_type == 'metagenomics':
+            forward_start = random.randrange(
+                0, len(record.seq) - (2 * read_length + insert_size))
+        elif sequence_type == 'amplicon':
+            forward_start = 0
     except AssertionError as e:
         raise
     except ValueError as e:
@@ -141,11 +150,16 @@ def simulate_read(record, ErrorModel, i, cpu_number):
     forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
     # generate the reverse read
-    try:
+    # assign start position reverse read
+    # if sequence_type == metagenomics, get a start position based on insert_size
+    # if sequence_type == amplicon, start position is the end of the read
+    if sequence_type == 'metagenomics':
         reverse_start = forward_end + insert_size
         reverse_end = reverse_start + read_length
-        assert reverse_end < len(record.seq)
-    except AssertionError as e:
+    elif sequence_type == 'amplicon':
+        reverse_start = len(record.seq) - read_length
+        reverse_end = reverse_start + read_length - 1
+    if reverse_end > len(record.seq):
         # we use random insert when the modelled template length distribution
         # is too large
         reverse_end = random.randrange(read_length, len(record.seq))
@@ -157,6 +171,7 @@ def simulate_read(record, ErrorModel, i, cpu_number):
         id='%s_%s_%s/2' % (header, i, cpu_number),
         description=''
     )
+
     # add the indels, the qual scores and modify the record accordingly
     reverse.seq = ErrorModel.introduce_indels(
         reverse, 'reverse', sequence, bounds)

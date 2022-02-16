@@ -308,7 +308,7 @@ def generate_reads(args):
                                 delayed(generator.reads)(
                                     record, err_mod,
                                     n_pairs_per_cpu[i], i, args.output,
-                                    args.seed,
+                                    args.seed, args.sequence_type,
                                     args.gc_bias, mode) for i in range(cpus))
                         temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
@@ -556,6 +556,13 @@ def main():
         metavar='<fastq>',
         help='Output file path and prefix (Required)',
         required=True
+    )
+    parser_gen.add_argument(
+        '--sequence_type',
+        '-t',
+        choices=['metagenomics', 'amplicon'],
+        required=True,
+        help='Type of sequencing. Can be metagenomics or amplicon.'
     )
     parser_gen._optionals.title = 'arguments'
     parser_gen.set_defaults(func=generate_reads)

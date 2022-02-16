@@ -62,7 +62,7 @@ class KDErrorModel(ErrorModel):
             cdfs (ndarray): array containing the cdfs
             orientation (string): orientation of the read. Can be 'forward' or
                 'reverse'
-
+            
         Returns:
             list: a list of phred scores
         """
@@ -79,7 +79,7 @@ class KDErrorModel(ErrorModel):
         # is 0.95) to best quality bin
         if quality_bin == 4:
             quality_bin = 3
-
+            
         cdfs_bin = cdfs[quality_bin]
 
         phred_list = []
