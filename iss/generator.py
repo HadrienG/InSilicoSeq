@@ -153,12 +153,14 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
     # assign start position reverse read
     # if sequence_type == metagenomics, get a start position based on insert_size
     # if sequence_type == amplicon, start position is the end of the read
-    if sequence_type == 'metagenomics':
+    if sequence_type == "metagenomics":
         reverse_start = forward_end + insert_size
         reverse_end = reverse_start + read_length
-    elif sequence_type == 'amplicon':
+    elif sequence_type == "amplicon":
         reverse_start = len(record.seq) - read_length
-        reverse_end = reverse_start + read_length - 1
+        reverse_end = reverse_start + read_length
+    else:
+        raise ValueError(f"Sequence type {sequence_type} not known")    
     if reverse_end > len(record.seq):
         # we use random insert when the modelled template length distribution
         # is too large

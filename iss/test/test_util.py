@@ -148,7 +148,6 @@ def test_concatenate():
         assert len(f.readlines()) == 40
 
 
-@raises(SystemExit)
 def test_concatenate_read_only():
     genome_files = ['data/ecoli.fasta'] * 2
     util.concatenate(genome_files, 'data/read_only.fasta')
