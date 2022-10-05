@@ -113,7 +113,7 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
 
     read_length = ErrorModel.read_length
     insert_size = ErrorModel.random_insert_size()
-    print(sequence_type)
+
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
         assert read_length < len(record.seq)
