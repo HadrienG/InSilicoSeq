@@ -7,9 +7,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqUtils import GC
 from Bio.SeqRecord import SeqRecord
-from shutil import copyfileobj
 
-import os
 import sys
 import random
 import logging

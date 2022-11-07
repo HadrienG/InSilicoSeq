@@ -3,7 +3,6 @@
 
 from iss import util
 from scipy import stats
-from joblib import Parallel, delayed
 
 import logging
 import numpy as np

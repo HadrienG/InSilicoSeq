@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss import bam
 from iss import util
 from iss import download
 from iss import abundance
@@ -9,12 +8,11 @@ from iss import generator
 from iss.version import __version__
 
 from Bio import SeqIO
-from joblib import Parallel, delayed, load, dump
+from joblib import Parallel, delayed
 
 import gc
 import os
 import sys
-import pickle
 import random
 import logging
 import argparse
