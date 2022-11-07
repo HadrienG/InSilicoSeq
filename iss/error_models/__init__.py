@@ -136,7 +136,7 @@ class ErrorModel(object):
                     mut_seq.append(nucl_to_add)
             elif orientation == 'reverse':
                 for i in range(to_add):
-                    if read_start-1 - i < 0:
+                    if read_start - 1 - i < 0:
                         nucl_to_add = 'A'
                     else:
                         nucl_to_add = util.rev_comp(

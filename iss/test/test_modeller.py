@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from builtins import next
-
 from iss import bam
 from iss import modeller
 

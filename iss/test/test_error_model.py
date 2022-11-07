@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from pickle import UnpicklingError
-from iss.error_models import ErrorModel, basic, kde, perfect
-from iss.util import load, rev_comp
+from iss.error_models import basic, kde, perfect
+from iss.util import rev_comp
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord

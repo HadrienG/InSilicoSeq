@@ -7,9 +7,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqUtils import GC
 from Bio.SeqRecord import SeqRecord
-from shutil import copyfileobj
 
-import os
 import sys
 import random
 import logging
@@ -125,6 +123,8 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
                 0, len(record.seq) - (2 * read_length + insert_size))
         elif sequence_type == 'amplicon':
             forward_start = 0
+        else:
+            raise RuntimeError(f"sequence type '{sequence_type}' is not supported")
     except AssertionError as e:
         raise
     except ValueError as e:
@@ -133,7 +133,6 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
             % (record.id, e))
         forward_start = max(0, random.randrange(
             0, len(record.seq) - read_length))
-        # raise
 
     forward_end = forward_start + read_length
     bounds = (forward_start, forward_end)
@@ -160,7 +159,7 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
         reverse_start = len(record.seq) - read_length
         reverse_end = reverse_start + read_length
     else:
-        raise ValueError(f"Sequence type {sequence_type} not known")    
+        raise ValueError(f"Sequence type {sequence_type} not known")
     if reverse_end > len(record.seq):
         # we use random insert when the modelled template length distribution
         # is too large

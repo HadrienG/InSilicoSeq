@@ -4,10 +4,6 @@
 from iss import util
 from iss.error_models import ErrorModel
 
-from Bio.Seq import MutableSeq
-from Bio.SeqRecord import SeqRecord
-
-import random
 import numpy as np
 
 
