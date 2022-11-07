@@ -5,14 +5,14 @@ from __future__ import unicode_literals
 
 from iss import generator
 from iss.util import cleanup
-from iss.error_models import ErrorModel, basic, kde
+from iss.error_models import basic, kde
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from nose.tools import with_setup, raises
 
-import os
 import sys
+import os
 import random
 import numpy as np
 
@@ -110,3 +110,35 @@ def test_kde_short():
         read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, 'metagenomics')
         big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
         assert big_read == 'ACCAAACCAAACCAAACCAAGGTTTGGTTTGGTTTGGTGT'
+
+
+def test_amp():
+    if sys.version_info > (3,):
+        random.seed(42)
+        np.random.seed(42)
+        err_mod = kde.KDErrorModel(
+            os.path.join(
+                os.path.dirname(__file__),
+                '../profiles/MiSeq'
+            )
+        )
+        print(err_mod.read_length)
+        ref_genome = SeqRecord(
+            Seq((
+                "TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGG"
+                "CCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTT"
+                )),
+            id='my_amplicon',
+            description='test amplicon'
+        )
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, 'amplicon')
+        assert len(read_tuple[0].seq) == 301
+        assert read_tuple[0].seq.startswith("TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        assert len(read_tuple[1].seq) == 301
+        assert read_tuple[1].seq.startswith("AAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")

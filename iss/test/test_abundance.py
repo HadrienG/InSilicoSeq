@@ -3,7 +3,7 @@
 
 from iss import util
 from iss import abundance
-from nose.tools import raises, assert_almost_equal, with_setup
+from nose.tools import raises, with_setup
 
 import numpy as np
 
