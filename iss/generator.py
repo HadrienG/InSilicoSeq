@@ -11,11 +11,15 @@ from Bio.SeqRecord import SeqRecord
 import sys
 import random
 import logging
+from typing import Tuple
 import numpy as np
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
-          gc_bias=False, mode="default"):
+          gc_bias=False, mode="default", store_mutations=False) -> str:
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     This function makes use of the `simulate_read` function to simulate reads
@@ -36,8 +40,6 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
     Returns:
         str: the name of the output file
     """
-    logger = logging.getLogger(__name__)
-
     # load the record from disk if mode is memmap
     if mode == "memmap":
         record_mmap = load(record)
@@ -46,23 +48,29 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
     if seed is not None:
         random.seed(seed + cpu_number)
         np.random.seed(seed + cpu_number)
-    logger.debug(
+    LOGGER.debug(
         'Cpu #%s: Generating %s read pairs'
         % (cpu_number, n_pairs))
     read_tuple_list = []
     i = 0
+
+    mutation_tuple_list = []
+
     while i < n_pairs:
         # try:
         #     forward, reverse = simulate_read(record, ErrorModel, i)
         # except ValueError as e:
-        #     logger.error('Skipping this record: %s' % record.id)
+        #     LOGGER.error('Skipping this record: %s' % record.id)
         #     return
         try:
             forward, reverse = simulate_read(record, ErrorModel, i, cpu_number, sequence_type)
+            if store_mutations:
+                mutation_tuple_list.extend(forward.annotations["mutations"])
+                mutation_tuple_list.extend(reverse.annotations["mutations"])
         except AssertionError as e:
-            logger.warning(
+            LOGGER.warning(
                 '%s shorter than read length for this ErrorModel' % record.id)
-            logger.warning(
+            LOGGER.warning(
                 'Skipping %s. You will have less reads than specified'
                 % record.id)
             break
@@ -84,11 +92,13 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
 
     temp_file_name = output + '.iss.tmp.%s.%s' % (record.id, cpu_number)
     to_fastq(read_tuple_list, temp_file_name)
+    if store_mutations:
+        to_vcf(mutation_tuple_list, temp_file_name)
 
     return temp_file_name
 
 
-def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
+def simulate_read(record: SeqRecord, ErrorModel, i, cpu_number, sequence_type) -> Tuple[SeqRecord, SeqRecord]:
     """From a read pair from one genome (or sequence) according to an
     ErrorModel
 
@@ -105,7 +115,6 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
     Returns:
         tuple: tuple containg a forward read and a reverse read
     """
-    logger = logging.getLogger(__name__)
     sequence = record.seq
     header = record.id
 
@@ -128,7 +137,7 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
     except AssertionError as e:
         raise
     except ValueError as e:
-        logger.debug(
+        LOGGER.debug(
             '%s shorter than template length for this ErrorModel:%s'
             % (record.id, e))
         forward_start = max(0, random.randrange(
@@ -142,13 +151,15 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
         id='%s_%s_%s/1' % (header, i, cpu_number),
         description=''
     )
-    # add the indels, the qual scores and modify the record accordingly
-    forward.seq = ErrorModel.introduce_indels(
-        forward, 'forward', sequence, bounds)
-    forward = ErrorModel.introduce_error_scores(forward, 'forward')
-    forward.seq = ErrorModel.mut_sequence(forward, 'forward')
 
-    # generate the reverse read
+    forward.annotations["mutations"] = []
+    forward.annotations["original"] = str(forward.seq)
+    # add the indels, the qual scores and modify the record accordingly
+    forward = ErrorModel.introduce_indels(forward, 'forward', sequence, bounds)
+    forward = ErrorModel.introduce_error_scores(forward, 'forward')
+    forward = ErrorModel.mut_sequence(forward, 'forward')
+
+    # generate the reverseread
     # assign start position reverse read
     # if sequence_type == metagenomics, get a start position based on insert_size
     # if sequence_type == amplicon, start position is the end of the read
@@ -173,11 +184,12 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
         description=''
     )
 
+    reverse.annotations["mutations"] = []
+    reverse.annotations["original"] = str(reverse.seq)
     # add the indels, the qual scores and modify the record accordingly
-    reverse.seq = ErrorModel.introduce_indels(
-        reverse, 'reverse', sequence, bounds)
+    reverse = ErrorModel.introduce_indels(reverse, 'reverse', sequence, bounds)
     reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
-    reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
+    reverse = ErrorModel.mut_sequence(reverse, 'reverse')
 
     return (forward, reverse)
 
@@ -192,7 +204,6 @@ def to_fastq(generator, output):
         generator (generator): a read generator (or list)
         output (string): the output files prefix
     """
-    logger = logging.getLogger(__name__)
     # define name of output files
     output_forward = output + '_R1.fastq'
     output_reverse = output + '_R2.fastq'
@@ -201,10 +212,26 @@ def to_fastq(generator, output):
         f = open(output_forward, 'a')
         r = open(output_reverse, 'a')
     except PermissionError as e:
-        logger.error('Failed to open output file(s): %s' % e)
+        LOGGER.error('Failed to open output file(s): %s' % e)
         sys.exit(1)
     else:
         with f, r:
             for read_tuple in generator:
                 SeqIO.write(read_tuple[0], f, 'fastq-sanger')
                 SeqIO.write(read_tuple[1], r, 'fastq-sanger')
+
+
+def to_vcf(generator, output):
+    output_vcf = output + ".vcf"
+    with open(output_vcf, 'w') as f:
+        for vcf_dict in generator:
+            # pass
+            line = "\t".join([
+                str(vcf_dict["id"]),
+                str(vcf_dict["position"] + 1), # vcf files have 1-based index
+                ".",
+                vcf_dict["ref"],
+                str(vcf_dict["alt"]),
+                str(vcf_dict["quality"])
+            ])
+            f.write(line + "\n")

@@ -14,8 +14,8 @@ class BasicErrorModel(ErrorModel):
     Only substitutions errors occur. The substitution rate is assumed
     equal between all nucleotides.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, store_mutations=False):
+        super().__init__(store_mutations)
         self.read_length = 125
         self.insert_size = 200
         self.quality_forward = self.quality_reverse = 30

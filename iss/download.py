@@ -14,6 +14,9 @@ import logging
 import requests
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 class BadRequestError(Exception):
     """Exception to raise when a http request does not return 200
     """
@@ -33,7 +36,6 @@ def ncbi(kingdom, n_genomes, output):
     Returns:
         str: the output file
     """
-    logger = logging.getLogger(__name__)
     Entrez.email = 'hadrien.gourle@slu.se'
     Entrez.tool = 'InSilicoSeq'
     Entrez.api_key = 'd784b36672ca73601f4a19c3865775a17207'
@@ -42,7 +44,7 @@ def ncbi(kingdom, n_genomes, output):
         term='%s[Organism] AND "latest refseq"[filter] AND "complete genome"[filter]'
         % kingdom, retmax=100000))['IdList']
     n = 0
-    logger.info('Searching for %s to download' % kingdom)
+    LOGGER.info('Searching for %s to download' % kingdom)
     while n < n_genomes:
         ident = random.choice(full_id_list)
         genome_info = Entrez.read(
@@ -56,13 +58,13 @@ def ncbi(kingdom, n_genomes, output):
                 % (genome_info['FtpPath_RefSeq'],
                    genome_info['AssemblyAccession'],
                    genome_info['AssemblyName'])
-            logger.info('Downloading %s' % genome_info['AssemblyAccession'])
+            LOGGER.info('Downloading %s' % genome_info['AssemblyAccession'])
             try:
                 assembly_to_fasta(url, output)
             except BadRequestError as e:
-                logger.debug('Could not download %s' %
+                LOGGER.debug('Could not download %s' %
                              genome_info['AssemblyAccession'])
-                logger.debug('Skipping and waiting two seconds')
+                LOGGER.debug('Skipping and waiting two seconds')
                 time.sleep(2)
             else:
                 n += 1
@@ -83,7 +85,6 @@ def assembly_to_fasta(url, output, chunk_size=1024):
     Returns:
         str: the file name
     """
-    logger = logging.getLogger(__name__)
     if url.startswith("ftp://"):  # requests doesnt support ftp
         url = url.replace("ftp://", "https://")
     if url:
@@ -101,10 +102,10 @@ def assembly_to_fasta(url, output, chunk_size=1024):
         try:
             f = open(output, 'a')
         except (IOError, OSError) as e:
-            logger.error('Failed to open output file: %s' % e)
+            LOGGER.error('Failed to open output file: %s' % e)
             sys.exit(1)
         else:
-            logger.debug('Writing genome to %s' % output)
+            LOGGER.debug('Writing genome to %s' % output)
             with f:
                 SeqIO.write(chromosome, f, 'fasta')
     return output

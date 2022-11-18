@@ -14,6 +14,9 @@ import numpy as np
 from shutil import copyfileobj
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 def phred_to_prob(q):
     """Convert a phred score (Sanger or modern Illumina) in probabilty
 
@@ -77,14 +80,13 @@ def count_records(fasta_file):
     Returns:
         list: a list of record ids
     """
-    logger = logging.getLogger(__name__)
     record_list = []
     for record in SeqIO.parse(fasta_file, "fasta"):
         record_list.append(record.id)
     try:
         assert len(record_list) != 0
     except AssertionError as e:
-        logger.error(
+        LOGGER.error(
             'Failed to find records in genome(s) file:%s' % fasta_file)
         sys.exit(1)
     else:
@@ -107,8 +109,7 @@ def split_list(l, n_parts=1):
 
 
 def nplog(type, flag):
-    logger = logging.getLogger(__name__)
-    logger.debug("FloatingPointError (%s), with flag %s" % (type, flag))
+    LOGGER.debug("FloatingPointError (%s), with flag %s" % (type, flag))
 
 
 def convert_n_reads(unit):
@@ -120,20 +121,19 @@ def convert_n_reads(unit):
     Returns:
         float: a number of reads
     """
-    logger = logging.getLogger(__name__)
     suffixes = {'k': 3, 'm': 6, 'g': 9}
     if unit[-1].isdigit():
         try:
             unit_int = int(unit)
         except ValueError as e:
-            logger.error('%s is not a valid number of reads' % unit)
+            LOGGER.error('%s is not a valid number of reads' % unit)
             sys.exit(1)
     elif unit[-1].lower() in suffixes:
         number = unit[:-1]
         exponent = suffixes[unit[-1].lower()]
         unit_int = int(float(number) * 10**exponent)
     else:
-        logger.error('%s is not a valid number of reads' % unit)
+        LOGGER.error('%s is not a valid number of reads' % unit)
         sys.exit(1)
     return unit_int
 
@@ -144,12 +144,11 @@ def genome_file_exists(filename):
     Args:
         filename (str): a file name
     """
-    logger = logging.getLogger(__name__)
     try:
         assert os.path.exists(filename) is False
     except AssertionError as e:
-        logger.error('%s already exists. Aborting.' % filename)
-        logger.error('Maybe use another --output prefix')
+        LOGGER.error('%s already exists. Aborting.' % filename)
+        LOGGER.error('Maybe use another --output prefix')
         sys.exit(1)
 
 
@@ -162,13 +161,12 @@ def reservoir(records, record_list, n=None):
     Yields:
         record (obj): a fasta record
     """
-    logger = logging.getLogger(__name__)
     if n is not None:
         try:
             total = len(record_list)
             assert n < total
         except AssertionError as e:
-            logger.error(
+            LOGGER.error(
                 '-u should be strictly smaller than total number of records.')
             sys.exit(1)
         else:
@@ -188,22 +186,23 @@ def reservoir(records, record_list, n=None):
             yield record
 
 
-def concatenate(file_list, output):
+def concatenate(file_list, output, header = None):
     """Concatenate files together
 
     Args:
         file_list (list): the list of input files (can be a generator)
         output (string): the output file name
     """
-    logger = logging.getLogger(__name__)
-    logger.info('Stitching input files together')
+    LOGGER.info('Stitching input files together')
     try:
         out_file = open(output, 'wb')
     except (IOError, OSError) as e:
-        logger.error('Failed to open output file: %s' % e)
+        LOGGER.error('Failed to open output file: %s' % e)
         sys.exit(1)
 
     with out_file:
+        if header is not None:
+            out_file.write(str.encode(header + "\n"))
         for file_name in file_list:
             if file_name is not None:
                 with open(file_name, 'rb') as f:
@@ -216,15 +215,14 @@ def cleanup(file_list):
     Args:
         file_list (list): a list of files to be removed
     """
-    logger = logging.getLogger(__name__)
-    logger.info('Cleaning up')
+    LOGGER.info('Cleaning up')
     for temp_file in file_list:
         if temp_file is not None:
             try:
                 os.remove(temp_file)
             except (IOError, OSError) as e:
-                logger.error('Could not read temporary file: %s' % temp_file)
-                logger.error('You may have to remove temporary files manually')
+                LOGGER.error('Could not read temporary file: %s' % temp_file)
+                LOGGER.error('You may have to remove temporary files manually')
                 sys.exit(1)
 
 
@@ -234,8 +232,7 @@ def compress(filename, remove=True):
     Args:
         filename (string): name of file to be compressed
     """
-    logger = logging.getLogger(__name__)
-    logger.info('Compressing %s' % filename)
+    LOGGER.info('Compressing %s' % filename)
     outfile = filename + '.gz'
     with open(filename, 'rb') as i, gzip.open(outfile, 'wb') as o:
         copyfileobj(i, o)

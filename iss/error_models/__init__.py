@@ -3,9 +3,12 @@
 
 from iss import util
 
+from Bio.SeqRecord import SeqRecord
+
 import sys
 import random
 import logging
+from typing import List, Tuple
 import numpy as np
 
 
@@ -15,6 +18,19 @@ class ErrorModel(object):
     This class is used to create inheriting classes and contains all
     the functions that are shared by all ErrorModel classes
     """
+    def __init__(self, store_mutations):
+        self.mutations = {}
+        self.store_mutations = store_mutations
+
+        # These will all be overwritten by the error model type class
+        self.subst_choices_for = []
+        self.subst_choices_rev = []
+        self.ins_for = []
+        self.ins_rev = []
+        self.del_for = []
+        self.del_rev = []
+        self.read_length = 0
+
     @property
     def logger(self):
         component = "{}.{}".format(type(self).__module__, type(self).__name__)
@@ -47,7 +63,7 @@ class ErrorModel(object):
             self.logger.debug('Loaded ErrorProfile: %s' % npz_path)
         return error_profile
 
-    def introduce_error_scores(self, record, orientation):
+    def introduce_error_scores(self, record, orientation) -> SeqRecord:
         """Add phred scores to a SeqRecord according to the error_model
 
         Args:
@@ -66,7 +82,7 @@ class ErrorModel(object):
                 self.quality_reverse, 'reverse')
         return record
 
-    def mut_sequence(self, record, orientation):
+    def mut_sequence(self, record: SeqRecord, orientation) -> SeqRecord:
         """Introduce substitution errors to a sequence
 
         If a random probability is higher than the probability of the basecall
@@ -86,20 +102,36 @@ class ErrorModel(object):
             nucl_choices = self.subst_choices_for
         elif orientation == 'reverse':
             nucl_choices = self.subst_choices_rev
+        else:
+            raise RuntimeError("Unsupported read orientation: %s" % orientation)
 
         mutable_seq = record.seq.tomutable()
         quality_list = record.letter_annotations["phred_quality"]
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
-            if random.random() > util.phred_to_prob(qual) \
-                    and nucl.upper() not in 'RYWSMKHBVDN':
-                mutable_seq[position] = str(np.random.choice(
-                    nucl_choices[position][nucl.upper()][0],
-                    p=nucl_choices[position][nucl.upper()][1]))
+            if random.random() > util.phred_to_prob(qual) and nucl.upper() not in 'RYWSMKHBVDN':
+                mutated_nuc = str(
+                        np.random.choice(
+                            nucl_choices[position][nucl.upper()][0],
+                            p=nucl_choices[position][nucl.upper()][1]
+                        )
+                    )
+                if self.store_mutations and mutated_nuc != record.annotations["original"][position]:
+                    record.annotations["mutations"].append({
+                            "id": record.id,
+                            "position": position,
+                            "ref": mutable_seq[position],
+                            "alt": mutated_nuc,
+                            "quality": qual,
+                            "type": "snp",
+                            })
+                mutable_seq[position] = mutated_nuc
             position += 1
-        return mutable_seq.toseq()
+        record.seq = mutable_seq.toseq()
 
-    def adjust_seq_length(self, mut_seq, orientation, full_sequence, bounds):
+        return record
+
+    def adjust_seq_length(self, mut_seq, orientation, full_sequence, bounds) -> str:
         """Truncate or Extend reads to make them fit the read length
 
         When insertions or deletions are introduced to the reads, their length
@@ -144,7 +176,7 @@ class ErrorModel(object):
                     mut_seq.append(nucl_to_add)
             return mut_seq.toseq()
 
-    def introduce_indels(self, record, orientation, full_seq, bounds):
+    def introduce_indels(self, record, orientation, full_seq, bounds) -> SeqRecord:
         """Introduce insertions or deletions in a sequence
 
         Introduce insertion and deletion errors according to the probabilities
@@ -170,6 +202,8 @@ class ErrorModel(object):
         elif orientation == 'reverse':
             insertions = self.ins_rev
             deletions = self.del_rev
+        else:
+            raise RuntimeError("Unsupported read orientation: %s" % orientation)
 
         mutable_seq = record.seq.tomutable()
         position = 0
@@ -183,7 +217,26 @@ class ErrorModel(object):
                     if random.random() < prob:
                         # we want to insert after the base read
                         mutable_seq.insert(position + 1, str(nucl_to_insert))
+                        if self.store_mutations:
+                            record.annotations["mutations"].append({
+                            "id": record.id,
+                            "position": position,
+                            "ref": mutable_seq[position],
+                            "alt": mutable_seq[position] + nucl_to_insert,
+                            "quality": ".",
+                            "type": "ins",
+                            })
+
                 if random.random() < deletions[position][mutable_seq[nucl].upper()]:
+                    if self.store_mutations:
+                            record.annotations["mutations"].append({
+                            "id": record.id,
+                            "position": position,
+                            "ref": mutable_seq[position],
+                            "alt": ".",
+                            "quality": ".",
+                            "type": "del",
+                            })
                     mutable_seq.pop(position)
                 position += 1
             except IndexError as e:
@@ -191,4 +244,5 @@ class ErrorModel(object):
 
         seq = self.adjust_seq_length(
             mutable_seq, orientation, full_seq, bounds)
-        return seq
+        record.seq = seq
+        return record

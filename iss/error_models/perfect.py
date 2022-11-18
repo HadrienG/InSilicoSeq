@@ -12,7 +12,7 @@ class PerfectErrorModel(ErrorModel):
     """
 
     def __init__(self):
-        super().__init__()
+        super().__init__(store_mutations=False)
         self.read_length = 125
         self.insert_size = 200
         self.quality_forward = self.quality_reverse = 40

@@ -9,6 +9,34 @@ import sys
 import logging
 import numpy as np
 
+LOGGER = logging.getLogger(__name__)
+
+
+def parse_readcount_file(readcount_file):
+    readcount_dic = {}
+    try:
+        assert os.stat(readcount_file).st_size != 0
+        f = open(readcount_file, 'r')
+    except (IOError, OSError) as e:
+        LOGGER.error('Failed to open file:%s' % e)
+        sys.exit(1)
+    except AssertionError as e:
+        LOGGER.error('File seems empty: %s' % readcount_file)
+        sys.exit(1)
+    else:
+        with f:
+            for line in f:
+                try:
+                    genome_id = line.split()[0]
+                    read_count = int(line.split()[1])
+                except IndexError as e:
+                    LOGGER.error('Failed to read file: %s' % e)
+                    sys.exit(1)
+                else:
+                    readcount_dic[genome_id] = read_count
+    return readcount_dic
+
+
 
 def parse_abundance_file(abundance_file):
     """Parse an abundance or coverage file
@@ -24,16 +52,15 @@ def parse_abundance_file(abundance_file):
     Returns:
         dict: genome_id as keys, abundance as values
     """
-    logger = logging.getLogger(__name__)
     abundance_dic = {}
     try:
         assert os.stat(abundance_file).st_size != 0
         f = open(abundance_file, 'r')
     except (IOError, OSError) as e:
-        logger.error('Failed to open file:%s' % e)
+        LOGGER.error('Failed to open file:%s' % e)
         sys.exit(1)
     except AssertionError as e:
-        logger.error('File seems empty: %s' % abundance_file)
+        LOGGER.error('File seems empty: %s' % abundance_file)
         sys.exit(1)
     else:
         with f:
@@ -42,11 +69,11 @@ def parse_abundance_file(abundance_file):
                     genome_id = line.split()[0]
                     abundance = float(line.split()[1])
                 except IndexError as e:
-                    logger.error('Failed to read file: %s' % e)
+                    LOGGER.error('Failed to read file: %s' % e)
                     sys.exit(1)
                 else:
                     abundance_dic[genome_id] = abundance
-    logger.debug('Loaded abundance/coverage file: %s' % abundance_file)
+    LOGGER.debug('Loaded abundance/coverage file: %s' % abundance_file)
     return abundance_dic
 
 
@@ -187,7 +214,7 @@ def coverage_scaling(total_n_reads, abundance_dic, genome_file, read_length):
             try:
                 species_coverage = abundance_dic[record.id]
             except KeyError as e:
-                logger.error(
+                LOGGER.error(
                     'Fasta record not found in abundance file: %s' % e)
                 sys.exit(1)
 
@@ -208,7 +235,6 @@ def to_file(abundance_dic, output, mode="abundance"):
         abundance_dic (dict): the abundance dictionary
         output (str): the output file name
     """
-    logger = logging.getLogger(__name__)
     if mode == "abundance":
         output_abundance = output + '_abundance.txt'
     else:
@@ -216,7 +242,7 @@ def to_file(abundance_dic, output, mode="abundance"):
     try:
         f = open(output_abundance, 'w')
     except PermissionError as e:
-        logger.error('Failed to open output file: %s' % e)
+        LOGGER.error('Failed to open output file: %s' % e)
         sys.exit(1)
     else:
         with f:

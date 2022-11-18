@@ -8,6 +8,9 @@ import logging
 import numpy as np
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 def insert_size(insert_size_distribution):
     """Calculate cumulative distribution function from the raw insert size
     distributin. Uses 1D kernel density estimation.
@@ -43,8 +46,6 @@ def divide_qualities_into_bins(qualities, n_bins=4):
     Returns:
         list: a list of lists containing the binned quality scores
     """
-    logger = logging.getLogger(__name__)
-    logger.debug('Dividing qualities into mean clusters')
     bin_lists = [[] for _ in range(n_bins)]  # create list of `n_bins` list
     ranges = np.split(np.array(range(40)), n_bins)
     for quality in qualities:
@@ -71,20 +72,19 @@ def quality_bins_to_histogram(bin_lists):
     Returns:
         list: a list of lists containg cumulative density functions
     """
-    logger = logging.getLogger(__name__)
     cdf_bins = []
     i = 0
     for qual_bin in bin_lists:
         if len(qual_bin) > 1:
-            logger.debug('Transposing matrix for mean cluster #%s' % i)
+            LOGGER.debug('Transposing matrix for mean cluster #%s' % i)
             # quals = np.asarray(qual_bin).T  # seems to make clunkier models
             quals = [q for q in zip(*qual_bin)]
-            logger.debug(
+            LOGGER.debug(
                 'Modelling quality distribution for mean cluster #%s' % i)
             cdfs_list = raw_qualities_to_histogram(quals)
             cdf_bins.append(cdfs_list)
         else:
-            logger.debug('Mean quality bin #%s of length < 1. Skipping' % i)
+            LOGGER.debug('Mean quality bin #%s of length < 1. Skipping' % i)
             cdf_bins.append([])
         i += 1
     return cdf_bins
@@ -103,8 +103,6 @@ def raw_qualities_to_histogram(qualities):
         list: list of cumulative distribution functions. One cdf per base. The
             list has the size of the read length
     """
-    logger = logging.getLogger(__name__)
-
     # moved this in quality_bins_to_histogram to try parallelization
     # quals = util.split_list([i for i in zip(*qualities)], n_parts=cpus)
     cdfs_list = []
@@ -117,7 +115,7 @@ def raw_qualities_to_histogram(qualities):
                 # if np.std of array is 0, we modify the array slightly to be
                 # able to divide by ~ np.std
                 # this will print a FloatingPointError in DEBUG mode
-                # logger.debug('np.std of quality array is zero: %s' % e)
+                # LOGGER.debug('np.std of quality array is zero: %s' % e)
                 q = list(q)
                 q[-1] += 1
                 kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
@@ -205,8 +203,6 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
         list: list of dictionaries representing
             the substitution probabilities for a collection of reads
     """
-    logger = logging.getLogger(__name__)
-
     nucl_choices_list = []
     for pos in range(read_length):
         sums = {
@@ -226,7 +222,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['A'] for
                         count in substitution_matrix[pos][1:4]])
             except FloatingPointError as e:
-                logger.debug(e, exc_info=True)
+                LOGGER.debug(e, exc_info=True)
                 A = (['T', 'C', 'G'], [1/3, 1/3, 1/3])
             try:
                 T = (
@@ -234,7 +230,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['T'] for
                         count in substitution_matrix[pos][5:8]])
             except FloatingPointError as e:
-                logger.debug(e, exc_info=True)
+                LOGGER.debug(e, exc_info=True)
                 T = (['A', 'C', 'G'], [1/3, 1/3, 1/3])
             try:
                 C = (
@@ -242,7 +238,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['C'] for
                         count in substitution_matrix[pos][9:12]])
             except FloatingPointError as e:
-                logger.debug(e, exc_info=True)
+                LOGGER.debug(e, exc_info=True)
                 C = (['A', 'T', 'G'], [1/3, 1/3, 1/3])
             try:
                 G = (
@@ -250,7 +246,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['G'] for
                         count in substitution_matrix[pos][13:]])
             except FloatingPointError as e:
-                logger.debug(e, exc_info=True)
+                LOGGER.debug(e, exc_info=True)
                 G = (['A', 'T', 'C'], [1/3, 1/3, 1/3])
 
             nucl_choices['A'] = A
@@ -280,8 +276,6 @@ def dispatch_indels(read):
         tuple: a tuple with the x, y position for dispatching the indel in the
         indel matrix
     """
-    logger = logging.getLogger(__name__)
-
     dispatch_indels = {
         0: 0,
         'A1': 1,
@@ -307,7 +301,7 @@ def dispatch_indels(read):
                 dispatch_tuple = (position, indel)
                 position += cigar_length
             except KeyError as e:  # we avoid ambiguous bases
-                # logger.debug(
+                # LOGGER.debug(
                 #     '%s not in dispatch: %s' % (insertion, e), exc_info=True)
                 position += cigar_length
                 continue
@@ -319,12 +313,12 @@ def dispatch_indels(read):
                 dispatch_tuple = (position, indel)
                 position -= cigar_length
             except KeyError as e:  # we avoid ambiguous bases
-                # logger.debug(
+                # LOGGER.debug(
                 #     '%s not in dispatch: %s' % (deletion, e), exc_info=True)
                 position -= cigar_length
                 continue
         else:
-            logger.debug("CIGAR %s. Skipping read." % cigar_type)
+            LOGGER.debug("CIGAR %s. Skipping read." % cigar_type)
             continue
         yield dispatch_tuple
 

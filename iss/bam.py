@@ -11,6 +11,9 @@ import logging
 import numpy as np
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 def read_bam(bam_file, n_reads=1000000):
     """Bam file reader. Select random mapped reads from a bam file
 
@@ -20,7 +23,6 @@ def read_bam(bam_file, n_reads=1000000):
     Yields:
         read: a pysam read object
     """
-    logger = logging.getLogger(__name__)
 
     try:
         lines = pysam.idxstats(bam_file).splitlines()
@@ -32,16 +34,16 @@ def read_bam(bam_file, n_reads=1000000):
 
     except (IOError, ValueError,
             ZeroDivisionError, pysam.utils.SamtoolsError) as e:
-        logger.error('Failed to read bam file: %s' % e)
+        LOGGER.error('Failed to read bam file: %s' % e)
         sys.exit(1)
     else:
-        logger.info('Reading bam file: %s' % bam_file)
+        LOGGER.info('Reading bam file: %s' % bam_file)
         c = 0
         with bam:
             for read in bam.fetch():
                 if not read.is_unmapped and random() < random_fraction:
                     c += 1
-                    if logger.getEffectiveLevel() == 10:
+                    if LOGGER.getEffectiveLevel() == 10:
                         print(
                             'DEBUG:iss.bam:Subsampling %s / %s reads' % (
                                 c, n_reads),
@@ -79,10 +81,8 @@ def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
         i_size (int): distribution of insert size for the aligned reads
         output (string): prefix of the output file
     """
-    logger = logging.getLogger(__name__)
-
     try:
-        logger.info('Writing model to file: %s' % output)
+        LOGGER.info('Writing model to file: %s' % output)
         np.savez_compressed(
             output,
             model=model,
@@ -100,7 +100,7 @@ def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
             del_reverse=del_r
         )
     except PermissionError as e:
-        logger.error('Failed to open output file: %s' % e)
+        LOGGER.error('Failed to open output file: %s' % e)
         sys.exit(1)
 
 
@@ -115,8 +115,6 @@ def to_model(bam_path, output):
         bam_path (string): path to a bam file
         output (string): prefix of the output file
     """
-    logger = logging.getLogger(__name__)
-
     insert_size_dist = []
     qualities_forward = []
     qualities_reverse = []
@@ -179,11 +177,11 @@ def to_model(bam_path, output):
                 elif read.is_read2:
                     indel_matrix_r[pos, indel] += 1
 
-    logger.info('Calculating insert size distribution')
+    LOGGER.info('Calculating insert size distribution')
     # insert_size = int(np.mean(insert_size_dist))
     hist_insert_size = modeller.insert_size(insert_size_dist)
 
-    logger.info('Calculating mean and base quality distribution')
+    LOGGER.info('Calculating mean and base quality distribution')
     quality_bins_f = modeller.divide_qualities_into_bins(qualities_forward)
     quality_bins_r = modeller.divide_qualities_into_bins(qualities_reverse)
 
@@ -208,11 +206,11 @@ def to_model(bam_path, output):
     indel_matrix_f.resize([read_length, 9], refcheck=False)
     indel_matrix_r.resize([read_length, 9], refcheck=False)
 
-    logger.info('Calculating substitution rate')
+    LOGGER.info('Calculating substitution rate')
     subst_f = modeller.subst_matrix_to_choices(subst_matrix_f, read_length)
     subst_r = modeller.subst_matrix_to_choices(subst_matrix_r, read_length)
 
-    logger.info('Calculating indel rate')
+    LOGGER.info('Calculating indel rate')
     # update the base count in indel matrices
     for position in range(read_length):
         indel_matrix_f[position][0] = sum(subst_matrix_f[position][::4])
