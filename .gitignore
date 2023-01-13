@@ -13,6 +13,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.eggs/
 
 # Unit test / coverage reports
 .cache
@@ -40,3 +41,8 @@ venv_iss/
 
 # editor configs
 .vscode/
+
+# test
+stuff/
+venv
+.envrc

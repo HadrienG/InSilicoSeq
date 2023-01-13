@@ -361,7 +361,11 @@ def model_from_bam(args):
         sys.exit(1)
     else:
         logger.info('Using KDE ErrorModel')
-        bam.to_model(args.bam, args.output)
+        if 40 % args.n_bins != 0:
+            logger.error(f'Not able to create {args.n_bins} equal bins for quality range [0..40]')
+            sys.exit(1)
+        
+        bam.to_model(args.bam, args.output, args.min_read_length, args.n_bins, args.sample_size)
         logger.info('Model generation complete')
 
 
@@ -594,6 +598,31 @@ def main():
         help='Output file path and prefix (Required)',
         required=True
     )
+    parser_mod.add_argument(
+        '--min_read_length',
+        '-l',
+        metavar='<len>',
+        type=int,
+        default=0,
+        help='Minimum read length for using read in model (default: %(default)s).'
+    )
+    parser_mod.add_argument(
+        '--n_bins',
+        '-n',
+        metavar='<bins>',
+        default=4,
+        type=int,
+        help='Number of quality bins to use (default: %(default)s).'
+    )
+    parser_mod.add_argument(
+        '--sample_size',
+        '-s',
+        metavar='<samples>',
+        default=1e6,
+        type=lambda x: int(float(x)),
+        help='Number of read to sample from the bamfile (default: %(default)s).'
+    )
+    
     parser_mod._optionals.title = 'arguments'
     parser_mod.set_defaults(func=model_from_bam)
     args = parser.parse_args()
