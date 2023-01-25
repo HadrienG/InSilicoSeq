@@ -24,14 +24,14 @@ def insert_size(insert_size_distribution):
         bw_method=0.2 / np.std(insert_size_distribution, ddof=1))
     x_grid = np.linspace(
         min(insert_size_distribution),
-        max(insert_size_distribution), 1000)  #TODO: Do we not need te use these min and max again when generating insertsizes from this cdf????
+        max(insert_size_distribution), 1000)
     kde = kde.evaluate(x_grid)
     cdf = np.cumsum(kde)
     cdf = cdf / cdf[-1]
     return cdf
 
 
-def divide_qualities_into_bins(qualities, n_bins):
+def divide_qualities_into_bins(qualities, n_bins=4):
     """Divides the raw quality scores in bins according to the mean phred
     quality of the sequence they come from
 
@@ -49,15 +49,16 @@ def divide_qualities_into_bins(qualities, n_bins):
     ranges = np.split(np.array(range(40)), n_bins)
     for quality in qualities:
         mean = int(quality[0][1])  # mean is at 1 and same regardless of b pos
-        for i, array in enumerate(ranges):
+        which_array = 0
+        for array in ranges:
             if mean in array:
-                read = np.fromiter((q[0] for q in quality), dtype=float)
-                bin_lists[i].append(read)
-                break
+                read = np.fromiter((q[0] for q in quality), dtype=np.float)
+                bin_lists[which_array].append(read)
+            which_array += 1
     return bin_lists
 
 
-def quality_bins_to_histogram(bin_lists, min_bin_size):
+def quality_bins_to_histogram(bin_lists):
     """Wrapper function to generate cdfs for each quality bins
 
     Generate cumulative distribution functions for a number of mean quality
@@ -72,8 +73,9 @@ def quality_bins_to_histogram(bin_lists, min_bin_size):
     """
     logger = logging.getLogger(__name__)
     cdf_bins = []
-    for i, qual_bin in enumerate(bin_lists):
-        if len(qual_bin) > min_bin_size:
+    i = 0
+    for qual_bin in bin_lists:
+        if len(qual_bin) > 1:
             logger.debug('Transposing matrix for mean cluster #%s' % i)
             # quals = np.asarray(qual_bin).T  # seems to make clunkier models
             quals = [q for q in zip(*qual_bin)]
@@ -82,8 +84,9 @@ def quality_bins_to_histogram(bin_lists, min_bin_size):
             cdfs_list = raw_qualities_to_histogram(quals)
             cdf_bins.append(cdfs_list)
         else:
-            logger.info(f'Mean quality bin #{i} of length < {min_bin_size}. Skipping')
+            logger.debug('Mean quality bin #%s of length < 1. Skipping' % i)
             cdf_bins.append([])
+        i += 1
     return cdf_bins
 
 
@@ -106,14 +109,15 @@ def raw_qualities_to_histogram(qualities):
     # quals = util.split_list([i for i in zip(*qualities)], n_parts=cpus)
     cdfs_list = []
     for q in qualities:
+        numpy_log_handler = np.seterrcall(util.nplog)
         with np.errstate(under='ignore', divide='call'):
             try:
                 kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
-            except Exception as e:
+            except np.linalg.linalg.LinAlgError as e:
                 # if np.std of array is 0, we modify the array slightly to be
                 # able to divide by ~ np.std
                 # this will print a FloatingPointError in DEBUG mode
-                logger.debug('np.std of quality array is zero: %s' % e)
+                # logger.debug('np.std of quality array is zero: %s' % e)
                 q = list(q)
                 q[-1] += 1
                 kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
@@ -222,7 +226,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['A'] for
                         count in substitution_matrix[pos][1:4]])
             except FloatingPointError as e:
-                # logger.debug(e, exc_info=True)
+                logger.debug(e, exc_info=True)
                 A = (['T', 'C', 'G'], [1/3, 1/3, 1/3])
             try:
                 T = (
@@ -230,7 +234,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['T'] for
                         count in substitution_matrix[pos][5:8]])
             except FloatingPointError as e:
-                # logger.debug(e, exc_info=True)
+                logger.debug(e, exc_info=True)
                 T = (['A', 'C', 'G'], [1/3, 1/3, 1/3])
             try:
                 C = (
@@ -238,7 +242,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['C'] for
                         count in substitution_matrix[pos][9:12]])
             except FloatingPointError as e:
-                # logger.debug(e, exc_info=True)
+                logger.debug(e, exc_info=True)
                 C = (['A', 'T', 'G'], [1/3, 1/3, 1/3])
             try:
                 G = (
@@ -246,7 +250,7 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
                     [count / sums['G'] for
                         count in substitution_matrix[pos][13:]])
             except FloatingPointError as e:
-                # logger.debug(e, exc_info=True)
+                logger.debug(e, exc_info=True)
                 G = (['A', 'T', 'C'], [1/3, 1/3, 1/3])
 
             nucl_choices['A'] = A

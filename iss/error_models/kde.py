@@ -66,10 +66,13 @@ class KDErrorModel(ErrorModel):
             mean = self.mean_reverse
 
         norm_mean = mean / sum(mean)
-
-        # Pick a bin by probability based on the size of the bins
+        # quality_bin = np.searchsorted(norm_mean, np.random.rand())
         quality_bin = np.random.choice(range(len(norm_mean)), p=norm_mean)
-
+        # downgrades index out of bound (ex rand is 1, last bin in searchsorted
+        # is 0.95) to best quality bin
+        if quality_bin == 4:
+            quality_bin = 3
+            
         cdfs_bin = cdfs[quality_bin]
 
         phred_list = []
