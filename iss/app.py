@@ -559,7 +559,7 @@ def main():
         '--sequence_type',
         '-t',
         choices=['metagenomics', 'amplicon'],
-        default='amplicon',
+        default='metagenomics',
         required=True,
         help='Type of sequencing. Can be metagenomics or amplicon (default: %(default)s).'
     )
