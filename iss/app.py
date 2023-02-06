@@ -559,8 +559,9 @@ def main():
         '--sequence_type',
         '-t',
         choices=['metagenomics', 'amplicon'],
+        default='amplicon',
         required=True,
-        help='Type of sequencing. Can be metagenomics or amplicon.'
+        help='Type of sequencing. Can be metagenomics or amplicon (default: %(default)s).'
     )
     parser_gen._optionals.title = 'arguments'
     parser_gen.set_defaults(func=generate_reads)
