@@ -6,6 +6,7 @@ from iss import util
 import sys
 import random
 import logging
+import _pickle
 import numpy as np
 
 from Bio.Seq import Seq, MutableSeq
@@ -37,7 +38,7 @@ class ErrorModel(object):
         try:
             error_profile = np.load(npz_path, allow_pickle=True)
             assert error_profile['model'] == model
-        except (OSError, IOError) as e:
+        except (OSError, IOError, EOFError, _pickle.UnpicklingError) as e:
             self.logger.error('Failed to read ErrorModel file: %s' % e)
             sys.exit(1)
         except AssertionError as e:
