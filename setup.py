@@ -28,7 +28,7 @@ setup(
     packages=find_packages(),
 
     tests_require=['nose'],
-    install_requires=['numpy', 'scipy', 'biopython<=1.78',
+    install_requires=['numpy', 'scipy', 'biopython>=1.79',
                       'pysam>=0.15.1', 'future',
                       'joblib', 'requests'],
     include_package_data=True,
