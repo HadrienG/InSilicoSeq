@@ -18,6 +18,7 @@ nose = "*"
 codecov = "*"
 "pep8" = "*"
 pycodestyle = "*"
+pytest = "*"
 
 [scripts]
 iss = "python -m iss"

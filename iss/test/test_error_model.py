@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from pickle import UnpicklingError
-from iss.error_models import basic, kde, perfect
+
+
+
+import pytest
+
+from iss.error_models import ErrorModel, basic, kde, perfect
 from iss.util import rev_comp
+
+from pickle import UnpicklingError
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from nose.tools import raises
 
 import random
 import numpy as np
@@ -142,6 +147,7 @@ def test_introduce_indels_rev():
     assert len(read.seq) == 20
     assert read.seq == 'CGTACGGTACGGTACGGTAC'
 
-@raises(SystemExit, UnpicklingError)
+
 def test_bad_err_mod():
-    err_mod = kde.KDErrorModel('data/empty_file')
+    with pytest.raises(SystemExit):
+        err_mod = kde.KDErrorModel('data/empty_file')
