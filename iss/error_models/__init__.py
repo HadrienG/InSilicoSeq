@@ -8,6 +8,8 @@ import random
 import logging
 import numpy as np
 
+from Bio.Seq import Seq, MutableSeq
+
 
 class ErrorModel(object):
     """Main ErrorModel Class
@@ -87,7 +89,7 @@ class ErrorModel(object):
         elif orientation == 'reverse':
             nucl_choices = self.subst_choices_rev
 
-        mutable_seq = record.seq.tomutable()
+        mutable_seq = MutableSeq(record.seq)
         quality_list = record.letter_annotations["phred_quality"]
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
@@ -97,7 +99,7 @@ class ErrorModel(object):
                     nucl_choices[position][nucl.upper()][0],
                     p=nucl_choices[position][nucl.upper()][1]))
             position += 1
-        return mutable_seq.toseq()
+        return Seq(mutable_seq)
 
     def adjust_seq_length(self, mut_seq, orientation, full_sequence, bounds):
         """Truncate or Extend reads to make them fit the read length
@@ -120,11 +122,11 @@ class ErrorModel(object):
         """
         read_start, read_end = bounds
         if len(mut_seq) == self.read_length:
-            return mut_seq.toseq()
+            return Seq(mut_seq)
         elif len(mut_seq) > self.read_length:
             while len(mut_seq) > self.read_length:
                 mut_seq.pop()
-            return mut_seq.toseq()
+            return Seq(mut_seq)
         else:  # len smaller
             to_add = self.read_length - len(mut_seq)
             if orientation == 'forward':
@@ -142,7 +144,7 @@ class ErrorModel(object):
                         nucl_to_add = util.rev_comp(
                             full_sequence[read_start-1 - i])
                     mut_seq.append(nucl_to_add)
-            return mut_seq.toseq()
+            return Seq(mut_seq)
 
     def introduce_indels(self, record, orientation, full_seq, bounds):
         """Introduce insertions or deletions in a sequence
@@ -171,7 +173,7 @@ class ErrorModel(object):
             insertions = self.ins_rev
             deletions = self.del_rev
 
-        mutable_seq = record.seq.tomutable()
+        mutable_seq = MutableSeq(record.seq)
         position = 0
         for nucl in range(self.read_length - 1):
             try:
