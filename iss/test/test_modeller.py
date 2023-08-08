@@ -21,7 +21,7 @@ def test_kde_qualities():
         [40, 10],
         [10, 10]]
     cdf_list = modeller.raw_qualities_to_histogram(quality_distribution)
-    assert(cdf_list[0][-2], pytest.approx(0.5))
+    assert cdf_list[0][-2] == pytest.approx(0.5, rel=1e-3)
     assert cdf_list[-1][0] == 0.0
     assert cdf_list[-1][-1] == 1
     assert len(cdf_list) == 5
