@@ -52,7 +52,7 @@ def divide_qualities_into_bins(qualities, n_bins=4):
         which_array = 0
         for array in ranges:
             if mean in array:
-                read = np.fromiter((q[0] for q in quality), dtype=np.float)
+                read = np.fromiter((q[0] for q in quality), float)
                 bin_lists[which_array].append(read)
             which_array += 1
     return bin_lists
