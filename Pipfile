@@ -14,12 +14,12 @@ requests = "*"
 urllib3 = ">=1.26.5"
 
 [dev-packages]
-nose = "*"
 codecov = "*"
 "pep8" = "*"
 pycodestyle = "*"
 pytest = "*"
+pytest-cov = "*"
 
 [scripts]
 iss = "python -m iss"
-tests = "nosetests --with-coverage --cover-package=iss --cover-xml"
+tests = "pytest --cov=iss ."
