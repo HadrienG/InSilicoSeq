@@ -169,7 +169,7 @@ def generate_reads(args):
                                         k, v in coverage_dic.items()
                                         if k not in args.draft}
                 draft_dic = abundance.expand_draft_abundance(
-                    abundance_dic_short,
+                    coverage_dic,
                     args.draft,
                     mode="coverage")
                 abundance_dic = {**complete_genomes_dic,
