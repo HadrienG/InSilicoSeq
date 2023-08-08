@@ -19,6 +19,7 @@ codecov = "*"
 pycodestyle = "*"
 pytest = "*"
 pytest-cov = "*"
+exceptiongroup = "*"
 
 [scripts]
 iss = "python -m iss"
