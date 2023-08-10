@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
+
 from iss.error_models import ErrorModel, basic, kde, perfect
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from nose.tools import raises
 
 import random
 import numpy as np
@@ -88,6 +89,6 @@ def test_introduce_indels():
     assert read.seq[:10] == 'ATGATAATAT'
 
 
-@raises(SystemExit)
 def test_bad_err_mod():
-    err_mod = kde.KDErrorModel('data/empty_file')
+    with pytest.raises(SystemExit):
+        err_mod = kde.KDErrorModel('data/empty_file')

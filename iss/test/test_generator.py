@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
+import pytest
+
 
 from iss import generator
 from iss.util import cleanup
@@ -9,7 +10,6 @@ from iss.error_models import ErrorModel, basic, kde
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from nose.tools import with_setup, raises
 
 import os
 import sys
@@ -24,18 +24,24 @@ def setup_function():
     output_file_prefix = 'data/.test'
 
 
-def teardown_function():
+def teardown_cleanup():
     cleanup(['data/.test.iss.tmp.my_genome.0_R1.fastq',
              'data/.test.iss.tmp.my_genome.0_R2.fastq'])
 
 
-@raises(SystemExit)
+@pytest.fixture
+def setup_and_teardown():
+    setup_function()
+    yield
+    teardown_cleanup()
+
+
 def test_cleanup_fail():
-    cleanup('data/does_not_exist')
+    with pytest.raises(SystemExit):
+        cleanup('data/does_not_exist')
 
 
-@with_setup(setup_function, teardown_function)
-def test_simulate_and_save():
+def test_simulate_and_save(setup_and_teardown):
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(
         Seq(str('AAAAACCCCC' * 100)),
@@ -45,8 +51,7 @@ def test_simulate_and_save():
     generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
-@with_setup(setup_function, teardown_function)
-def test_simulate_and_save_short():
+def test_simulate_and_save_short(setup_and_teardown):
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(
         Seq(str('AACCC' * 100)),
@@ -56,15 +61,15 @@ def test_simulate_and_save_short():
     generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
 
 
-@raises(AssertionError)
 def test_small_input():
-    err_mod = kde.KDErrorModel('data/ecoli.npz')
-    ref_genome = SeqRecord(
-        Seq(str('AAAAACCCCC')),
-        id='my_genome',
-        description='test genome'
-    )
-    generator.simulate_read(ref_genome, err_mod, 1, 0)
+    with pytest.raises(AssertionError):
+        err_mod = kde.KDErrorModel('data/ecoli.npz')
+        ref_genome = SeqRecord(
+            Seq(str('AAAAACCCCC')),
+            id='my_genome',
+            description='test genome'
+        )
+        generator.simulate_read(ref_genome, err_mod, 1, 0)
 
 
 def test_basic():

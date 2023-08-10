@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
+
 from builtins import next
 
 from iss import bam
 from iss import modeller
 
-from nose.tools import assert_almost_equals
 
 import sys
 import numpy as np
@@ -20,7 +21,7 @@ def test_kde_qualities():
         [40, 10],
         [10, 10]]
     cdf_list = modeller.raw_qualities_to_histogram(quality_distribution)
-    assert_almost_equals(cdf_list[0][-2], 0.500002794)
+    assert cdf_list[0][-2] == pytest.approx(0.5, rel=1e-3)
     assert cdf_list[-1][0] == 0.0
     assert cdf_list[-1][-1] == 1
     assert len(cdf_list) == 5
