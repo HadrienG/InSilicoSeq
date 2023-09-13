@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-
-
 import pytest
 
 from iss.error_models import ErrorModel, basic, kde, perfect
