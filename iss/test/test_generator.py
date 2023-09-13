@@ -69,7 +69,7 @@ def test_small_input():
             id='my_genome',
             description='test genome'
         )
-        generator.simulate_read(ref_genome, err_mod, 1, 0)
+        generator.simulate_read(ref_genome, err_mod, 1, 0, 'metagenomics')
 
 
 def test_basic():
