@@ -3,6 +3,7 @@
 *.bam
 *.bam.bai
 *.bt2
+*.npz
 test_runs/
 
 # Byte-compiled / optimized / DLL files
@@ -11,6 +12,7 @@ __pycache__/
 
 # Distribution / packaging
 *.egg-info/
+.eggs/
 dist/
 build/
 

@@ -6,13 +6,13 @@ import pytest
 
 from iss import generator
 from iss.util import cleanup
-from iss.error_models import ErrorModel, basic, kde
+from iss.error_models import basic, kde
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-import os
 import sys
+import os
 import random
 import numpy as np
 
@@ -48,7 +48,7 @@ def test_simulate_and_save(setup_and_teardown):
         id='my_genome',
         description='test genome'
     )
-    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, 'metagenomics', gc_bias = True)
 
 
 def test_simulate_and_save_short(setup_and_teardown):
@@ -58,7 +58,7 @@ def test_simulate_and_save_short(setup_and_teardown):
         id='my_genome',
         description='test genome'
     )
-    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, True)
+    generator.reads(ref_genome, err_mod, 1000, 0, 'data/.test', 0, 'metagenomics', gc_bias = True)
 
 
 def test_small_input():
@@ -69,7 +69,7 @@ def test_small_input():
             id='my_genome',
             description='test genome'
         )
-        generator.simulate_read(ref_genome, err_mod, 1, 0)
+        generator.simulate_read(ref_genome, err_mod, 1, 0, 'metagenomics')
 
 
 def test_basic():
@@ -82,7 +82,7 @@ def test_basic():
             id='my_genome',
             description='test genome'
         )
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0)
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, 'metagenomics')
         big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
         assert big_read[-15:] == 'TTTTGGGGGTTTTTG'
 
@@ -97,7 +97,7 @@ def test_kde():
             id='my_genome',
             description='test genome'
         )
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0)
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, 'metagenomics')
         big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
         assert big_read[:15] == 'CCGTTTCAACCCGTT'
 
@@ -112,6 +112,38 @@ def test_kde_short():
             id='my_genome',
             description='test genome'
         )
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0)
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, 'metagenomics')
         big_read = ''.join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
         assert big_read == 'ACCAAACCAAACCAAACCAAGGTTTGGTTTGGTTTGGTGT'
+
+
+def test_amp():
+    if sys.version_info > (3,):
+        random.seed(42)
+        np.random.seed(42)
+        err_mod = kde.KDErrorModel(
+            os.path.join(
+                os.path.dirname(__file__),
+                '../profiles/MiSeq'
+            )
+        )
+        print(err_mod.read_length)
+        ref_genome = SeqRecord(
+            Seq((
+                "TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGG"
+                "CCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTT"
+                )),
+            id='my_amplicon',
+            description='test amplicon'
+        )
+        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, 'amplicon')
+        assert len(read_tuple[0].seq) == 301
+        assert read_tuple[0].seq.startswith("TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        assert len(read_tuple[1].seq) == 301
+        assert read_tuple[1].seq.startswith("AAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
