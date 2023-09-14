@@ -5,7 +5,7 @@ from iss.util import load, rev_comp
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqUtils import GC
+from Bio.SeqUtils import gc_fraction
 from Bio.SeqRecord import SeqRecord
 
 import sys
@@ -69,7 +69,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
         else:
             if gc_bias:
                 stiched_seq = forward.seq + reverse.seq
-                gc_content = GC(stiched_seq)
+                gc_content = gc_fraction(stiched_seq)
                 if 40 < gc_content < 60:
                     read_tuple_list.append((forward, reverse))
                     i += 1

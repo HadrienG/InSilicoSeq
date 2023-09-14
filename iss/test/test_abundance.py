@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
+
 from iss import util
 from iss import abundance
-from nose.tools import raises, with_setup
 
 import numpy as np
 
@@ -12,8 +13,14 @@ def setup_function():
     output_file_prefix = 'data/.test'
 
 
-def teardown_function():
+def teardown_cleanup():
     util.cleanup(['data/test_abundance.txt'])
+
+@pytest.fixture
+def setup_and_teardown():
+    setup_function()
+    yield
+    teardown_cleanup()
 
 
 def test_parsing():
@@ -27,19 +34,19 @@ def test_parsing():
     }
 
 
-@raises(SystemExit)
 def test_parsing_empty():
-    abundance_dic = abundance.parse_abundance_file('data/empty_file')
+    with pytest.raises(SystemExit):
+        abundance_dic = abundance.parse_abundance_file('data/empty_file')
 
 
-@raises(SystemExit)
 def test_parsing_no_exists():
-    abundance_dic = abundance.parse_abundance_file('data/does_not_exist')
+    with pytest.raises(SystemExit):
+        abundance_dic = abundance.parse_abundance_file('data/does_not_exist')
 
 
-@raises(SystemExit)
 def test_parsing_bad_abundance():
-    abundance_dic = abundance.parse_abundance_file('data/bad_abundance.txt')
+    with pytest.raises(SystemExit):
+        abundance_dic = abundance.parse_abundance_file('data/bad_abundance.txt')
 
 
 def test_cov_calc():
@@ -74,8 +81,7 @@ def test_distributions():
     assert round(zero_inflated_lognormal_dic['genome_A'], 2) == 0.44
 
 
-@with_setup(setup_function, teardown_function)
-def test_abunance_draft():
+def test_abunance_draft(setup_and_teardown):
     abundance_dic = {'genome_A': 0.15511887441170918,
                      'genome_T': 0.08220476760848751,
                      'genome_GC': 0.18039811160555874,

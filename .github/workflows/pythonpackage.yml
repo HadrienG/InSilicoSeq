@@ -8,7 +8,7 @@ jobs:
         strategy:
             max-parallel: 4
             matrix:
-                python-version: [3.6, 3.7, 3.8]
+                python-version: ['3.9', '3.10', '3.11']
 
         steps:
             - uses: actions/checkout@v1
@@ -21,7 +21,7 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install pipenv
                   pipenv install --dev
-            - name: Test with nose
+            - name: Test with pytest
               run: |
                   chmod -w data/read_only.fasta
                   pipenv run tests

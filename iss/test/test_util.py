@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from nose.tools import raises, with_setup
+import pytest
 
 from iss import util
 
@@ -11,12 +11,26 @@ def setup_function():
     output_file_prefix = 'data/.test'
 
 
-def teardown_function():
+def teardown_uncompress():
     util.cleanup(['data/test_concat.iss.tmp.genomes.fasta'])
 
 
 def teardown_compress():
     util.cleanup(['data/ecoli.fasta.gz'])
+
+
+@pytest.fixture
+def setup_and_teardown():
+    setup_function()
+    yield
+    teardown_uncompress()
+
+
+@pytest.fixture
+def setup_and_teardown_compress():
+    setup_function()
+    yield
+    teardown_compress()
 
 
 def test_phred_conversions():
@@ -46,9 +60,9 @@ def test_count_records():
         'genome_A', 'genome_T', 'genome_GC', 'genome_ATCG', 'genome_TA']
 
 
-@raises(SystemExit)
 def test_count_records_empty():
-    util.count_records('data/empty_file')
+    with pytest.raises(SystemExit):
+        util.count_records('data/empty_file')
 
 
 def test_split_list():
@@ -95,22 +109,22 @@ def test_convert_n_reads():
     assert util.convert_n_reads(giga_upper) == 500000000
 
 
-@raises(SystemExit)
 def test_convert_n_reads_bad_not_a_number():
-    not_valid = 'rocket0'
-    util.convert_n_reads(not_valid)
+    with pytest.raises(SystemExit):
+        not_valid = 'rocket0'
+        util.convert_n_reads(not_valid)
 
 
-@raises(SystemExit)
 def test_convert_n_reads_bad_suffix():
-    not_valid = '0.12Q'
-    util.convert_n_reads(not_valid)
+    with pytest.raises(SystemExit):
+        not_valid = '0.12Q'
+        util.convert_n_reads(not_valid)
 
 
-@raises(SystemExit)
 def test_genome_file_exists():
-    my_important_file = 'data/ecoli.fasta'
-    util.genome_file_exists(my_important_file)
+    with pytest.raises(SystemExit):
+        my_important_file = 'data/ecoli.fasta'
+        util.genome_file_exists(my_important_file)
 
 
 def test_reservoir():
@@ -126,19 +140,18 @@ def test_reservoir():
     assert len(samples) == 2
 
 
-@raises(SystemExit)
 def test_reservoir_invalid_input():
-    genome_file = 'data/ecoli.fasta'
-    record_list = ['NC_002695.1']
-    n = 4
-    with open(genome_file, 'r') as f:
-        fasta_file = SeqIO.parse(f, 'fasta')
-        for record in util.reservoir(fasta_file, record_list, n):
-            pass
+    with pytest.raises(SystemExit):
+        genome_file = 'data/ecoli.fasta'
+        record_list = ['NC_002695.1']
+        n = 4
+        with open(genome_file, 'r') as f:
+            fasta_file = SeqIO.parse(f, 'fasta')
+            for record in util.reservoir(fasta_file, record_list, n):
+                pass
 
 
-@with_setup(setup_function, teardown_function)
-def test_concatenate():
+def test_concatenate(setup_and_teardown):
     genome_files = ['data/ecoli.fasta'] * 2
     util.concatenate(genome_files, 'data/test_concat.iss.tmp.genomes.fasta')
     with open('data/test_concat.iss.tmp.genomes.fasta', 'rb') as f:
@@ -146,11 +159,11 @@ def test_concatenate():
 
 
 def test_concatenate_read_only():
-    genome_files = ['data/ecoli.fasta'] * 2
-    util.concatenate(genome_files, 'data/read_only.fasta')
+    with pytest.raises(SystemExit):
+        genome_files = ['data/ecoli.fasta'] * 2
+        util.concatenate(genome_files, 'data/read_only.fasta')
 
 
-@with_setup(setup_function, teardown_compress)
-def test_compress():
+def test_compress(setup_and_teardown_compress):
     genome_file = 'data/ecoli.fasta'
     util.compress(genome_file, remove=False)
