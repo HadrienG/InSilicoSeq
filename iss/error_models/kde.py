@@ -1,15 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss import util
 from iss.error_models import ErrorModel
 
-from Bio.Seq import MutableSeq
-from Bio.SeqRecord import SeqRecord
-from scipy import stats
-
-import sys
-import random
 import numpy as np
 
 
@@ -62,7 +55,7 @@ class KDErrorModel(ErrorModel):
             cdfs (ndarray): array containing the cdfs
             orientation (string): orientation of the read. Can be 'forward' or
                 'reverse'
-
+            
         Returns:
             list: a list of phred scores
         """
@@ -79,7 +72,7 @@ class KDErrorModel(ErrorModel):
         # is 0.95) to best quality bin
         if quality_bin == 4:
             quality_bin = 3
-
+            
         cdfs_bin = cdfs[quality_bin]
 
         phred_list = []

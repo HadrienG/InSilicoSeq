@@ -7,9 +7,6 @@ from iss import util
 
 from Bio import SeqIO
 
-import random
-
-
 def setup_function():
     output_file_prefix = 'data/.test'
 
