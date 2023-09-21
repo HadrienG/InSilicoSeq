@@ -141,8 +141,17 @@ def generate_reads(args):
             'lognormal': abundance.lognormal,
             'zero_inflated_lognormal': abundance.zero_inflated_lognormal
         }
+        if args.readcount_file:
+            logger.info('Using readcount file:%s' % args.readcount_file)
+            logger.warning('--readcount_file disables --n_reads, n_reads will be calculated from the readcount file')
+            if args.draft:
+                raise RuntimeError(
+                    "readcount_file is only supported using --genomes, not --draft"
+                    )
+            readcount_dic =  abundance.parse_readcount_file(args.readcount_file)
+
         # read the abundance file
-        if args.abundance_file:
+        elif args.abundance_file:
             logger.info('Using abundance file:%s' % args.abundance_file)
             if args.draft:
                 abundance_dic_short = abundance.parse_abundance_file(
@@ -212,13 +221,16 @@ def generate_reads(args):
                     args.abundance](genome_list)
                 abundance.to_file(abundance_dic, args.output)
         else:
-            logger.error('Could not get abundance')
+            logger.error('Could not get abundance, or coverage or readcount information')
             sys.exit(1)
 
         cpus = args.cpus
         logger.info('Using %s cpus for read generation' % cpus)
-
-        if not (args.coverage or args.coverage_file):
+        
+        if args.readcount_file:
+            n_reads = sum(readcount_dic.values())
+            logger.info('Generating %s reads' % n_reads)
+        elif not (args.coverage or args.coverage_file):
             n_reads = util.convert_n_reads(args.n_reads)
             logger.info('Generating %s reads' % n_reads)
 
@@ -228,16 +240,16 @@ def generate_reads(args):
             with f:
                 fasta_file = SeqIO.parse(f, 'fasta')
                 total_reads_generated = 0
-                total_reads_generated_unrouned = 0
+                total_reads_generated_unrounded = 0
                 for record in fasta_file:
                     # generate reads for records
-                    try:
-                        species_abundance = abundance_dic[record.id]
-                    except KeyError as e:
-                        logger.error(
-                            'Fasta record not found in abundance file: %s' % e)
-                        sys.exit(1)
+                    if args.readcount_file:
+                        assert record.id in readcount_dic, f"Record {record.id} not found in readcount file"
+                        n_pairs = n_pairs_unrounded = readcount_dic[record.id]
                     else:
+                        assert record.id in abundance_dic, f"Record {record.id} not found in abundance file"
+                        species_abundance = abundance_dic[record.id]
+                   
                         logger.info('Generating reads for record: %s'
                                     % record.id)
                         genome_size = len(record.seq)
@@ -256,62 +268,61 @@ def generate_reads(args):
                             err_mod.read_length) / 2
                         n_pairs = round(n_pairs_unrounded)
 
-                        # check that the rounding does not cause to drop
-                        # read pairs
-                        total_reads_generated_unrouned += n_pairs_unrounded
-                        total_reads_generated += n_pairs
-                        if round(total_reads_generated_unrouned) > \
-                                total_reads_generated:
-                            logger.debug(
-                                "Adding a pair to correct rounding error")
-                            n_pairs += 1
-                            total_reads_generated += 1
+                    # check that the rounding does not cause to drop
+                    # read pairs
+                    total_reads_generated_unrounded += n_pairs_unrounded
+                    total_reads_generated += n_pairs
+                    if round(total_reads_generated_unrounded) > \
+                            total_reads_generated:
+                        logger.debug(
+                            "Adding a pair to correct rounding error")
+                        n_pairs += 1
+                        total_reads_generated += 1
 
-                        # skip record if n_reads == 0
-                        if n_pairs == 0:
-                            continue
+                    # skip record if n_reads == 0
+                    if n_pairs == 0:
+                        continue
 
-                        # exact n_reads for each cpus
-                        if n_pairs % cpus == 0:
-                            n_pairs_per_cpu = [(n_pairs // cpus)
-                                               for _ in range(cpus)]
-                        else:
-                            n_pairs_per_cpu = [(n_pairs // cpus)
-                                               for _ in range(cpus)]
-                            n_pairs_per_cpu[-1] += n_pairs % cpus
+                    # exact n_reads for each cpus
+                    if n_pairs % cpus == 0:
+                        n_pairs_per_cpu = [(n_pairs // cpus)
+                                            for _ in range(cpus)]
+                    else:
+                        n_pairs_per_cpu = [(n_pairs // cpus)
+                                            for _ in range(cpus)]
+                        n_pairs_per_cpu[-1] += n_pairs % cpus
 
-                        # due to a bug in multiprocessing
-                        # https://bugs.python.org/issue17560
-                        # we can't send records taking more than 2**31 bytes
-                        # through serialisation.
-                        # In those cases we use memmapping
-                        if sys.getsizeof(str(record.seq)) >= 2**31 - 1:
-                            logger.warning(
-                                "record %s unusually big." % record.id)
-                            logger.warning("Using a memory map.")
-                            mode = "memmap"
+                    # due to a bug in multiprocessing
+                    # https://bugs.python.org/issue17560
+                    # we can't send records taking more than 2**31 bytes
+                    # through serialisation.
+                    # In those cases we use memmapping
+                    if sys.getsizeof(str(record.seq)) >= 2**31 - 1:
+                        logger.warning(
+                            "record %s unusually big." % record.id)
+                        logger.warning("Using a memory map.")
+                        mode = "memmap"
 
-                            record_mmap = "%s.memmap" % args.output
-                            if os.path.exists(record_mmap):
-                                os.unlink(record_mmap)
-                            util.dump(record, record_mmap)
-                            del record
-                            record = record_mmap
-                            gc.collect()
-                        else:
-                            mode = "default"
+                        record_mmap = "%s.memmap" % args.output
+                        if os.path.exists(record_mmap):
+                            os.unlink(record_mmap)
+                        util.dump(record, record_mmap)
+                        del record
+                        record = record_mmap
+                        gc.collect()
+                    else:
+                        mode = "default"
 
-                        record_file_name_list = Parallel(
-                            n_jobs=cpus)(
-                                delayed(generator.reads)(
-                                    record, err_mod,
-                                    n_pairs_per_cpu[i], i, args.output,
-                                    args.seed, args.sequence_type,
-                                    args.gc_bias, mode) for i in range(cpus))
-                        temp_file_list.extend(record_file_name_list)
+                    record_file_name_list = Parallel(
+                        n_jobs=cpus)(
+                            delayed(generator.reads)(
+                                record, err_mod,
+                                n_pairs_per_cpu[i], i, args.output,
+                                args.seed, args.sequence_type,
+                                args.gc_bias, mode) for i in range(cpus))
+                    temp_file_list.extend(record_file_name_list)
         except KeyboardInterrupt as e:
             logger.error('iss generate interrupted: %s' % e)
-            temp_file_unique = list(set(temp_file_list))
             temp_R1 = [temp_file + '_R1.fastq' for temp_file in temp_file_list]
             temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
             full_tmp_list = temp_R1 + temp_R2
@@ -324,7 +335,6 @@ def generate_reads(args):
             # remove the duplicates in file list and cleanup
             # we remove the duplicates in case two records had the same header
             # and reads were appended to the same temp file.
-            temp_file_unique = list(set(temp_file_list))
             temp_R1 = [temp_file + '_R1.fastq' for temp_file in temp_file_list]
             temp_R2 = [temp_file + '_R2.fastq' for temp_file in temp_file_list]
             util.concatenate(temp_R1, args.output + '_R1.fastq')
@@ -504,6 +514,12 @@ def main():
         '-D',
         metavar='<coverage.txt>',
         help='file containing coverage information (default: %(default)s).'
+    )
+    input_abundance.add_argument(
+        "--readcount_file",
+        "-R",
+        metavar='<readcount.txt>',
+        help='file containing read_count information (default: %(default)s).'
     )
     parser_gen.add_argument(
         '--n_reads',
