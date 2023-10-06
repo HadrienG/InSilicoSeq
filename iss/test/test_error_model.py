@@ -3,10 +3,8 @@
 
 import pytest
 
-from iss.error_models import ErrorModel, basic, kde, perfect
+from iss.error_models import basic, kde, perfect
 from iss.util import rev_comp
-
-from pickle import UnpicklingError
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -136,11 +134,8 @@ def test_introduce_indels_rev():
         id='read_1',
         description='test read'
     )
-    print(read.seq)
     read.seq = err_mod.introduce_indels(
         read, 'reverse', ref_genome, bounds)
-    print(read.seq)
-    print(ref_genome.seq)
     assert len(read.seq) == 20
     assert read.seq == 'CGTACGGTACGGTACGGTAC'
 

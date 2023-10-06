@@ -1,0 +1,5 @@
+amplicon_A    2
+amplicon_T    2
+amplicon_GC   4
+amplicon_ATCG 1
+amplicon_TA   1

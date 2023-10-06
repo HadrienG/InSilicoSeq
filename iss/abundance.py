@@ -10,6 +10,33 @@ import logging
 import numpy as np
 
 
+def parse_readcount_file(readcount_file):
+    logger = logging.getLogger(__name__)
+
+    readcount_dic = {}
+    try:
+        assert os.stat(readcount_file).st_size != 0
+        f = open(readcount_file, 'r')
+    except (IOError, OSError) as e:
+        logger.error('Failed to open file:%s' % e)
+        sys.exit(1)
+    except AssertionError as e:
+        logger.error('File seems empty: %s' % readcount_file)
+        sys.exit(1)
+    else:
+        with f:
+            for line in f:
+                try:
+                    genome_id = line.split()[0]
+                    read_count = int(line.split()[1])
+                except IndexError as e:
+                    logger.error('Failed to read file: %s' % e)
+                    sys.exit(1)
+                else:
+                    readcount_dic[genome_id] = read_count
+    return readcount_dic
+
+
 def parse_abundance_file(abundance_file):
     """Parse an abundance or coverage file
 
