@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss import util
-
-import sys
-import random
 import logging
+import random
+import sys
+
 import _pickle
 import numpy as np
+from Bio.Seq import MutableSeq, Seq
 
-from Bio.Seq import Seq, MutableSeq
+from iss import util
 
 
 class ErrorModel(object):
@@ -18,6 +18,7 @@ class ErrorModel(object):
     This class is used to create inheriting classes and contains all
     the functions that are shared by all ErrorModel classes
     """
+
     @property
     def logger(self):
         component = "{}.{}".format(type(self).__module__, type(self).__name__)
@@ -37,17 +38,15 @@ class ErrorModel(object):
         """
         try:
             error_profile = np.load(npz_path, allow_pickle=True)
-            assert error_profile['model'] == model
+            assert error_profile["model"] == model
         except (OSError, IOError, EOFError, _pickle.UnpicklingError) as e:
-            self.logger.error('Failed to read ErrorModel file: %s' % e)
+            self.logger.error("Failed to read ErrorModel file: %s" % e)
             sys.exit(1)
-        except AssertionError as e:
-            self.logger.error(
-                'Trying to load a %s ErrorModel in %s mode' % (
-                    error_profile['model'], model))
+        except AssertionError:
+            self.logger.error("Trying to load a %s ErrorModel in %s mode" % (error_profile["model"], model))
             sys.exit(1)
         else:
-            self.logger.debug('Loaded ErrorProfile: %s' % npz_path)
+            self.logger.debug("Loaded ErrorProfile: %s" % npz_path)
         return error_profile
 
     def introduce_error_scores(self, record, orientation):
@@ -57,16 +56,14 @@ class ErrorModel(object):
             record (SeqRecord): a read record
             orientation (string): orientation of the read. Can be 'forward' or
                 'reverse'
-            
+
         Returns:
             SeqRecord: a read record with error scores
         """
-        if orientation == 'forward':
-            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_forward, 'forward')
-        elif orientation == 'reverse':
-            record.letter_annotations["phred_quality"] = self.gen_phred_scores(
-                self.quality_reverse, 'reverse')
+        if orientation == "forward":
+            record.letter_annotations["phred_quality"] = self.gen_phred_scores(self.quality_forward, "forward")
+        elif orientation == "reverse":
+            record.letter_annotations["phred_quality"] = self.gen_phred_scores(self.quality_reverse, "reverse")
         return record
 
     def mut_sequence(self, record, orientation):
@@ -85,20 +82,19 @@ class ErrorModel(object):
         """
 
         # get the right subst_matrix
-        if orientation == 'forward':
+        if orientation == "forward":
             nucl_choices = self.subst_choices_for
-        elif orientation == 'reverse':
+        elif orientation == "reverse":
             nucl_choices = self.subst_choices_rev
 
         mutable_seq = MutableSeq(record.seq)
         quality_list = record.letter_annotations["phred_quality"]
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
-            if random.random() > util.phred_to_prob(qual) \
-                    and nucl.upper() not in 'RYWSMKHBVDN':
-                mutable_seq[position] = str(np.random.choice(
-                    nucl_choices[position][nucl.upper()][0],
-                    p=nucl_choices[position][nucl.upper()][1]))
+            if random.random() > util.phred_to_prob(qual) and nucl.upper() not in "RYWSMKHBVDN":
+                mutable_seq[position] = str(
+                    np.random.choice(nucl_choices[position][nucl.upper()][0], p=nucl_choices[position][nucl.upper()][1])
+                )
             position += 1
         return Seq(mutable_seq)
 
@@ -130,20 +126,19 @@ class ErrorModel(object):
             return Seq(mut_seq)
         else:  # len smaller
             to_add = self.read_length - len(mut_seq)
-            if orientation == 'forward':
+            if orientation == "forward":
                 for i in range(to_add):
                     if read_end + i >= len(full_sequence):
-                        nucl_to_add = 'A'
+                        nucl_to_add = "A"
                     else:
                         nucl_to_add = str(full_sequence[read_end + i])
                     mut_seq.append(nucl_to_add)
-            elif orientation == 'reverse':
+            elif orientation == "reverse":
                 for i in range(to_add):
                     if read_start - 1 - i < 0:
-                        nucl_to_add = 'A'
+                        nucl_to_add = "A"
                     else:
-                        nucl_to_add = util.rev_comp(
-                            full_sequence[read_start-1 - i])
+                        nucl_to_add = util.rev_comp(full_sequence[read_start - 1 - i])
                     mut_seq.append(nucl_to_add)
             return Seq(mut_seq)
 
@@ -167,10 +162,10 @@ class ErrorModel(object):
         """
 
         # get the right indel arrays
-        if orientation == 'forward':
+        if orientation == "forward":
             insertions = self.ins_for
             deletions = self.del_for
-        elif orientation == 'reverse':
+        elif orientation == "reverse":
             insertions = self.ins_rev
             deletions = self.del_rev
 
@@ -179,7 +174,7 @@ class ErrorModel(object):
         for nucl in range(self.read_length - 1):
             try:
                 # skip ambiguous nucleotides
-                if mutable_seq[nucl].upper() in 'RYWSMKHBVDN':
+                if mutable_seq[nucl].upper() in "RYWSMKHBVDN":
                     position += 1
                     continue
                 for nucl_to_insert, prob in insertions[position].items():
@@ -189,9 +184,8 @@ class ErrorModel(object):
                 if random.random() < deletions[position][mutable_seq[nucl].upper()]:
                     mutable_seq.pop(position)
                 position += 1
-            except IndexError as e:
+            except IndexError:
                 continue
 
-        seq = self.adjust_seq_length(
-            mutable_seq, orientation, full_seq, bounds)
+        seq = self.adjust_seq_length(mutable_seq, orientation, full_seq, bounds)
         return seq

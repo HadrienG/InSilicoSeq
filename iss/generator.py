@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss.util import load, rev_comp
+import logging
+import random
+import sys
 
+import numpy as np
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqUtils import gc_fraction
 from Bio.SeqRecord import SeqRecord
+from Bio.SeqUtils import gc_fraction
 
-import sys
-import random
-import logging
-import numpy as np
+from iss.util import load, rev_comp
 
 
-def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
-          gc_bias=False, mode="default"):
+def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type, gc_bias=False, mode="default"):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
     This function makes use of the `simulate_read` function to simulate reads
@@ -46,25 +45,20 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
     if seed is not None:
         random.seed(seed + cpu_number)
         np.random.seed(seed + cpu_number)
-    logger.debug(
-        'Cpu #%s: Generating %s read pairs'
-        % (cpu_number, n_pairs))
+    logger.debug("Cpu #%s: Generating %s read pairs" % (cpu_number, n_pairs))
     read_tuple_list = []
     i = 0
     while i < n_pairs:
         # try:
         #     forward, reverse = simulate_read(record, ErrorModel, i)
-        # except ValueError as e:
+        # except ValueError:
         #     logger.error('Skipping this record: %s' % record.id)
         #     return
         try:
             forward, reverse = simulate_read(record, ErrorModel, i, cpu_number, sequence_type)
-        except AssertionError as e:
-            logger.warning(
-                '%s shorter than read length for this ErrorModel' % record.id)
-            logger.warning(
-                'Skipping %s. You will have less reads than specified'
-                % record.id)
+        except AssertionError:
+            logger.warning("%s shorter than read length for this ErrorModel" % record.id)
+            logger.warning("Skipping %s. You will have less reads than specified" % record.id)
             break
         else:
             if gc_bias:
@@ -82,7 +76,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed, sequence_type,
                 read_tuple_list.append((forward, reverse))
                 i += 1
 
-    temp_file_name = output + '.iss.tmp.%s.%s' % (record.id, cpu_number)
+    temp_file_name = output + ".iss.tmp.%s.%s" % (record.id, cpu_number)
     to_fastq(read_tuple_list, temp_file_name)
 
     return temp_file_name
@@ -118,35 +112,28 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
         # assign the start position of the forward read
         # if sequence_type == metagenomics, get a random start position
         # if sequence_type == amplicon, start position is the start of the read
-        if sequence_type == 'metagenomics':
-            forward_start = random.randrange(
-                0, len(record.seq) - (2 * read_length + insert_size))
-        elif sequence_type == 'amplicon':
+        if sequence_type == "metagenomics":
+            forward_start = random.randrange(0, len(record.seq) - (2 * read_length + insert_size))
+        elif sequence_type == "amplicon":
             forward_start = 0
         else:
             raise RuntimeError(f"sequence type '{sequence_type}' is not supported")
-    except AssertionError as e:
+    except AssertionError:
         raise
     except ValueError as e:
-        logger.debug(
-            '%s shorter than template length for this ErrorModel:%s'
-            % (record.id, e))
-        forward_start = max(0, random.randrange(
-            0, len(record.seq) - read_length))
+        logger.debug("%s shorter than template length for this ErrorModel:%s" % (record.id, e))
+        forward_start = max(0, random.randrange(0, len(record.seq) - read_length))
 
     forward_end = forward_start + read_length
     bounds = (forward_start, forward_end)
     # create a perfect read
     forward = SeqRecord(
-        Seq(str(sequence[forward_start:forward_end])),
-        id='%s_%s_%s/1' % (header, i, cpu_number),
-        description=''
+        Seq(str(sequence[forward_start:forward_end])), id="%s_%s_%s/1" % (header, i, cpu_number), description=""
     )
     # add the indels, the qual scores and modify the record accordingly
-    forward.seq = ErrorModel.introduce_indels(
-        forward, 'forward', sequence, bounds)
-    forward = ErrorModel.introduce_error_scores(forward, 'forward')
-    forward.seq = ErrorModel.mut_sequence(forward, 'forward')
+    forward.seq = ErrorModel.introduce_indels(forward, "forward", sequence, bounds)
+    forward = ErrorModel.introduce_error_scores(forward, "forward")
+    forward.seq = ErrorModel.mut_sequence(forward, "forward")
 
     # generate the reverse read
     # assign start position reverse read
@@ -169,15 +156,14 @@ def simulate_read(record, ErrorModel, i, cpu_number, sequence_type):
     # create a perfect read
     reverse = SeqRecord(
         Seq(rev_comp(str(sequence[reverse_start:reverse_end]))),
-        id='%s_%s_%s/2' % (header, i, cpu_number),
-        description=''
+        id="%s_%s_%s/2" % (header, i, cpu_number),
+        description="",
     )
 
     # add the indels, the qual scores and modify the record accordingly
-    reverse.seq = ErrorModel.introduce_indels(
-        reverse, 'reverse', sequence, bounds)
-    reverse = ErrorModel.introduce_error_scores(reverse, 'reverse')
-    reverse.seq = ErrorModel.mut_sequence(reverse, 'reverse')
+    reverse.seq = ErrorModel.introduce_indels(reverse, "reverse", sequence, bounds)
+    reverse = ErrorModel.introduce_error_scores(reverse, "reverse")
+    reverse.seq = ErrorModel.mut_sequence(reverse, "reverse")
 
     return (forward, reverse)
 
@@ -194,17 +180,17 @@ def to_fastq(generator, output):
     """
     logger = logging.getLogger(__name__)
     # define name of output files
-    output_forward = output + '_R1.fastq'
-    output_reverse = output + '_R2.fastq'
+    output_forward = output + "_R1.fastq"
+    output_reverse = output + "_R2.fastq"
 
     try:
-        f = open(output_forward, 'a')
-        r = open(output_reverse, 'a')
+        f = open(output_forward, "a")
+        r = open(output_reverse, "a")
     except PermissionError as e:
-        logger.error('Failed to open output file(s): %s' % e)
+        logger.error("Failed to open output file(s): %s" % e)
         sys.exit(1)
     else:
         with f, r:
             for read_tuple in generator:
-                SeqIO.write(read_tuple[0], f, 'fastq-sanger')
-                SeqIO.write(read_tuple[1], r, 'fastq-sanger')
+                SeqIO.write(read_tuple[0], f, "fastq-sanger")
+                SeqIO.write(read_tuple[1], r, "fastq-sanger")

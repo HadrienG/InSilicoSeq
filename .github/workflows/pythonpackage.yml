@@ -21,6 +21,11 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install pipenv
                   pipenv install --dev
+            - name: Style check
+              run: |
+                  black . --check
+                  isort . --check
+                  flake8 .
             - name: Test with pytest
               run: |
                   chmod -w data/read_only.fasta
