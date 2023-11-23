@@ -36,13 +36,13 @@ def test_cleanup_fail():
 def test_simulate_and_save(setup_and_teardown):
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(Seq(str("AAAAACCCCC" * 100)), id="my_genome", description="test genome")
-    generator.reads(ref_genome, err_mod, 1000, 0, "data/.test", 0, "metagenomics", gc_bias=True)
+    generator.simulate_reads(ref_genome, err_mod, 1000, 0, "data/.test", 0, "metagenomics", gc_bias=True)
 
 
 def test_simulate_and_save_short(setup_and_teardown):
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(Seq(str("AACCC" * 100)), id="my_genome", description="test genome")
-    generator.reads(ref_genome, err_mod, 1000, 0, "data/.test", 0, "metagenomics", gc_bias=True)
+    generator.simulate_reads(ref_genome, err_mod, 1000, 0, "data/.test", 0, "metagenomics", gc_bias=True)
 
 
 def test_small_input():
