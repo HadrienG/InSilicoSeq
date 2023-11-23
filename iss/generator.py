@@ -19,7 +19,15 @@ from iss.util import load, rev_comp
 
 
 def simulate_reads(
-    record, error_model, n_pairs, cpu_number, output, seed, sequence_type, gc_bias=False, mode="default"
+    record,
+    error_model,
+    n_pairs,
+    cpu_number,
+    forward_handle,
+    reverse_handle,
+    sequence_type,
+    gc_bias=False,
+    mode="default",
 ):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
@@ -32,14 +40,12 @@ def simulate_reads(
         n_pairs (int): the number of reads to generate
         cpu_number (int): an int indentifying the cpu that is used by the
             function. Is used for naming the output file
-        output (str): the output file prefix
-        seed (int): random seed to use
+        forward_handle (file): a file handle to write the forward reads to
+        reverse_handle (file): a file handle to write the reverse reads to
         sequencing_type (str): metagenomics or amplicon sequencing used
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
 
-    Returns:
-        str: the name of the output file
     """
     logger = logging.getLogger(__name__)
 
@@ -48,15 +54,13 @@ def simulate_reads(
         record_mmap = load(record)
         record = record_mmap
 
-    if seed is not None:
-        random.seed(seed + cpu_number)
-        np.random.seed(seed + cpu_number)
     logger.debug("Cpu #%s: Generating %s read pairs" % (cpu_number, n_pairs))
 
-    temp_file_name = output + ".iss.tmp.%s.%s" % (record.id, cpu_number)
-    to_fastq(reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_type), temp_file_name)
-
-    return temp_file_name
+    for forward_record, reverse_record in reads_generator(
+        n_pairs, record, error_model, cpu_number, gc_bias, sequence_type
+    ):
+        SeqIO.write(forward_record, forward_handle, "fastq-sanger")
+        SeqIO.write(reverse_record, reverse_handle, "fastq-sanger")
 
 
 def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_type):
@@ -201,22 +205,33 @@ def to_fastq(generator, output):
                 SeqIO.write(read_tuple[1], r, "fastq-sanger")
 
 
-def worker_iterator(work, error_model, cpu_number, output, seed, sequence_type, gc_bias):
+def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence_type, gc_bias):
     """A utility function to run the reads simulation of each record in a loop for a specific cpu"""
-    return [
-        simulate_reads(
-            record=record,
-            n_pairs=n_pairs,
-            mode=mode,
-            error_model=error_model,
-            cpu_number=cpu_number,
-            output=output,
-            seed=seed,
-            sequence_type=sequence_type,
-            gc_bias=gc_bias,
-        )
-        for record, n_pairs, mode in work
-    ]
+    logger = logging.getLogger(__name__)
+    try:
+        forward_handle = open(f"{worker_prefix}_R1.fastq", "w")
+        reverse_handle = open(f"{worker_prefix}_R2.fastq", "w")
+    except PermissionError as e:
+        logger.error("Failed to temporary output file(s): %s" % e)
+        sys.exit(1)
+
+    if seed is not None:
+        random.seed(seed + cpu_number)
+        np.random.seed(seed + cpu_number)
+
+    with forward_handle, reverse_handle:
+        for record, n_pairs, mode in work:
+            simulate_reads(
+                record=record,
+                n_pairs=n_pairs,
+                mode=mode,
+                error_model=error_model,
+                cpu_number=cpu_number,
+                forward_handle=forward_handle,
+                reverse_handle=reverse_handle,
+                sequence_type=sequence_type,
+                gc_bias=gc_bias,
+            )
 
 
 def generate_work_divider(
@@ -225,7 +240,8 @@ def generate_work_divider(
     """Yields a list of tuples containing the records and the number of reads to generate for each record
 
     Yields:
-        list[tuple[SeqIO.Record, int, str]]: a list of tuples containing the records, the number of reads to generate for each record and the mode
+        list[tuple[SeqIO.Record, int, str]]: a list of tuples containing the records,
+            the number of reads to generate for each record and the mode
     """
     logger = logging.getLogger(__name__)
 

@@ -36,19 +36,24 @@ def test_cleanup_fail():
 def test_simulate_and_save(setup_and_teardown):
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(Seq(str("AAAAACCCCC" * 100)), id="my_genome", description="test genome")
-    generator.simulate_reads(ref_genome, err_mod, 1000, 0, "data/.test", 0, "metagenomics", gc_bias=True)
+    forward_handle = open("data/.test.iss.tmp.my_genome.0_R1.fastq", "w")
+    reverse_handle = open("data/.test.iss.tmp.my_genome.0_R2.fastq", "w")
+    generator.simulate_reads(ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, "metagenomics", gc_bias=True)
 
 
 def test_simulate_and_save_short(setup_and_teardown):
     err_mod = basic.BasicErrorModel()
     ref_genome = SeqRecord(Seq(str("AACCC" * 100)), id="my_genome", description="test genome")
-    generator.simulate_reads(ref_genome, err_mod, 1000, 0, "data/.test", 0, "metagenomics", gc_bias=True)
+    forward_handle = open("data/.test.iss.tmp.my_genome.0_R1.fastq", "w")
+    reverse_handle = open("data/.test.iss.tmp.my_genome.0_R2.fastq", "w")
+    generator.simulate_reads(ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, "metagenomics", gc_bias=True)
 
 
 def test_small_input():
     with pytest.raises(AssertionError):
         err_mod = kde.KDErrorModel("data/ecoli.npz")
         ref_genome = SeqRecord(Seq(str("AAAAACCCCC")), id="my_genome", description="test genome")
+
         generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
 
 

@@ -54,8 +54,7 @@ def generate_reads(args):
         error_model,
     )
 
-    cpus = args.cpus
-    logger.info("Using %s cpus for read generation" % cpus)
+    logger.info("Using %s cpus for read generation" % args.cpus)
 
     if readcount_dic is not None:
         n_reads = sum(readcount_dic.values())
@@ -65,14 +64,16 @@ def generate_reads(args):
         logger.info("Generating %s reads" % n_reads)
 
     try:
-        temp_file_list = []  # list holding the prefix of all temp files
+        # list holding the prefix for each cpu's temp file
+        temp_file_list = [f"{args.output}.iss.tmp.{i}" for i in range(args.cpus)]
         f = open(genome_file, "r")  # re-opens the file
         with f:
             fasta_file = SeqIO.parse(f, "fasta")
             # TODO check if a SeqIO.index (db) leads to better memory usage and is not slower
             # fasta_dict = SeqIO.index(f, 'fasta')
 
-            chunk_size = -(n_reads // -cpus)  # this is ceildiv, see https://stackoverflow.com/a/17511341
+            # Calculate how many reads we want each cpu to generate
+            chunk_size = -(n_reads // -args.cpus)  # this is ceildiv, see https://stackoverflow.com/a/17511341
             logger.debug("Chunk size: %s" % chunk_size)
 
             # Divide the work of generating n_reads for each record into chunks
@@ -91,16 +92,14 @@ def generate_reads(args):
             )
 
             # Generate reads for each chunk in parallel
-            with mp.Pool(cpus) as pool:
-                work_temp_file_lists = pool.starmap(
+            with mp.Pool(args.cpus) as pool:
+                pool.starmap(
                     worker_iterator,
                     [
-                        (work, error_model, i, args.output, args.seed, args.sequence_type, args.gc_bias)
-                        for i, work in enumerate(work_chunks)
+                        (work, error_model, cpu_number, worker_prefix, args.seed, args.sequence_type, args.gc_bias)
+                        for cpu_number, (work, worker_prefix) in enumerate(zip(work_chunks, temp_file_list))
                     ],
                 )
-            for work_temp_file_list in work_temp_file_lists:
-                temp_file_list.extend(work_temp_file_list)
 
     except KeyboardInterrupt as e:
         logger.error("iss generate interrupted: %s" % e)
