@@ -19,6 +19,9 @@ pycodestyle = "*"
 pytest = "*"
 pytest-cov = "*"
 exceptiongroup = "*"
+black = "*"
+isort = "*"
+flake8 = "*"
 
 [scripts]
 iss = "python -m iss"
