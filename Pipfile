@@ -26,3 +26,7 @@ flake8 = "*"
 [scripts]
 iss = "python -m iss"
 tests = "pytest --cov=iss ."
+black = "black --check ."
+isort = "isort --check ."
+flake8 = "flake8 ."
+

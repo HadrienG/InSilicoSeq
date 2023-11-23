@@ -23,9 +23,7 @@ jobs:
                   pipenv install --dev
             - name: Style check
               run: |
-                  black . --check
-                  isort . --check
-                  flake8 .
+                  pipenv run black; pipenv run isort; pipenv run flake8
             - name: Test with pytest
               run: |
                   chmod -w data/read_only.fasta
