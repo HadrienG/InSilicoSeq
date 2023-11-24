@@ -31,6 +31,7 @@ jobs:
                   chmod -w data/read_only.fasta
                   pipenv run tests
             - name: Upload to Codecov
+              if: github.event.repository.fork == false
               uses: codecov/codecov-action@v1.0.2
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
