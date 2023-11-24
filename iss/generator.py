@@ -254,10 +254,14 @@ def generate_work_divider(
     for record in fasta_file:
         # generate reads for records
         if readcount_dic is not None:
-            assert record.id in readcount_dic, f"Record {record.id} not found in readcount file"
+            if record.id not in readcount_dic:
+                logger.warning(f"Record {record.id} not found in readcount file")
+                continue
             n_pairs = n_pairs_unrounded = readcount_dic[record.id]
         elif abundance_dic is not None:
-            assert record.id in abundance_dic, f"Record {record.id} not found in abundance file"
+            if record.id not in abundance_dic:
+                logger.warning(f"Record {record.id} not found in abundance file")
+                continue
             species_abundance = abundance_dic[record.id]
 
             logger.info("Generating reads for record: %s" % record.id)
@@ -288,9 +292,6 @@ def generate_work_divider(
         if n_pairs == 0:
             continue
 
-        # print("n_pairs to distribute: ", n_pairs)
-        n_pairs_remaining = n_pairs
-
         # due to a bug in multiprocessing
         # https://bugs.python.org/issue17560
         # we can't send records taking more than 2**31 bytes
@@ -311,17 +312,16 @@ def generate_work_divider(
         else:
             mode = "default"
 
+        n_pairs_remaining = n_pairs
         while n_pairs_remaining > 0:
             chunk_remaining = chunk_size - current_chunk
 
-            # print("chunk_remaining: ", chunk_remaining)
             if n_pairs_remaining <= chunk_remaining:
-                # print(f"Adding {n_pairs_remaining} pairs to chunk and continue")
+                # Record fits in the current chunk
                 chunk_work.append((record, n_pairs_remaining, mode))
                 n_pairs_added = n_pairs_remaining
             else:
-                # print(f"Adding {chunk_remaining} pairs to current chunk and go to next chunk")
-                # Split the record into chunks of chunk_size and yield them
+                # Record does not fit in the current chunk
                 chunk_work.append((record, chunk_remaining, mode))
                 n_pairs_added = chunk_remaining
 
@@ -329,7 +329,6 @@ def generate_work_divider(
             current_chunk += n_pairs_added
 
             if current_chunk == chunk_size:
-                # print("Yielding chunk")
                 yield chunk_work
                 chunk_work = []
                 current_chunk = 0
