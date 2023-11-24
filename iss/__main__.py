@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss import app
+from iss.app import main
 
-app.main()
+main()
