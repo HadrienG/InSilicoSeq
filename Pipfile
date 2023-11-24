@@ -23,6 +23,7 @@ black = "*"
 isort = "*"
 flake8 = "*"
 typing-extensions = "*"
+tomli = "*"
 
 [scripts]
 iss = "python -m iss"
