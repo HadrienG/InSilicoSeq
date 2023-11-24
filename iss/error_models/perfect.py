@@ -17,16 +17,19 @@ class PerfectErrorModel(ErrorModel):
         self.insert_size = 200
         self.quality_forward = self.quality_reverse = 40
 
-        self.subst_choices_for = self.subst_choices_rev = [{
-            'A': (['A', 'T', 'C', 'G'], [1, 0, 0, 0]),
-            'T': (['A', 'T', 'C', 'G'], [0, 1, 0, 0]),
-            'C': (['A', 'T', 'C', 'G'], [0, 0, 1, 0]),
-            'G': (['A', 'T', 'C', 'G'], [0, 0, 0, 1])
-        } for _ in range(self.read_length)]
+        self.subst_choices_for = self.subst_choices_rev = [
+            {
+                "A": (["A", "T", "C", "G"], [1, 0, 0, 0]),
+                "T": (["A", "T", "C", "G"], [0, 1, 0, 0]),
+                "C": (["A", "T", "C", "G"], [0, 0, 1, 0]),
+                "G": (["A", "T", "C", "G"], [0, 0, 0, 1]),
+            }
+            for _ in range(self.read_length)
+        ]
 
-        self.ins_for = self.ins_rev = self.del_for = self.del_rev = [{
-            'A': 0.0, 'T': 0.0, 'C': 0.0, 'G': 0.0
-        } for _ in range(self.read_length)]
+        self.ins_for = self.ins_rev = self.del_for = self.del_rev = [
+            {"A": 0.0, "T": 0.0, "C": 0.0, "G": 0.0} for _ in range(self.read_length)
+        ]
 
     def gen_phred_scores(self, mean_quality, orientation):
         """Fake randorm function returning the distribution of Phred
