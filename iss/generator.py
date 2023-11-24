@@ -276,7 +276,6 @@ def generate_work_divider(
             n_pairs = round(n_pairs_unrounded)
         else:
             raise RuntimeError("No readcount or abundance file provided")
-        sys.intern
 
         # check that the rounding does not cause to drop read pairs
         total_reads_generated_unrounded += n_pairs_unrounded
