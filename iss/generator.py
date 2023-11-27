@@ -257,7 +257,7 @@ def generate_work_divider(
             if record.id not in readcount_dic:
                 logger.warning(f"Record {record.id} not found in readcount file")
                 continue
-            n_pairs = n_pairs_unrounded = readcount_dic[record.id] / 2
+            n_pairs_unrounded = readcount_dic[record.id] / 2
         elif abundance_dic is not None:
             if record.id not in abundance_dic:
                 logger.warning(f"Record {record.id} not found in abundance file")
@@ -276,11 +276,11 @@ def generate_work_divider(
                     genome_size,
                 )
             n_pairs_unrounded = ((record_coverage * len(record.seq)) / error_model.read_length) / 2
-            n_pairs = round(n_pairs_unrounded)
         else:
             raise RuntimeError("No readcount or abundance file provided")
 
         # check that the rounding does not cause to drop read pairs
+        n_pairs = round(n_pairs_unrounded)
         total_reads_generated_unrounded += n_pairs_unrounded
         total_reads_generated += n_pairs
         if round(total_reads_generated_unrounded) > total_reads_generated:
