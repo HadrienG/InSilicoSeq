@@ -267,19 +267,18 @@ def generate_work_divider(
             genome_size = len(record.seq)
 
             if coverage or coverage_file:
-                coverage = record_abundance
+                record_coverage = record_abundance
             else:
-                coverage = abundance.to_coverage(
+                record_coverage = abundance.to_coverage(
                     n_reads,
                     record_abundance,
                     error_model.read_length,
                     genome_size,
                 )
-            n_pairs_unrounded = ((coverage * len(record.seq)) / error_model.read_length) / 2
+            n_pairs_unrounded = ((record_coverage * len(record.seq)) / error_model.read_length) / 2
             n_pairs = round(n_pairs_unrounded)
         else:
             raise RuntimeError("No readcount or abundance file provided")
-        logger.debug("Will generate %s read pairs for %s" % (n_pairs, record.id))
 
         # check that the rounding does not cause to drop read pairs
         total_reads_generated_unrounded += n_pairs_unrounded
@@ -288,6 +287,8 @@ def generate_work_divider(
             logger.debug("Adding a pair to correct rounding error")
             n_pairs += 1
             total_reads_generated += 1
+
+        logger.debug("Will generate %s read pairs for %s" % (n_pairs, record.id))
 
         if n_pairs == 0:
             continue
