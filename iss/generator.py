@@ -257,7 +257,7 @@ def generate_work_divider(
             if record.id not in readcount_dic:
                 logger.warning(f"Record {record.id} not found in readcount file")
                 continue
-            n_pairs = n_pairs_unrounded = readcount_dic[record.id]
+            n_pairs = n_pairs_unrounded = readcount_dic[record.id] / 2
         elif abundance_dic is not None:
             if record.id not in abundance_dic:
                 logger.warning(f"Record {record.id} not found in abundance file")

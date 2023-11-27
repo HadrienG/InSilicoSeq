@@ -73,7 +73,8 @@ def generate_reads(args):
             # fasta_dict = SeqIO.index(f, 'fasta')
 
             # Calculate how many reads we want each cpu to generate
-            chunk_size = -(n_reads // -args.cpus)  # this is ceildiv, see https://stackoverflow.com/a/17511341
+            n_read_pairs = n_reads // 2
+            chunk_size = -((n_read_pairs) // -args.cpus)  # this is ceildiv, see https://stackoverflow.com/a/17511341
             logger.debug("Chunk size: %s" % chunk_size)
 
             # Divide the work of generating n_reads for each record into chunks
