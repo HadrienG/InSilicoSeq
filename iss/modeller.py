@@ -9,7 +9,7 @@ from scipy import stats
 from iss import util
 
 
-def insert_size(insert_size_distribution):
+def insert_size(template_length_dist, read_length):
     """Calculate cumulative distribution function from the raw insert size
     distributin. Uses 1D kernel density estimation.
 
@@ -20,8 +20,18 @@ def insert_size(insert_size_distribution):
     Returns:
         1darray: a cumulative density function
     """
-    kde = stats.gaussian_kde(insert_size_distribution, bw_method=0.2 / np.std(insert_size_distribution, ddof=1))
-    x_grid = np.linspace(min(insert_size_distribution), max(insert_size_distribution), 1000)
+    # we want to remove zeroes and outliers
+    tld = np.asarray(template_length_dist)
+    min_mask = tld > 0
+    tld = tld[min_mask]
+    # 2000 is a common upper limit for template length for illumina sequencing
+    max_mask = tld < 2000
+    tld = tld[max_mask]
+
+    isd = tld - (2* read_length)  # convert to insert size
+
+    kde = stats.gaussian_kde(isd, bw_method=0.2 / np.std(isd, ddof=1))
+    x_grid = np.linspace(min(isd), max(isd), 2000)
     kde = kde.evaluate(x_grid)
     cdf = np.cumsum(kde)
     cdf = cdf / cdf[-1]
