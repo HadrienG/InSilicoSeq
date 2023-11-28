@@ -14,8 +14,8 @@ def insert_size(template_length_dist, read_length):
     distributin. Uses 1D kernel density estimation.
 
     Args:
-        insert_size_distribution (list): list of insert sizes from aligned
-        read pairs
+        template_length_dist (list): List of template lengths from bam file.
+        read_length (int): The length of the read.
 
     Returns:
         1darray: a cumulative density function
@@ -28,7 +28,7 @@ def insert_size(template_length_dist, read_length):
     max_mask = tld < 2000
     tld = tld[max_mask]
 
-    isd = tld - (2* read_length)  # convert to insert size
+    isd = tld - (2 * read_length)  # convert to insert size
 
     kde = stats.gaussian_kde(isd, bw_method=0.2 / np.std(isd, ddof=1))
     x_grid = np.linspace(min(isd), max(isd), 2000)

@@ -206,7 +206,7 @@ def to_model(bam_path, output):
     ins_r, del_r = modeller.indel_matrix_to_choices(indel_matrix_r, read_length)
 
     logger.info("Calculating insert size distribution")
-    # insert_size = int(np.mean(insert_size_dist))    
+    # insert_size = int(np.mean(insert_size_dist))
     hist_insert_size = modeller.insert_size(template_length_dist, read_length)
 
     write_to_file(
