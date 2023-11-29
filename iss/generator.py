@@ -113,7 +113,8 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     header = record.id
 
     read_length = error_model.read_length
-    insert_size = error_model.random_insert_size()
+    fragment_length = int(np.random.normal(error_model.fragment_length, error_model.fragment_sd))
+    insert_size = fragment_length - (read_length * 2)
 
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
@@ -122,7 +123,7 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
         # if sequence_type == metagenomics, get a random start position
         # if sequence_type == amplicon, start position is the start of the read
         if sequence_type == "metagenomics":
-            forward_start = random.randrange(0, len(record.seq) - (2 * read_length + insert_size))
+            forward_start = random.randrange(0, len(record.seq) - fragment_length)
         elif sequence_type == "amplicon":
             forward_start = 0
         else:
@@ -339,7 +340,7 @@ def generate_work_divider(
         yield chunk_work
 
 
-def load_error_model(mode, seed, model):
+def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
     logger = logging.getLogger(__name__)
 
     logger.info("Using %s ErrorModel" % mode)
@@ -359,17 +360,17 @@ def load_error_model(mode, seed, model):
             npz = os.path.join(os.path.dirname(__file__), "profiles/MiSeq")
         else:
             npz = model
-        err_mod = kde.KDErrorModel(npz)
+        err_mod = kde.KDErrorModel(npz, fragment_length, fragment_length_sd)
     elif mode == "basic":
         if model is not None:
             logger.warning("--model %s will be ignored in --mode %s" % (model, mode))
 
-        err_mod = basic.BasicErrorModel()
+        err_mod = basic.BasicErrorModel(fragment_length, fragment_length_sd)
     elif mode == "perfect":
         if model is not None:
             logger.warning("--model %s will be ignored in --mode %s" % (model, mode))
 
-        err_mod = perfect.PerfectErrorModel()
+        err_mod = perfect.PerfectErrorModel(fragment_length, fragment_length_sd)
 
     return err_mod
 

@@ -15,10 +15,11 @@ class BasicErrorModel(ErrorModel):
     equal between all nucleotides.
     """
 
-    def __init__(self):
+    def __init__(self, fragment_length=1000, fragment_sd=10):
         super().__init__()
         self.read_length = 125
-        self.insert_size = 200
+        self.fragment_length = fragment_length
+        self.fragment_sd = fragment_sd
         self.quality_forward = self.quality_reverse = 30
         self.subst_choices_for = self.subst_choices_rev = [
             {
@@ -49,12 +50,3 @@ class BasicErrorModel(ErrorModel):
         norm = [min(q, 0.9999) for q in np.random.normal(util.phred_to_prob(mean_quality), 0.01, self.read_length)]
         phred = [util.prob_to_phred(p) for p in norm]
         return phred
-
-    def random_insert_size(self):
-        """Fake random function returning the default insert size of the
-        basic arror model
-
-        Returns:
-            int: insert size
-        """
-        return self.insert_size
