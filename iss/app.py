@@ -11,11 +11,11 @@ from Bio import SeqIO
 
 from iss import util
 from iss.generator import (
+    generate_work_divider,
     load_error_model,
     load_genomes,
     load_readcount_or_abundance,
     worker_iterator,
-    generate_work_divider,
 )
 from iss.version import __version__
 
