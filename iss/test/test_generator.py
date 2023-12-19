@@ -33,8 +33,14 @@ def test_cleanup_fail():
         cleanup("data/does_not_exist")
 
 
+@pytest.fixture
+def with_seed():
+    random.seed(42)
+    np.random.seed(42)
+
+
 def test_simulate_and_save(setup_and_teardown):
-    err_mod = basic.BasicErrorModel()
+    err_mod = basic.BasicErrorModel(451, 0)
     ref_genome = SeqRecord(Seq(str("AAAAACCCCC" * 100)), id="my_genome", description="test genome")
     forward_handle = open("data/.test.iss.tmp.my_genome.0_R1.fastq", "w")
     reverse_handle = open("data/.test.iss.tmp.my_genome.0_R2.fastq", "w")
@@ -57,63 +63,51 @@ def test_small_input():
         generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
 
 
-def test_basic():
-    if sys.version_info > (3,):
-        random.seed(42)
-        np.random.seed(42)
-        err_mod = basic.BasicErrorModel()
-        ref_genome = SeqRecord(Seq(str("AAAAACCCCC" * 100)), id="my_genome", description="test genome")
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
-        big_read = "".join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
-        assert big_read[-15:] == "TTTTGGGGGTTTTTG"
+def test_basic(with_seed):
+    err_mod = basic.BasicErrorModel(450, 0)
+    ref_genome = SeqRecord(Seq(str("AAAAACCCCC" * 100)), id="my_genome", description="test genome")
+    read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
+    big_read = "".join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
+    assert big_read[-15:] == "TTTTGGGGGTTTTTG"
 
 
-def test_kde():
-    if sys.version_info > (3,):
-        random.seed(42)
-        np.random.seed(42)
-        err_mod = kde.KDErrorModel("data/ecoli.npz")
-        ref_genome = SeqRecord(Seq(str("CGTTTCAACC" * 400)), id="my_genome", description="test genome")
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
-        big_read = "".join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
-        assert big_read[:15] == "CCGTTTCAACCCGTT"
+def test_kde(with_seed):
+    err_mod = kde.KDErrorModel("data/ecoli.npz")
+    ref_genome = SeqRecord(Seq(str("CGTTTCAACC" * 400)), id="my_genome", description="test genome")
+    read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
+    big_read = "".join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
+    assert big_read[:15] == "CCGTTTCAACCCGTT"
 
 
-def test_kde_short():
-    if sys.version_info > (3,):
-        random.seed(42)
-        np.random.seed(42)
-        err_mod = kde.KDErrorModel("data/ecoli.npz")
-        ref_genome = SeqRecord(Seq(str("AAACC" * 100)), id="my_genome", description="test genome")
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
-        big_read = "".join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
-        assert big_read == "ACCAAACCAAACCAAACCAAGGTTTGGTTTGGTTTGGTGT"
+def test_kde_short(with_seed):
+    err_mod = kde.KDErrorModel("data/ecoli.npz", 1000, 10)
+    ref_genome = SeqRecord(Seq(str("AAACC" * 100)), id="my_genome", description="test genome")
+    read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "metagenomics")
+    big_read = "".join(str(read_tuple[0].seq) + str(read_tuple[1].seq))
+    assert big_read == "ACCAAACCAAACCAAACCAAGGTTTGGTTTGGTTTGGTAT"
 
 
-def test_amp():
-    if sys.version_info > (3,):
-        random.seed(42)
-        np.random.seed(42)
-        err_mod = kde.KDErrorModel(os.path.join(os.path.dirname(__file__), "../profiles/MiSeq"))
-        print(err_mod.read_length)
-        ref_genome = SeqRecord(
-            Seq(
-                (
-                    "TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGG"
-                    "CCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTT"
-                )
-            ),
-            id="my_amplicon",
-            description="test amplicon",
-        )
-        read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "amplicon")
-        assert len(read_tuple[0].seq) == 301
-        assert read_tuple[0].seq.startswith("TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-        assert len(read_tuple[1].seq) == 301
-        assert read_tuple[1].seq.startswith("AAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
+def test_amp(with_seed):
+    err_mod = kde.KDErrorModel(os.path.join(os.path.dirname(__file__), "../profiles/MiSeq"), 1000, 10)
+    print(err_mod.read_length)
+    ref_genome = SeqRecord(
+        Seq(
+            (
+                "TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGG"
+                "CCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATTT"
+            )
+        ),
+        id="my_amplicon",
+        description="test amplicon",
+    )
+    read_tuple = generator.simulate_read(ref_genome, err_mod, 1, 0, "amplicon")
+    assert len(read_tuple[0].seq) == 301
+    assert read_tuple[0].seq.startswith("TTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    assert len(read_tuple[1].seq) == 301
+    assert read_tuple[1].seq.startswith("AAATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTCT")

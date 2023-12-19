@@ -11,10 +11,12 @@ class PerfectErrorModel(ErrorModel):
     All Phred score are 40. No errors are introduced at all.
     """
 
-    def __init__(self):
+    def __init__(self, fragment_length=None, fragment_sd=None):
         super().__init__()
         self.read_length = 125
         self.insert_size = 200
+        self.fragment_length = fragment_length
+        self.fragment_sd = fragment_sd
         self.quality_forward = self.quality_reverse = 40
 
         self.subst_choices_for = self.subst_choices_rev = [

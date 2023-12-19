@@ -34,7 +34,7 @@ def generate_reads(args):
     logger.debug("Using verbose logger")
     logger.info("Starting iss generate")
 
-    error_model = load_error_model(args.mode, args.seed, args.model)
+    error_model = load_error_model(args.mode, args.seed, args.model, args.fragment_length, args.fragment_length_sd)
 
     genome_list, genome_file = load_genomes(
         args.genomes, args.draft, args.ncbi, args.n_genomes_ncbi, args.output, args.n_genomes
@@ -365,6 +365,22 @@ def main():
         required=True,
         help="Type of sequencing. Can be metagenomics or amplicon (default: %(default)s).",
     )
+    parser_gen.add_argument(
+        "--fragment-length",
+        "-l",
+        metavar="<int>",
+        required=False,
+        type=int,
+        help="Fragment length for metagenomics sequencing (default: %(default)s).",
+    )
+    parser_gen.add_argument(
+        "--fragment-length-sd",
+        "-s",
+        metavar="<int>",
+        required=False,
+        type=int,
+        help="Fragment length standard deviation for metagenomics sequencing (default: %(default)s).",
+    )
     parser_gen._optionals.title = "arguments"
     parser_gen.set_defaults(func=generate_reads)
 
@@ -419,4 +435,4 @@ def main():
         logger = logging.getLogger(__name__)
         logger.debug(e)
         parser.print_help()
-        # raise  # extra traceback to uncomment if all hell breaks lose
+        raise  # extra traceback to uncomment if all hell breaks lose

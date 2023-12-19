@@ -113,7 +113,13 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     header = record.id
 
     read_length = error_model.read_length
-    insert_size = error_model.random_insert_size()
+
+    if error_model.fragment_length is not None and error_model.fragment_sd is not None:
+        fragment_length = int(np.random.normal(error_model.fragment_length, error_model.fragment_sd))
+        insert_size = fragment_length - (read_length * 2)
+    else:
+        insert_size = error_model.random_insert_size()
+        fragment_length = insert_size + (read_length * 2)
 
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
@@ -122,7 +128,7 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
         # if sequence_type == metagenomics, get a random start position
         # if sequence_type == amplicon, start position is the start of the read
         if sequence_type == "metagenomics":
-            forward_start = random.randrange(0, len(record.seq) - (2 * read_length + insert_size))
+            forward_start = random.randrange(0, len(record.seq) - fragment_length)
         elif sequence_type == "amplicon":
             forward_start = 0
         else:
@@ -339,24 +345,32 @@ def generate_work_divider(
         yield chunk_work
 
 
-def load_error_model(mode, seed, model):
-    """Load the error model based on the specified mode, seed, and model.
+def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
+    """
+    Load the error model based on the specified mode and parameters.
 
     Args:
-        mode (str): The mode of the error model. Possible values are "kde", "basic", or "perfect".
+        mode (str): The mode of the error model. Possible values are 'kde', 'basic', and 'perfect'.
         seed (int): The random seed to use for generating random numbers.
-        model (str): The name or path of the error model.
+        model (str): The model to use for the error model. Only applicable for the 'kde' mode.
+        fragment_length (float): The mean fragment length for the error model.
+        fragment_length_sd (float): The standard deviation of the fragment length for the error model.
 
     Returns:
-        err_mod: The loaded error model.
-
-    Raises:
-        SystemExit: If the mode is "kde" and the model is not provided.
-
+        err_mod: The loaded error model based on the specified mode and parameters.
     """
     logger = logging.getLogger(__name__)
 
     logger.info("Using %s ErrorModel" % mode)
+
+    if fragment_length is not None and fragment_length_sd is not None:
+        logger.info(
+            f"Using custom fragment length {fragment_length} and default fragment length sd {fragment_length_sd}"
+        )
+    elif bool(fragment_length) ^ bool(fragment_length_sd):
+        logger.error("fragment_length and fragment_length_sd must be specified together")
+        sys.exit(1)
+
     if seed:
         logger.info("Setting random seed to %i" % seed)
         random.seed(seed)
@@ -373,17 +387,17 @@ def load_error_model(mode, seed, model):
             npz = os.path.join(os.path.dirname(__file__), "profiles/MiSeq")
         else:
             npz = model
-        err_mod = kde.KDErrorModel(npz)
+        err_mod = kde.KDErrorModel(npz, fragment_length, fragment_length_sd)
     elif mode == "basic":
         if model is not None:
             logger.warning("--model %s will be ignored in --mode %s" % (model, mode))
 
-        err_mod = basic.BasicErrorModel()
+        err_mod = basic.BasicErrorModel(fragment_length, fragment_length_sd)
     elif mode == "perfect":
         if model is not None:
             logger.warning("--model %s will be ignored in --mode %s" % (model, mode))
 
-        err_mod = perfect.PerfectErrorModel()
+        err_mod = perfect.PerfectErrorModel(fragment_length, fragment_length_sd)
 
     return err_mod
 
