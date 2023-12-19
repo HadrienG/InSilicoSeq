@@ -78,18 +78,16 @@ def generate_reads(args):
             logger.debug("Chunk size: %s" % chunk_size)
 
             # Divide the work of generating n_reads for each record into chunks
-            work_chunks = list(
-                generate_work_divider(
-                    fasta_file,
-                    readcount_dic,
-                    abundance_dic,
-                    n_reads,
-                    args.coverage,
-                    args.coverage_file,
-                    error_model,
-                    args.output,
-                    chunk_size,
-                )
+            work_chunks = generate_work_divider(
+                fasta_file,
+                readcount_dic,
+                abundance_dic,
+                n_reads,
+                args.coverage,
+                args.coverage_file,
+                error_model,
+                args.output,
+                chunk_size,
             )
 
             # Generate reads for each chunk in parallel
