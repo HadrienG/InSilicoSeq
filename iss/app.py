@@ -371,7 +371,7 @@ def main():
         "--fragment-length",
         "-l",
         metavar="<int>",
-        default=1000,
+        required=False,
         type=int,
         help="Fragment length for metagenomics sequencing (default: %(default)s).",
     )
@@ -379,7 +379,7 @@ def main():
         "--fragment-length-sd",
         "-s",
         metavar="<int>",
-        default=10,
+        required=False,
         type=int,
         help="Fragment length standard deviation for metagenomics sequencing (default: %(default)s).",
     )

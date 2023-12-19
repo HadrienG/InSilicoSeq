@@ -113,8 +113,13 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     header = record.id
 
     read_length = error_model.read_length
-    fragment_length = int(np.random.normal(error_model.fragment_length, error_model.fragment_sd))
-    insert_size = fragment_length - (read_length * 2)
+
+    if error_model.fragment_length is not None and error_model.fragment_sd is not None:
+        fragment_length = int(np.random.normal(error_model.fragment_length, error_model.fragment_sd))
+        insert_size = fragment_length - (read_length * 2)
+    else:
+        insert_size = error_model.random_insert_size()
+        fragment_length = insert_size + (read_length * 2)
 
     # generate the forward read
     try:  # a ref sequence has to be longer than 2 * read_length + i_size
@@ -344,6 +349,15 @@ def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
     logger = logging.getLogger(__name__)
 
     logger.info("Using %s ErrorModel" % mode)
+
+    if fragment_length is not None and fragment_length_sd is not None:
+        logger.info(
+            f"Using custom fragment length {fragment_length} and default fragment length sd {fragment_length_sd}"
+        )
+    elif bool(fragment_length) ^ bool(fragment_length_sd):
+        logger.error("fragment_length and fragment_length_sd must be specified together")
+        sys.exit(1)
+
     if seed:
         logger.info("Setting random seed to %i" % seed)
         random.seed(seed)

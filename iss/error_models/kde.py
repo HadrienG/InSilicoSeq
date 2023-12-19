@@ -21,12 +21,14 @@ class KDErrorModel(ErrorModel):
     - the insertion and deletion rates for each position (for R1 and R2)
     """
 
-    def __init__(self, npz_path, fragment_length=1000, fragment_sd=10):
+    def __init__(self, npz_path, fragment_length=None, fragment_sd=None):
         super().__init__()
         self.npz_path = npz_path
         self.error_profile = self.load_npz(npz_path, "kde")
 
         self.read_length = self.error_profile["read_length"]
+        self.i_size_cdf = self.error_profile["insert_size"]
+
         self.fragment_length = fragment_length
         self.fragment_sd = fragment_sd
 
@@ -81,3 +83,15 @@ class KDErrorModel(ErrorModel):
             random_quality = np.searchsorted(cdf, np.random.rand())
             phred_list.append(random_quality)
         return phred_list[: self.read_length]
+
+    def random_insert_size(self):
+        """Draw a random insert size from the insert size cdf
+
+        Args:
+            i_size_cdf: cumulative distribution function of the insert size
+
+        Returns:
+            int: an insert size
+        """
+        insert_size = np.searchsorted(self.i_size_cdf, np.random.rand())
+        return insert_size
