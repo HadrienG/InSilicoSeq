@@ -212,7 +212,7 @@ def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence
         forward_handle = open(f"{worker_prefix}_R1.fastq", "w")
         reverse_handle = open(f"{worker_prefix}_R2.fastq", "w")
     except PermissionError as e:
-        logger.error("Failed to temporary output file(s): %s" % e)
+        logger.error("Failed to write temporary output file(s): %s" % e)
         sys.exit(1)
 
     if seed is not None:
@@ -340,6 +340,20 @@ def generate_work_divider(
 
 
 def load_error_model(mode, seed, model):
+    """Load the error model based on the specified mode, seed, and model.
+
+    Args:
+        mode (str): The mode of the error model. Possible values are "kde", "basic", or "perfect".
+        seed (int): The random seed to use for generating random numbers.
+        model (str): The name or path of the error model.
+
+    Returns:
+        err_mod: The loaded error model.
+
+    Raises:
+        SystemExit: If the mode is "kde" and the model is not provided.
+
+    """
     logger = logging.getLogger(__name__)
 
     logger.info("Using %s ErrorModel" % mode)
@@ -375,6 +389,20 @@ def load_error_model(mode, seed, model):
 
 
 def load_genomes(genomes, draft, ncbi, n_genomes_ncbi, output, n_genomes):
+    """Load genomes from different sources and concatenate them into a single file.
+
+    Args:
+        genomes (list): List of paths to genome files.
+        draft (list): List of paths to draft genome files.
+        ncbi (bool): Flag indicating whether to download genomes from NCBI.
+        n_genomes_ncbi (list): List of tuples specifying the NCBI genome IDs and the number of genomes to download.
+        output (str): Path to the output file.
+        n_genomes (int): Number of genomes to select randomly from the concatenated genome file.
+
+    Returns:
+        tuple: A tuple containing the number of genomes and the path to the concatenated genome file.
+    """
+
     logger = logging.getLogger(__name__)
     if not (genomes or draft or ncbi):
         logger.error("One of --genomes/-g, --draft, --ncbi/-k is required")
@@ -442,6 +470,24 @@ def load_readcount_or_abundance(
     output,
     error_model,
 ):
+    """Load readcount or abundance information based on the provided input parameters.
+
+    Args:
+        readcount_file (str): Path to the readcount file.
+        abundance_file (str): Path to the abundance file.
+        coverage_file (str): Path to the coverage file.
+        coverage (str): Coverage distribution type.
+        abundance_distribution (str): Abundance distribution type.
+        draft (str): Draft mode.
+        genome_list (list): List of genomes.
+        genome_file (str): Path to the genome file.
+        n_reads (int): Number of reads.
+        output (str): Output file path.
+        error_model (object): Error model object.
+
+    Returns:
+        tuple: A tuple containing the readcount dictionary and abundance dictionary.
+    """
     logger = logging.getLogger(__name__)
     abundance_dispatch = {
         "uniform": abundance.uniform,
