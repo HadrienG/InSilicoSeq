@@ -113,7 +113,7 @@ def to_model(bam_path, output):
     """
     logger = logging.getLogger(__name__)
 
-    insert_size_dist = []
+    template_length_dist = []
     qualities_forward = []
     qualities_reverse = []
     subst_matrix_f = np.zeros([301, 16])  # we dont know the len of the reads
@@ -124,10 +124,10 @@ def to_model(bam_path, output):
     # read the bam file and extract info needed for modelling
     for read in read_bam(bam_path):
         # get insert size distribution
-        if read.is_proper_pair:
+        if read.is_paired:
             template_length = abs(read.template_length)
-            i_size = template_length - (2 * len(read.seq))
-            insert_size_dist.append(i_size)
+            # i_size = template_length - (2 * len(read.seq))
+            template_length_dist.append(template_length)
 
         # get qualities
         if read.is_read1:
@@ -167,10 +167,6 @@ def to_model(bam_path, output):
                 elif read.is_read2:
                     indel_matrix_r[pos, indel] += 1
 
-    logger.info("Calculating insert size distribution")
-    # insert_size = int(np.mean(insert_size_dist))
-    hist_insert_size = modeller.insert_size(insert_size_dist)
-
     logger.info("Calculating mean and base quality distribution")
     quality_bins_f = modeller.divide_qualities_into_bins(qualities_forward)
     quality_bins_r = modeller.divide_qualities_into_bins(qualities_reverse)
@@ -208,6 +204,10 @@ def to_model(bam_path, output):
 
     ins_f, del_f = modeller.indel_matrix_to_choices(indel_matrix_f, read_length)
     ins_r, del_r = modeller.indel_matrix_to_choices(indel_matrix_r, read_length)
+
+    logger.info("Calculating insert size distribution")
+    # insert_size = int(np.mean(insert_size_dist))
+    hist_insert_size = modeller.insert_size(template_length_dist, read_length)
 
     write_to_file(
         "kde",
