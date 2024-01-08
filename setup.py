@@ -23,7 +23,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     tests_require=["pytest"],
-    install_requires=["numpy", "scipy", "biopython>=1.79", "pysam>=0.15.1", "joblib", "requests"],
+    install_requires=["numpy", "scipy", "biopython>=1.79", "pysam>=0.15.1", "requests"],
     include_package_data=True,
     entry_points={
         "console_scripts": ["iss = iss.app:main"],

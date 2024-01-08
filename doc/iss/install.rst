@@ -18,7 +18,6 @@ To install InSilicoSeq, type the following in your terminal:
 It will install InSilicoSeq as well as the following dependencies:
 
 * biopython
-* joblib
 * numpy
 * pysam
 * scipy
