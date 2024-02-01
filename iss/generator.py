@@ -6,6 +6,7 @@ import logging
 import os
 import random
 import sys
+from typing import Dict
 
 import numpy as np
 from Bio import SeqIO
@@ -363,6 +364,18 @@ def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
 
     logger.info("Using %s ErrorModel" % mode)
 
+    precomputed_error_models: Dict[str, str] = {
+        "hiseq": os.path.join(os.path.dirname(__file__), "profiles/HiSeq"),
+        "novaseq": os.path.join(os.path.dirname(__file__), "profiles/NovaSeq"),
+        "miseq": os.path.join(os.path.dirname(__file__), "profiles/miSeq_0.npz"),
+        "miseq-20": os.path.join(os.path.dirname(__file__), "profiles/miSeq_20.npz"),
+        "miseq-24": os.path.join(os.path.dirname(__file__), "profiles/miSeq_24.npz"),
+        "miseq-28": os.path.join(os.path.dirname(__file__), "profiles/miSeq_28.npz"),
+        "miseq-32": os.path.join(os.path.dirname(__file__), "profiles/miSeq_32.npz"),
+        "miseq-36": os.path.join(os.path.dirname(__file__), "profiles/miSeq_36.npz"),
+        "nextseq": os.path.join(os.path.dirname(__file__), "profiles/nextSeq.npz"),
+    }
+
     if fragment_length is not None and fragment_length_sd is not None:
         logger.info(
             f"Using custom fragment length {fragment_length} and default fragment length sd {fragment_length_sd}"
@@ -379,12 +392,8 @@ def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
         if model is None:
             logger.error("--model is required in --mode kde")
             sys.exit(1)
-        elif model.lower() == "hiseq":
-            npz = os.path.join(os.path.dirname(__file__), "profiles/HiSeq")
-        elif model.lower() == "novaseq":
-            npz = os.path.join(os.path.dirname(__file__), "profiles/NovaSeq")
-        elif model.lower() == "miseq":
-            npz = os.path.join(os.path.dirname(__file__), "profiles/MiSeq")
+        elif model in precomputed_error_models:
+            npz = precomputed_error_models[model]
         else:
             npz = model
         err_mod = kde.KDErrorModel(npz, fragment_length, fragment_length_sd)
