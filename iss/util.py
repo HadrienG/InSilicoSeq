@@ -210,7 +210,7 @@ def reservoir(records, record_list, n=None):
             yield record
 
 
-def concatenate(file_list, output, header = None):
+def concatenate(file_list, output, header=None):
     """Concatenate files together
 
     Args:

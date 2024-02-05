@@ -96,14 +96,16 @@ class ErrorModel(object):
                     np.random.choice(nucl_choices[position][nucl.upper()][0], p=nucl_choices[position][nucl.upper()][1])
                 )
                 if self.store_mutations and mutated_nuc != record.annotations["original"][position]:
-                    record.annotations["mutations"].append({
+                    record.annotations["mutations"].append(
+                        {
                             "id": record.id,
                             "position": position,
                             "ref": mutable_seq[position],
                             "alt": mutated_nuc,
                             "quality": qual,
                             "type": "snp",
-                            })
+                        }
+                    )
                 mutable_seq[position] = mutated_nuc
             position += 1
         record.seq = Seq(mutable_seq)

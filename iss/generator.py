@@ -72,7 +72,6 @@ def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_
     i = 0
     while i < n_pairs:
         try:
-            # forward, reverse = simulate_read(record, error_model, i, cpu_number, sequence_type)
             forward, reverse, mutations = simulate_read(record, error_model, i, cpu_number, sequence_type)
 
         except AssertionError:
@@ -190,7 +189,7 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     reverse = error_model.introduce_error_scores(reverse, "reverse")
     reverse.seq = error_model.mut_sequence(reverse, "reverse")
 
-    return (forward, reverse) # mutations
+    return (forward, reverse, forward.annotations["mutations"] + reverse.annotations["mutations"])
 
 
 def to_fastq(generator, output):
@@ -602,13 +601,14 @@ def write_mutations(mutations, mutations_handle):
             "\t".join(
                 [
                     str(vcf_dict["id"]),
-                    str(vcf_dict["position"] + 1), # vcf files have 1-based index
+                    str(vcf_dict["position"] + 1),  # vcf files have 1-based index
                     ".",
                     vcf_dict["ref"],
                     str(vcf_dict["alt"]),
                     str(vcf_dict["quality"]),
                     "",
-                    ""
+                    "",
                 ]
-            ) + "\n"
+            )
+            + "\n"
         )

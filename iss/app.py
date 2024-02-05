@@ -34,7 +34,9 @@ def generate_reads(args):
     logger.debug("Using verbose logger")
     logger.info("Starting iss generate")
 
-    error_model = load_error_model(args.mode, args.seed, args.model, args.fragment_length, args.fragment_length_sd, args.store_mutations)
+    error_model = load_error_model(
+        args.mode, args.seed, args.model, args.fragment_length, args.fragment_length_sd, args.store_mutations
+    )
 
     genome_list, genome_file = load_genomes(
         args.genomes, args.draft, args.ncbi, args.n_genomes_ncbi, args.output, args.n_genomes
@@ -53,6 +55,9 @@ def generate_reads(args):
         args.output,
         error_model,
     )
+
+    if args.store_mutations:
+        logger.info(f"Storing inserted sequence errors in {args.output}.vcf")
 
     logger.info("Using %s cpus for read generation" % args.cpus)
 
@@ -123,8 +128,8 @@ def generate_reads(args):
         if args.store_mutations:
             util.concatenate(
                 temp_mut,
-                args.output + '.vcf',
-                "##fileformat=VCFv4.1\n" + "\t".join(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"])
+                args.output + ".vcf",
+                "##fileformat=VCFv4.1\n" + "\t".join(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]),
             )
         full_tmp_list = temp_R1 + temp_R2
         full_tmp_list.append(genome_file)
@@ -135,7 +140,7 @@ def generate_reads(args):
             util.compress(args.output + "_R1.fastq")
             util.compress(args.output + "_R2.fastq")
             if args.store_mutations:
-                util.compress(args.output + '.vcf')
+                util.compress(args.output + ".vcf")
         logger.info("Read generation complete")
 
 
@@ -392,11 +397,11 @@ def main():
         help="Fragment length standard deviation for metagenomics sequencing (default: %(default)s).",
     )
     parser_gen.add_argument(
-        '--store_mutations',
-        '-M',
-        action='store_true',
+        "--store_mutations",
+        "-M",
+        action="store_true",
         default=False,
-        help='Generates an additional VCF file with the mutations introduced in the reads',
+        help="Generates an additional VCF file with the mutations introduced in the reads",
     )
     parser_gen._optionals.title = "arguments"
     parser_gen.set_defaults(func=generate_reads)
