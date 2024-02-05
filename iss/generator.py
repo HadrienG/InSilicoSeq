@@ -596,7 +596,6 @@ def write_mutations(mutations, mutations_handle):
         mutations_handle (file): File handle to write the mutations to.
     """
     for vcf_dict in mutations:
-        # pass
         mutations_handle.write(
             "\t".join(
                 [
