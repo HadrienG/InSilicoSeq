@@ -131,7 +131,7 @@ def generate_reads(args):
                 args.output + ".vcf",
                 "##fileformat=VCFv4.1\n" + "\t".join(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]),
             )
-        full_tmp_list = temp_R1 + temp_R2
+        full_tmp_list = temp_R1 + temp_R2 + temp_mut
         full_tmp_list.append(genome_file)
         if os.path.exists("%s.memmap" % args.output):
             full_tmp_list.append("%s.memmap" % args.output)

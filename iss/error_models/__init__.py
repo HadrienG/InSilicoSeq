@@ -171,7 +171,7 @@ class ErrorModel(object):
             bounds (tuple): the position of the read in the full_sequence
 
         Returns:
-            Seq: a sequence with (eventually) indels
+            SeqRecord: a sequence record with indel errors
         """
 
         # get the right indel arrays
@@ -194,11 +194,35 @@ class ErrorModel(object):
                     if random.random() < prob:
                         # we want to insert after the base read
                         mutable_seq.insert(position + 1, str(nucl_to_insert))
+                        if self.store_mutations:
+                            record.annotations["mutations"].append(
+                                {
+                                    "id": record.id,
+                                    "position": position,
+                                    "ref": mutable_seq[position],
+                                    "alt": mutable_seq[position] + nucl_to_insert,
+                                    "quality": ".",
+                                    "type": "ins",
+                                }
+                            )
+
                 if random.random() < deletions[position][mutable_seq[nucl].upper()]:
                     mutable_seq.pop(position)
+                    if self.store_mutations:
+                        record.annotations["mutations"].append(
+                            {
+                                "id": record.id,
+                                "position": position,
+                                "ref": mutable_seq[position],
+                                "alt": ".",
+                                "quality": ".",
+                                "type": "del",
+                            }
+                        )
                 position += 1
             except IndexError:
                 continue
 
         seq = self.adjust_seq_length(mutable_seq, orientation, full_seq, bounds)
-        return seq
+        record.seq = seq
+        return record

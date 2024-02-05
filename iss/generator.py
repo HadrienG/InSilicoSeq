@@ -153,7 +153,7 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     forward.annotations["original"] = str(forward.seq)
 
     # add the indels, the qual scores and modify the record accordingly
-    forward.seq = error_model.introduce_indels(forward, "forward", sequence, bounds)
+    forward = error_model.introduce_indels(forward, "forward", sequence, bounds)
     forward = error_model.introduce_error_scores(forward, "forward")
     forward = error_model.mut_sequence(forward, "forward")
 
@@ -185,7 +185,7 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     reverse.annotations["original"] = str(reverse.seq)
 
     # add the indels, the qual scores and modify the record accordingly
-    reverse.seq = error_model.introduce_indels(reverse, "reverse", sequence, bounds)
+    reverse = error_model.introduce_indels(reverse, "reverse", sequence, bounds)
     reverse = error_model.introduce_error_scores(reverse, "reverse")
     reverse = error_model.mut_sequence(reverse, "reverse")
 
