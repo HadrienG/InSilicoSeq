@@ -210,7 +210,7 @@ def reservoir(records, record_list, n=None):
             yield record
 
 
-def concatenate(file_list, output):
+def concatenate(file_list, output, header = None):
     """Concatenate files together
 
     Args:
@@ -226,6 +226,8 @@ def concatenate(file_list, output):
         sys.exit(1)
 
     with out_file:
+        if header is not None:
+            out_file.write(str.encode(header + "\n"))
         for file_name in file_list:
             if file_name is not None:
                 with open(file_name, "rb") as f:

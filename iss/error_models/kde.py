@@ -21,10 +21,11 @@ class KDErrorModel(ErrorModel):
     - the insertion and deletion rates for each position (for R1 and R2)
     """
 
-    def __init__(self, npz_path, fragment_length=None, fragment_sd=None):
+    def __init__(self, npz_path, fragment_length=None, fragment_sd=None, store_mutations=False):
         super().__init__()
         self.npz_path = npz_path
         self.error_profile = self.load_npz(npz_path, "kde")
+        self.store_mutations = store_mutations
 
         self.read_length = self.error_profile["read_length"]
         self.i_size_cdf = self.error_profile["insert_size"]

@@ -25,6 +25,7 @@ def simulate_reads(
     cpu_number,
     forward_handle,
     reverse_handle,
+    mutations_handle,
     sequence_type,
     gc_bias=False,
     mode="default",
@@ -42,6 +43,7 @@ def simulate_reads(
             function. Is used for naming the output file
         forward_handle (file): a file handle to write the forward reads to
         reverse_handle (file): a file handle to write the reverse reads to
+        mutations_handle (file): a file handle to write the mutations to
         sequencing_type (str): metagenomics or amplicon sequencing used
         gc_bias (bool): if set, the function may skip a read due to abnormal
             GC content
@@ -56,11 +58,12 @@ def simulate_reads(
 
     logger.debug("Cpu #%s: Generating %s read pairs" % (cpu_number, n_pairs))
 
-    for forward_record, reverse_record in reads_generator(
+    for forward_record, reverse_record, mutations in reads_generator(
         n_pairs, record, error_model, cpu_number, gc_bias, sequence_type
     ):
         SeqIO.write(forward_record, forward_handle, "fastq-sanger")
         SeqIO.write(reverse_record, reverse_handle, "fastq-sanger")
+        write_mutations(mutations, mutations_handle)
 
 
 def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_type):
@@ -69,7 +72,9 @@ def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_
     i = 0
     while i < n_pairs:
         try:
-            forward, reverse = simulate_read(record, error_model, i, cpu_number, sequence_type)
+            # forward, reverse = simulate_read(record, error_model, i, cpu_number, sequence_type)
+            forward, reverse, mutations = simulate_read(record, error_model, i, cpu_number, sequence_type)
+
         except AssertionError:
             logger.warning("%s shorter than read length for this ErrorModel" % record.id)
             logger.warning("Skipping %s. You will have less reads than specified" % record.id)
@@ -79,15 +84,15 @@ def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_
                 stiched_seq = forward.seq + reverse.seq
                 gc_content = gc_fraction(stiched_seq)
                 if 40 < gc_content < 60:
-                    yield (forward, reverse)
+                    yield (forward, reverse, mutations)
                     i += 1
                 elif np.random.rand() < 0.90:
-                    yield (forward, reverse)
+                    yield (forward, reverse, mutations)
                     i += 1
                 else:
                     continue
             else:
-                yield (forward, reverse)
+                yield (forward, reverse, mutations)
                 i += 1
 
 
@@ -145,6 +150,9 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     forward = SeqRecord(
         Seq(str(sequence[forward_start:forward_end])), id="%s_%s_%s/1" % (header, i, cpu_number), description=""
     )
+    forward.annotations["mutations"] = []
+    forward.annotations["original"] = str(forward.seq)
+
     # add the indels, the qual scores and modify the record accordingly
     forward.seq = error_model.introduce_indels(forward, "forward", sequence, bounds)
     forward = error_model.introduce_error_scores(forward, "forward")
@@ -174,13 +182,15 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
         id="%s_%s_%s/2" % (header, i, cpu_number),
         description="",
     )
+    reverse.annotations["mutations"] = []
+    reverse.annotations["original"] = str(reverse.seq)
 
     # add the indels, the qual scores and modify the record accordingly
     reverse.seq = error_model.introduce_indels(reverse, "reverse", sequence, bounds)
     reverse = error_model.introduce_error_scores(reverse, "reverse")
     reverse.seq = error_model.mut_sequence(reverse, "reverse")
 
-    return (forward, reverse)
+    return (forward, reverse) # mutations
 
 
 def to_fastq(generator, output):
@@ -217,6 +227,7 @@ def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence
     try:
         forward_handle = open(f"{worker_prefix}_R1.fastq", "w")
         reverse_handle = open(f"{worker_prefix}_R2.fastq", "w")
+        mutation_handle = open(f"{worker_prefix}.vcf", "w")
     except PermissionError as e:
         logger.error("Failed to write temporary output file(s): %s" % e)
         sys.exit(1)
@@ -235,6 +246,7 @@ def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence
                 cpu_number=cpu_number,
                 forward_handle=forward_handle,
                 reverse_handle=reverse_handle,
+                mutations_handle=mutation_handle,
                 sequence_type=sequence_type,
                 gc_bias=gc_bias,
             )
@@ -345,7 +357,7 @@ def generate_work_divider(
         yield chunk_work
 
 
-def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
+def load_error_model(mode, seed, model, fragment_length, fragment_length_sd, store_mutations):
     """
     Load the error model based on the specified mode and parameters.
 
@@ -387,12 +399,12 @@ def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
             npz = os.path.join(os.path.dirname(__file__), "profiles/MiSeq")
         else:
             npz = model
-        err_mod = kde.KDErrorModel(npz, fragment_length, fragment_length_sd)
+        err_mod = kde.KDErrorModel(npz, fragment_length, fragment_length_sd, store_mutations)
     elif mode == "basic":
         if model is not None:
             logger.warning("--model %s will be ignored in --mode %s" % (model, mode))
 
-        err_mod = basic.BasicErrorModel(fragment_length, fragment_length_sd)
+        err_mod = basic.BasicErrorModel(fragment_length, fragment_length_sd, store_mutations)
     elif mode == "perfect":
         if model is not None:
             logger.warning("--model %s will be ignored in --mode %s" % (model, mode))
@@ -575,3 +587,28 @@ def load_readcount_or_abundance(
         sys.exit(1)
 
     return readcount_dic, abundance_dic
+
+
+def write_mutations(mutations, mutations_handle):
+    """Write mutations to a file
+
+    Args:
+        mutations (list): List of mutations.
+        mutations_handle (file): File handle to write the mutations to.
+    """
+    for vcf_dict in mutations:
+        # pass
+        mutations_handle.write(
+            "\t".join(
+                [
+                    str(vcf_dict["id"]),
+                    str(vcf_dict["position"] + 1), # vcf files have 1-based index
+                    ".",
+                    vcf_dict["ref"],
+                    str(vcf_dict["alt"]),
+                    str(vcf_dict["quality"]),
+                    "",
+                    ""
+                ]
+            ) + "\n"
+        )

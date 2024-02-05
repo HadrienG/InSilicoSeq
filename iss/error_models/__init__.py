@@ -92,11 +92,22 @@ class ErrorModel(object):
         position = 0
         for nucl, qual in zip(mutable_seq, quality_list):
             if random.random() > util.phred_to_prob(qual) and nucl.upper() not in "RYWSMKHBVDN":
-                mutable_seq[position] = str(
+                mutated_nuc = str(
                     np.random.choice(nucl_choices[position][nucl.upper()][0], p=nucl_choices[position][nucl.upper()][1])
                 )
+                if self.store_mutations and mutated_nuc != record.annotations["original"][position]:
+                    record.annotations["mutations"].append({
+                            "id": record.id,
+                            "position": position,
+                            "ref": mutable_seq[position],
+                            "alt": mutated_nuc,
+                            "quality": qual,
+                            "type": "snp",
+                            })
+                mutable_seq[position] = mutated_nuc
             position += 1
-        return Seq(mutable_seq)
+        record.seq = Seq(mutable_seq)
+        return record
 
     def adjust_seq_length(self, mut_seq, orientation, full_sequence, bounds):
         """Truncate or Extend reads to make them fit the read length
