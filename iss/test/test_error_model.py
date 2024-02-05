@@ -52,7 +52,7 @@ def test_mut_sequence():
 
     read = SeqRecord(Seq(str("AAAAA" * 25)), id="read_1", description="test read")
     read.letter_annotations["phred_quality"] = [5] * 125
-    read.seq = err_mod.mut_sequence(read, "forward")
+    read = err_mod.mut_sequence(read, "forward")
     assert str(read.seq[:10]) == "AAAACAGAAA"
 
 

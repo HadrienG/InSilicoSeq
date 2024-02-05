@@ -155,7 +155,7 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     # add the indels, the qual scores and modify the record accordingly
     forward.seq = error_model.introduce_indels(forward, "forward", sequence, bounds)
     forward = error_model.introduce_error_scores(forward, "forward")
-    forward.seq = error_model.mut_sequence(forward, "forward")
+    forward = error_model.mut_sequence(forward, "forward")
 
     # generate the reverse read
     # assign start position reverse read
@@ -187,7 +187,7 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     # add the indels, the qual scores and modify the record accordingly
     reverse.seq = error_model.introduce_indels(reverse, "reverse", sequence, bounds)
     reverse = error_model.introduce_error_scores(reverse, "reverse")
-    reverse.seq = error_model.mut_sequence(reverse, "reverse")
+    reverse = error_model.mut_sequence(reverse, "reverse")
 
     return (forward, reverse, forward.annotations["mutations"] + reverse.annotations["mutations"])
 
@@ -235,7 +235,7 @@ def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence
         random.seed(seed + cpu_number)
         np.random.seed(seed + cpu_number)
 
-    with forward_handle, reverse_handle:
+    with forward_handle, reverse_handle, mutation_handle:
         for record, n_pairs, mode in work:
             simulate_reads(
                 record=record,

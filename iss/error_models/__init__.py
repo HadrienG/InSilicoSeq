@@ -78,7 +78,7 @@ class ErrorModel(object):
                 'reverse'
 
         Returns:
-            Seq: a sequence
+            SeqRecord: the read record with substitution errors
         """
 
         # get the right subst_matrix
