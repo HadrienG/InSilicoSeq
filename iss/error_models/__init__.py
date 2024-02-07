@@ -103,7 +103,7 @@ class ErrorModel(object):
                             "ref": mutable_seq[position],
                             "alt": mutated_nuc,
                             "quality": qual,
-                            "type": "snp",
+                            "type": "sub",
                         }
                     )
                 mutable_seq[position] = mutated_nuc
