@@ -52,7 +52,7 @@ def test_mut_sequence():
 
     read = SeqRecord(Seq(str("AAAAA" * 25)), id="read_1", description="test read")
     read.letter_annotations["phred_quality"] = [5] * 125
-    read.seq = err_mod.mut_sequence(read, "forward")
+    read = err_mod.mut_sequence(read, "forward")
     assert str(read.seq[:10]) == "AAAACAGAAA"
 
 
@@ -66,7 +66,7 @@ def test_introduce_indels():
     bounds = (5, 130)
     read = SeqRecord(Seq(str("ATATA" * 25)), id="read_1", description="test read")
     ref_genome = SeqRecord(Seq(str("ATATA" * 100)), id="ref_genome", description="test reference")
-    read.seq = err_mod.introduce_indels(read, "forward", ref_genome, bounds)
+    read = err_mod.introduce_indels(read, "forward", ref_genome, bounds)
     assert len(read.seq) == 125
     assert read.seq[:10] == "ATGATAATAT"
 
@@ -81,7 +81,7 @@ def test_adjust_seq_length_extend():
     bounds = (480, 500)
     read = SeqRecord(Seq(str("ATTTA" * 4)), id="read_1", description="test read")
     ref_genome = SeqRecord(Seq(str("ATTTA" * 100)), id="ref_genome", description="test reference")
-    read.seq = err_mod.introduce_indels(read, "forward", ref_genome, bounds)
+    read = err_mod.introduce_indels(read, "forward", ref_genome, bounds)
     assert len(read.seq) == 20
     assert read.seq[:10] == "TTAATTTAAT"
     assert read.seq[10:] == "TTAATTTAAA"
@@ -100,7 +100,7 @@ def test_introduce_indels_rev():
 
     ref_genome = SeqRecord(Seq("GG" + str("GTACC" * 100) + "GG"), id="ref_genome", description="test reference")
     read = SeqRecord(Seq(rev_comp(str(ref_genome.seq[484:504]))), id="read_1", description="test read")
-    read.seq = err_mod.introduce_indels(read, "reverse", ref_genome, bounds)
+    read = err_mod.introduce_indels(read, "reverse", ref_genome, bounds)
     assert len(read.seq) == 20
     assert read.seq == "CGTACGGTACGGTACGGTAC"
 

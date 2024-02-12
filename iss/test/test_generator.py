@@ -13,18 +13,17 @@ from iss import generator
 from iss.error_models import basic, kde
 from iss.util import cleanup
 
-# due to inconsistent seeding between python 2 and 3, some of the following
-# tests are disabled with python2
-
-
-def teardown_cleanup():
-    cleanup(["data/.test.iss.tmp.my_genome.0_R1.fastq", "data/.test.iss.tmp.my_genome.0_R2.fastq"])
-
 
 @pytest.fixture
 def setup_and_teardown():
     yield
-    cleanup(["data/.test.iss.tmp.my_genome.0_R1.fastq", "data/.test.iss.tmp.my_genome.0_R2.fastq"])
+    cleanup(
+        [
+            "data/.test.iss.tmp.my_genome.0_R1.fastq",
+            "data/.test.iss.tmp.my_genome.0_R2.fastq",
+            "data/.test.iss.tmp.my_genome.tsv",
+        ]
+    )
 
 
 def test_cleanup_fail():
@@ -43,7 +42,10 @@ def test_simulate_and_save(setup_and_teardown):
     ref_genome = SeqRecord(Seq(str("AAAAACCCCC" * 100)), id="my_genome", description="test genome")
     forward_handle = open("data/.test.iss.tmp.my_genome.0_R1.fastq", "w")
     reverse_handle = open("data/.test.iss.tmp.my_genome.0_R2.fastq", "w")
-    generator.simulate_reads(ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, "metagenomics", gc_bias=True)
+    mutations_handle = open("data/.test.iss.tmp.my_genome.tsv", "w")
+    generator.simulate_reads(
+        ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, mutations_handle, "metagenomics", gc_bias=True
+    )
 
 
 def test_simulate_and_save_short(setup_and_teardown):
@@ -51,7 +53,10 @@ def test_simulate_and_save_short(setup_and_teardown):
     ref_genome = SeqRecord(Seq(str("AACCC" * 100)), id="my_genome", description="test genome")
     forward_handle = open("data/.test.iss.tmp.my_genome.0_R1.fastq", "w")
     reverse_handle = open("data/.test.iss.tmp.my_genome.0_R2.fastq", "w")
-    generator.simulate_reads(ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, "metagenomics", gc_bias=True)
+    mutations_handle = open("data/.test.iss.tmp.my_genome.tsv", "w")
+    generator.simulate_reads(
+        ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, mutations_handle, "metagenomics", gc_bias=True
+    )
 
 
 def test_small_input():
@@ -88,7 +93,6 @@ def test_kde_short(with_seed):
 
 def test_amp(with_seed):
     err_mod = kde.KDErrorModel(os.path.join(os.path.dirname(__file__), "../profiles/MiSeq"), 1000, 10)
-    print(err_mod.read_length)
     ref_genome = SeqRecord(
         Seq(
             (

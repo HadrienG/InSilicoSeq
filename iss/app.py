@@ -34,7 +34,9 @@ def generate_reads(args):
     logger.debug("Using verbose logger")
     logger.info("Starting iss generate")
 
-    error_model = load_error_model(args.mode, args.seed, args.model, args.fragment_length, args.fragment_length_sd)
+    error_model = load_error_model(
+        args.mode, args.seed, args.model, args.fragment_length, args.fragment_length_sd, args.store_mutations
+    )
 
     genome_list, genome_file = load_genomes(
         args.genomes, args.draft, args.ncbi, args.n_genomes_ncbi, args.output, args.n_genomes
@@ -53,6 +55,9 @@ def generate_reads(args):
         args.output,
         error_model,
     )
+
+    if args.store_mutations:
+        logger.info(f"Storing inserted sequence errors in {args.output}.vcf")
 
     logger.info("Using %s cpus for read generation" % args.cpus)
 
@@ -104,7 +109,8 @@ def generate_reads(args):
         logger.error("iss generate interrupted: %s" % e)
         temp_R1 = [temp_file + "_R1.fastq" for temp_file in temp_file_list]
         temp_R2 = [temp_file + "_R2.fastq" for temp_file in temp_file_list]
-        full_tmp_list = temp_R1 + temp_R2
+        temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list]
+        full_tmp_list = temp_R1 + temp_R2 + temp_mut
         full_tmp_list.append(genome_file)
         if os.path.exists("%s.memmap" % args.output):
             full_tmp_list.append("%s.memmap" % args.output)
@@ -116,9 +122,16 @@ def generate_reads(args):
         # and reads were appended to the same temp file.
         temp_R1 = [temp_file + "_R1.fastq" for temp_file in temp_file_list]
         temp_R2 = [temp_file + "_R2.fastq" for temp_file in temp_file_list]
+        temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list] if args.store_mutations else []
         util.concatenate(temp_R1, args.output + "_R1.fastq")
         util.concatenate(temp_R2, args.output + "_R2.fastq")
-        full_tmp_list = temp_R1 + temp_R2
+        if args.store_mutations:
+            util.concatenate(
+                temp_mut,
+                args.output + ".vcf",
+                "##fileformat=VCFv4.1\n" + "\t".join(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]),
+            )
+        full_tmp_list = temp_R1 + temp_R2 + temp_mut
         full_tmp_list.append(genome_file)
         if os.path.exists("%s.memmap" % args.output):
             full_tmp_list.append("%s.memmap" % args.output)
@@ -126,6 +139,8 @@ def generate_reads(args):
         if args.compress:
             util.compress(args.output + "_R1.fastq")
             util.compress(args.output + "_R2.fastq")
+            if args.store_mutations:
+                util.compress(args.output + ".vcf")
         logger.info("Read generation complete")
 
 
@@ -380,6 +395,13 @@ def main():
         required=False,
         type=int,
         help="Fragment length standard deviation for metagenomics sequencing (default: %(default)s).",
+    )
+    parser_gen.add_argument(
+        "--store_mutations",
+        "-M",
+        action="store_true",
+        default=False,
+        help="Generates an additional VCF file with the mutations introduced in the reads",
     )
     parser_gen._optionals.title = "arguments"
     parser_gen.set_defaults(func=generate_reads)
