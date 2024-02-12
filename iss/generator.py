@@ -6,7 +6,6 @@ import logging
 import os
 import random
 import sys
-from typing import Dict
 
 import numpy as np
 from Bio import SeqIO
@@ -364,7 +363,7 @@ def load_error_model(mode, seed, model, fragment_length, fragment_length_sd):
 
     logger.info("Using %s ErrorModel" % mode)
 
-    precomputed_error_models: Dict[str, str] = {
+    precomputed_error_models = {
         "hiseq": os.path.join(os.path.dirname(__file__), "profiles/HiSeq"),
         "novaseq": os.path.join(os.path.dirname(__file__), "profiles/NovaSeq"),
         "miseq": os.path.join(os.path.dirname(__file__), "profiles/miSeq_0.npz"),
