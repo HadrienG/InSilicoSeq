@@ -377,7 +377,7 @@ def main():
         "-t",
         choices=["metagenomics", "amplicon"],
         default="metagenomics",
-        required=True,
+        required=False,
         help="Type of sequencing. Can be metagenomics or amplicon (default: %(default)s).",
     )
     parser_gen.add_argument(
