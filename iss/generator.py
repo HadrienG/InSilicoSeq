@@ -402,8 +402,8 @@ def load_error_model(mode, seed, model, fragment_length, fragment_length_sd, sto
         if model is None:
             logger.error("--model is required in --mode kde")
             sys.exit(1)
-        elif model in precomputed_error_models:
-            npz = precomputed_error_models[model]
+        elif model.lower() in precomputed_error_models:
+            npz = precomputed_error_models[model.lower()]
         else:
             npz = model
         err_mod = kde.KDErrorModel(npz, fragment_length, fragment_length_sd, store_mutations)
