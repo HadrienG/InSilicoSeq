@@ -21,7 +21,7 @@ Available models
 | NovaSeq    | 150 bp      |
 +------------+-------------+
 
-.. figure:: qualities.png TODO fig from paper
+.. figure:: qualities.png
 
     Average per base quality profiles for the prebuilt error models
 
