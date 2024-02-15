@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss import util
 from iss.error_models import ErrorModel
 
 
@@ -12,22 +11,27 @@ class PerfectErrorModel(ErrorModel):
     All Phred score are 40. No errors are introduced at all.
     """
 
-    def __init__(self):
+    def __init__(self, fragment_length=None, fragment_sd=None):
         super().__init__()
         self.read_length = 125
         self.insert_size = 200
+        self.fragment_length = fragment_length
+        self.fragment_sd = fragment_sd
         self.quality_forward = self.quality_reverse = 40
 
-        self.subst_choices_for = self.subst_choices_rev = [{
-            'A': (['A', 'T', 'C', 'G'], [1, 0, 0, 0]),
-            'T': (['A', 'T', 'C', 'G'], [0, 1, 0, 0]),
-            'C': (['A', 'T', 'C', 'G'], [0, 0, 1, 0]),
-            'G': (['A', 'T', 'C', 'G'], [0, 0, 0, 1])
-        } for _ in range(self.read_length)]
+        self.subst_choices_for = self.subst_choices_rev = [
+            {
+                "A": (["A", "T", "C", "G"], [1, 0, 0, 0]),
+                "T": (["A", "T", "C", "G"], [0, 1, 0, 0]),
+                "C": (["A", "T", "C", "G"], [0, 0, 1, 0]),
+                "G": (["A", "T", "C", "G"], [0, 0, 0, 1]),
+            }
+            for _ in range(self.read_length)
+        ]
 
-        self.ins_for = self.ins_rev = self.del_for = self.del_rev = [{
-            'A': 0.0, 'T': 0.0, 'C': 0.0, 'G': 0.0
-        } for _ in range(self.read_length)]
+        self.ins_for = self.ins_rev = self.del_for = self.del_rev = [
+            {"A": 0.0, "T": 0.0, "C": 0.0, "G": 0.0} for _ in range(self.read_length)
+        ]
 
     def gen_phred_scores(self, mean_quality, orientation):
         """Fake randorm function returning the distribution of Phred

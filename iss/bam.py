@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss import util
-from iss import modeller
-
-from scipy import stats
+import logging
+import sys
 from random import random
 
-import sys
-import pysam
-import logging
 import numpy as np
+import pysam
+
+from iss import modeller
 
 
 def read_bam(bam_file, n_reads=1000000):
@@ -26,35 +24,31 @@ def read_bam(bam_file, n_reads=1000000):
 
     try:
         lines = pysam.idxstats(bam_file).splitlines()
-        total_records = sum([int(l.split("\t")[2])
-                            for l in lines if not l.startswith("#")])
+        total_records = sum([int(line.split("\t")[2]) for line in lines if not line.startswith("#")])
         # total_records = sum(1 for _ in bam.fetch() if not _.is_unmapped)
         random_fraction = n_reads / total_records
-        bam = pysam.AlignmentFile(bam_file, 'rb')  # reopen the file
+        bam = pysam.AlignmentFile(bam_file, "rb")  # reopen the file
 
-    except (IOError, ValueError,
-            ZeroDivisionError, pysam.utils.SamtoolsError) as e:
-        logger.error('Failed to read bam file: %s' % e)
+    except (IOError, ValueError, ZeroDivisionError, pysam.utils.SamtoolsError) as e:
+        logger.error("Failed to read bam file: %s" % e)
         sys.exit(1)
     else:
-        logger.info('Reading bam file: %s' % bam_file)
+        logger.info("Reading bam file: %s" % bam_file)
         c = 0
         with bam:
             for read in bam.fetch():
                 if not read.is_unmapped and random() < random_fraction:
                     c += 1
                     if logger.getEffectiveLevel() == 10:
-                        print(
-                            'DEBUG:iss.bam:Subsampling %s / %s reads' % (
-                                c, n_reads),
-                            end='\r')
+                        print("DEBUG:iss.bam:Subsampling %s / %s reads" % (c, n_reads), end="\r")
                     yield read
                 elif c >= n_reads:
                     break
 
 
-def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
-                  sub_f, sub_r, ins_f, ins_r, del_f, del_r, i_size, output):
+def write_to_file(
+    model, read_length, mean_f, mean_r, hist_f, hist_r, sub_f, sub_r, ins_f, ins_r, del_f, del_r, i_size, output
+):
     """Write variables to a .npz file
 
     Args:
@@ -84,7 +78,7 @@ def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
     logger = logging.getLogger(__name__)
 
     try:
-        logger.info('Writing model to file: %s' % output)
+        logger.info("Writing model to file: %s" % output)
         np.savez_compressed(
             output,
             model=model,
@@ -99,10 +93,10 @@ def write_to_file(model, read_length, mean_f, mean_r, hist_f, hist_r,
             ins_forward=ins_f,
             ins_reverse=ins_r,
             del_forward=del_f,
-            del_reverse=del_r
+            del_reverse=del_r,
         )
     except PermissionError as e:
-        logger.error('Failed to open output file: %s' % e)
+        logger.error("Failed to open output file: %s" % e)
         sys.exit(1)
 
 
@@ -119,57 +113,49 @@ def to_model(bam_path, output):
     """
     logger = logging.getLogger(__name__)
 
-    insert_size_dist = []
+    template_length_dist = []
     qualities_forward = []
     qualities_reverse = []
     subst_matrix_f = np.zeros([301, 16])  # we dont know the len of the reads
     subst_matrix_r = np.zeros([301, 16])  # yet. we will find out from the
-    indel_matrix_f = np.zeros([301, 9])   # len of the quality lists
+    indel_matrix_f = np.zeros([301, 9])  # len of the quality lists
     indel_matrix_r = np.zeros([301, 9])
 
     # read the bam file and extract info needed for modelling
     for read in read_bam(bam_path):
         # get insert size distribution
-        if read.is_proper_pair:
+        if read.is_paired:
             template_length = abs(read.template_length)
-            i_size = template_length - (2 * len(read.seq))
-            insert_size_dist.append(i_size)
+            # i_size = template_length - (2 * len(read.seq))
+            template_length_dist.append(template_length)
 
         # get qualities
         if read.is_read1:
             # get mean quality too
-            quality_means = []
             read_quality = read.query_qualities
             mean_quality = np.mean(read_quality)
             if read.is_reverse:
                 read_quality = read_quality[::-1]  # reverse the list
 
-            quality_plus_mean = [
-                (quality, mean_quality) for quality in read_quality]
+            quality_plus_mean = [(quality, mean_quality) for quality in read_quality]
             qualities_forward.append(np.asarray(quality_plus_mean))
             # qualities_forward.append(read.query_qualities)
         elif read.is_read2:
             # get mean quality too
-            quality_means = []
             read_quality = read.query_qualities
             mean_quality = np.mean(read_quality)
             if read.is_reverse:
                 read_quality = read_quality[::-1]  # reverse the list
 
-            quality_plus_mean = [
-                (quality, mean_quality) for quality in read_quality]
+            quality_plus_mean = [(quality, mean_quality) for quality in read_quality]
             qualities_reverse.append(np.asarray(quality_plus_mean))
             # qualities_reverse.append(read.query_qualities)
 
         # get mismatches
-        alignment = read.get_aligned_pairs(
-            matches_only=True,
-            with_seq=True
-            )
+        alignment = read.get_aligned_pairs(matches_only=True, with_seq=True)
         read_has_indels = False
         for base in alignment:  # dispatch mismatches in matrix
-            pos, subst, read_has_indels = modeller.dispatch_subst(
-                base, read, read_has_indels)
+            pos, subst, read_has_indels = modeller.dispatch_subst(base, read, read_has_indels)
             if read.is_read1 and subst is not None:
                 subst_matrix_f[pos, subst] += 1
             elif read.is_read2 and subst is not None:
@@ -181,11 +167,7 @@ def to_model(bam_path, output):
                 elif read.is_read2:
                     indel_matrix_r[pos, indel] += 1
 
-    logger.info('Calculating insert size distribution')
-    # insert_size = int(np.mean(insert_size_dist))
-    hist_insert_size = modeller.insert_size(insert_size_dist)
-
-    logger.info('Calculating mean and base quality distribution')
+    logger.info("Calculating mean and base quality distribution")
     quality_bins_f = modeller.divide_qualities_into_bins(qualities_forward)
     quality_bins_r = modeller.divide_qualities_into_bins(qualities_reverse)
 
@@ -210,23 +192,25 @@ def to_model(bam_path, output):
     indel_matrix_f.resize([read_length, 9], refcheck=False)
     indel_matrix_r.resize([read_length, 9], refcheck=False)
 
-    logger.info('Calculating substitution rate')
+    logger.info("Calculating substitution rate")
     subst_f = modeller.subst_matrix_to_choices(subst_matrix_f, read_length)
     subst_r = modeller.subst_matrix_to_choices(subst_matrix_r, read_length)
 
-    logger.info('Calculating indel rate')
+    logger.info("Calculating indel rate")
     # update the base count in indel matrices
     for position in range(read_length):
         indel_matrix_f[position][0] = sum(subst_matrix_f[position][::4])
         indel_matrix_r[position][0] = sum(subst_matrix_r[position][::4])
 
-    ins_f, del_f = modeller.indel_matrix_to_choices(
-        indel_matrix_f, read_length)
-    ins_r, del_r = modeller.indel_matrix_to_choices(
-        indel_matrix_r, read_length)
+    ins_f, del_f = modeller.indel_matrix_to_choices(indel_matrix_f, read_length)
+    ins_r, del_r = modeller.indel_matrix_to_choices(indel_matrix_r, read_length)
+
+    logger.info("Calculating insert size distribution")
+    # insert_size = int(np.mean(insert_size_dist))
+    hist_insert_size = modeller.insert_size(template_length_dist, read_length)
 
     write_to_file(
-        'kde',
+        "kde",
         read_length,
         mean_f,
         mean_r,
@@ -239,4 +223,5 @@ def to_model(bam_path, output):
         del_f,
         del_r,
         hist_insert_size,
-        output + '.npz')
+        output + ".npz",
+    )

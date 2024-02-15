@@ -4,11 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-future = "*"
 numpy = "*"
 scipy = "*"
 biopython = "*"
-joblib = "*"
 pysam = "*"
 requests = "*"
 urllib3 = ">=1.26.5"
@@ -20,7 +18,15 @@ pycodestyle = "*"
 pytest = "*"
 pytest-cov = "*"
 exceptiongroup = "*"
+black = "*"
+isort = "*"
+flake8 = "*"
+typing-extensions = "*"
+tomli = "*"
 
 [scripts]
 iss = "python -m iss"
 tests = "pytest --cov=iss ."
+black = "black --check ."
+isort = "isort --check ."
+flake8 = "flake8 ."

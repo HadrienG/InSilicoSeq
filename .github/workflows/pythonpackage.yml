@@ -21,11 +21,17 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install pipenv
                   pipenv install --dev
+            - name: Style check
+              run: |
+                  pipenv run black
+                  pipenv run isort
+                  pipenv run flake8
             - name: Test with pytest
               run: |
                   chmod -w data/read_only.fasta
                   pipenv run tests
             - name: Upload to Codecov
+              if: github.event.repository.fork == false
               uses: codecov/codecov-action@v1.0.2
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}

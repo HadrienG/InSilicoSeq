@@ -1,13 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
+import os
+import sys
+
+import numpy as np
 from Bio import SeqIO
 from scipy import stats
 
-import os
-import sys
-import logging
-import numpy as np
+
+def parse_readcount_file(readcount_file):
+    logger = logging.getLogger(__name__)
+
+    readcount_dic = {}
+    try:
+        assert os.stat(readcount_file).st_size != 0
+        f = open(readcount_file, "r")
+    except (IOError, OSError) as e:
+        logger.error("Failed to open file:%s" % e)
+        sys.exit(1)
+    except AssertionError:
+        logger.error("File seems empty: %s" % readcount_file)
+        sys.exit(1)
+    else:
+        with f:
+            for line in f:
+                try:
+                    genome_id = line.split()[0]
+                    read_count = int(line.split()[1])
+                except IndexError as e:
+                    logger.error("Failed to read file: %s" % e)
+                    sys.exit(1)
+                else:
+                    readcount_dic[genome_id] = read_count
+    return readcount_dic
 
 
 def parse_abundance_file(abundance_file):
@@ -28,12 +55,12 @@ def parse_abundance_file(abundance_file):
     abundance_dic = {}
     try:
         assert os.stat(abundance_file).st_size != 0
-        f = open(abundance_file, 'r')
+        f = open(abundance_file, "r")
     except (IOError, OSError) as e:
-        logger.error('Failed to open file:%s' % e)
+        logger.error("Failed to open file:%s" % e)
         sys.exit(1)
-    except AssertionError as e:
-        logger.error('File seems empty: %s' % abundance_file)
+    except AssertionError:
+        logger.error("File seems empty: %s" % abundance_file)
         sys.exit(1)
     else:
         with f:
@@ -42,11 +69,11 @@ def parse_abundance_file(abundance_file):
                     genome_id = line.split()[0]
                     abundance = float(line.split()[1])
                 except IndexError as e:
-                    logger.error('Failed to read file: %s' % e)
+                    logger.error("Failed to read file: %s" % e)
                     sys.exit(1)
                 else:
                     abundance_dic[genome_id] = abundance
-    logger.debug('Loaded abundance/coverage file: %s' % abundance_file)
+    logger.debug("Loaded abundance/coverage file: %s" % abundance_file)
     return abundance_dic
 
 
@@ -179,16 +206,16 @@ def coverage_scaling(total_n_reads, abundance_dic, genome_file, read_length):
     Returns:
         dict: scaled coverage dictionary
     """
+    logger = logging.getLogger(__name__)
     total_reads = 0
-    f = open(genome_file, 'r')  # re-opens the file
+    f = open(genome_file, "r")  # re-opens the file
     with f:
-        fasta_file = SeqIO.parse(f, 'fasta')
+        fasta_file = SeqIO.parse(f, "fasta")
         for record in fasta_file:
             try:
                 species_coverage = abundance_dic[record.id]
             except KeyError as e:
-                logger.error(
-                    'Fasta record not found in abundance file: %s' % e)
+                logger.error("Fasta record not found in abundance file: %s" % e)
                 sys.exit(1)
 
             genome_size = len(record.seq)
@@ -210,18 +237,18 @@ def to_file(abundance_dic, output, mode="abundance"):
     """
     logger = logging.getLogger(__name__)
     if mode == "abundance":
-        output_abundance = output + '_abundance.txt'
+        output_abundance = output + "_abundance.txt"
     else:
-        output_abundance = output + '_coverage.txt'
+        output_abundance = output + "_coverage.txt"
     try:
-        f = open(output_abundance, 'w')
+        f = open(output_abundance, "w")
     except PermissionError as e:
-        logger.error('Failed to open output file: %s' % e)
+        logger.error("Failed to open output file: %s" % e)
         sys.exit(1)
     else:
         with f:
             for record, abundance in abundance_dic.items():
-                f.write('%s\t%s\n' % (record, abundance))
+                f.write("%s\t%s\n" % (record, abundance))
 
 
 def draft(genomes, draft, distribution, output, mode="abundance"):
@@ -240,13 +267,10 @@ def draft(genomes, draft, distribution, output, mode="abundance"):
     # first we get a list of contig names in draft genomes
     draft_records = []
     for d in draft:
-        draft_records.extend(
-            [record.name for record in SeqIO.parse(d, 'fasta')])
+        draft_records.extend([record.name for record in SeqIO.parse(d, "fasta")])
     genomes = list(set(genomes) - set(draft_records))
     abundance_dic = distribution(genomes + draft)
-    complete_genomes_abundance = {k: v for
-                                  k, v in abundance_dic.items()
-                                  if k not in draft}
+    complete_genomes_abundance = {k: v for k, v in abundance_dic.items() if k not in draft}
     to_file(abundance_dic, output)
     draft_dic = expand_draft_abundance(abundance_dic, draft, mode)
     full_abundance_dic = {**complete_genomes_abundance, **draft_dic}
@@ -273,12 +297,12 @@ def expand_draft_abundance(abundance_dic, draft, mode="abundance"):
     for key, abundance in abundance_dic.items():
         if key in draft:
             try:
-                f = open(key, 'r')
+                f = open(key, "r")
                 with f:
-                    fasta_file = SeqIO.parse(f, 'fasta')
+                    fasta_file = SeqIO.parse(f, "fasta")
                     draft_records = [record for record in fasta_file]
                     total_length = sum(len(record) for record in draft_records)
-            except Exception as e:
+            except Exception:
                 raise
             else:
                 total_length = sum(len(record) for record in draft_records)

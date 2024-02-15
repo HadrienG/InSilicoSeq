@@ -2,38 +2,21 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-
-from iss import util
-
 from Bio import SeqIO
 
-import random
-
-
-def setup_function():
-    output_file_prefix = 'data/.test'
-
-
-def teardown_uncompress():
-    util.cleanup(['data/test_concat.iss.tmp.genomes.fasta'])
-
-
-def teardown_compress():
-    util.cleanup(['data/ecoli.fasta.gz'])
+from iss import util
 
 
 @pytest.fixture
 def setup_and_teardown():
-    setup_function()
     yield
-    teardown_uncompress()
+    util.cleanup(["data/test_concat.iss.tmp.genomes.fasta"])
 
 
 @pytest.fixture
 def setup_and_teardown_compress():
-    setup_function()
     yield
-    teardown_compress()
+    util.cleanup(["data/ecoli.fasta.gz"])
 
 
 def test_phred_conversions():
@@ -49,23 +32,22 @@ def test_phred_conversions():
 
 
 def test_rev_comp():
-    lowercase_seq = 'attgctat'
-    uppercase_seq = 'CCGATTAC'
-    assert util.rev_comp(lowercase_seq) == 'atagcaat'
-    assert util.rev_comp(uppercase_seq) == 'GTAATCGG'
+    lowercase_seq = "attgctat"
+    uppercase_seq = "CCGATTAC"
+    assert util.rev_comp(lowercase_seq) == "atagcaat"
+    assert util.rev_comp(uppercase_seq) == "GTAATCGG"
 
 
 def test_count_records():
-    f = open('data/genomes.fasta', 'r')
+    f = open("data/genomes.fasta", "r")
     with f:  # count the number of records
         record_list = util.count_records(f)
-    assert record_list == [
-        'genome_A', 'genome_T', 'genome_GC', 'genome_ATCG', 'genome_TA']
+    assert record_list == ["genome_A", "genome_T", "genome_GC", "genome_ATCG", "genome_TA"]
 
 
 def test_count_records_empty():
     with pytest.raises(SystemExit):
-        util.count_records('data/empty_file')
+        util.count_records("data/empty_file")
 
 
 def test_split_list():
@@ -73,35 +55,22 @@ def test_split_list():
     test_list = list(range(10))
     # tests on range
     assert util.split_list(test_range) == [range(10)]
-    assert util.split_list(test_range, n_parts=2) == [
-        range(0, 5),
-        range(5, 10)
-    ]
-    assert util.split_list(test_range, n_parts=3) == [
-        range(0, 3),
-        range(3, 6),
-        range(6, 10)
-    ]
+    assert util.split_list(test_range, n_parts=2) == [range(0, 5), range(5, 10)]
+    assert util.split_list(test_range, n_parts=3) == [range(0, 3), range(3, 6), range(6, 10)]
     # tests on lists
     assert util.split_list(test_list) == [list(range(10))]
-    assert util.split_list(test_list, n_parts=2) == [
-        list(range(0, 5)),
-        list(range(5, 10))]
-    assert util.split_list(test_list, n_parts=3) == [
-        list(range(0, 3)),
-        list(range(3, 6)),
-        list(range(6, 10))
-    ]
+    assert util.split_list(test_list, n_parts=2) == [list(range(0, 5)), list(range(5, 10))]
+    assert util.split_list(test_list, n_parts=3) == [list(range(0, 3)), list(range(3, 6)), list(range(6, 10))]
 
 
 def test_convert_n_reads():
-    simple_number = '10000'
-    kilo_lower = '100k'
-    kilo_upper = '100K'
-    mega_lower = '20m'
-    mega_upper = '20M'
-    giga_lower = '1.5g'
-    giga_upper = '0.5G'
+    simple_number = "10000"
+    kilo_lower = "100k"
+    kilo_upper = "100K"
+    mega_lower = "20m"
+    mega_upper = "20M"
+    giga_lower = "1.5g"
+    giga_upper = "0.5G"
 
     assert util.convert_n_reads(simple_number) == 10000
     assert util.convert_n_reads(kilo_lower) == 100000
@@ -114,30 +83,30 @@ def test_convert_n_reads():
 
 def test_convert_n_reads_bad_not_a_number():
     with pytest.raises(SystemExit):
-        not_valid = 'rocket0'
+        not_valid = "rocket0"
         util.convert_n_reads(not_valid)
 
 
 def test_convert_n_reads_bad_suffix():
     with pytest.raises(SystemExit):
-        not_valid = '0.12Q'
+        not_valid = "0.12Q"
         util.convert_n_reads(not_valid)
 
 
 def test_genome_file_exists():
     with pytest.raises(SystemExit):
-        my_important_file = 'data/ecoli.fasta'
+        my_important_file = "data/ecoli.fasta"
         util.genome_file_exists(my_important_file)
 
 
 def test_reservoir():
     samples = []
-    genome_file = 'data/genomes.fasta'
-    with open(genome_file, 'r') as f:
+    genome_file = "data/genomes.fasta"
+    with open(genome_file, "r") as f:
         record_list = util.count_records(f)
     n = 2
-    with open(genome_file, 'r') as f:
-        fasta_file = SeqIO.parse(f, 'fasta')
+    with open(genome_file, "r") as f:
+        fasta_file = SeqIO.parse(f, "fasta")
         for record in util.reservoir(fasta_file, record_list, n):
             samples.append(record.id)
     assert len(samples) == 2
@@ -145,28 +114,28 @@ def test_reservoir():
 
 def test_reservoir_invalid_input():
     with pytest.raises(SystemExit):
-        genome_file = 'data/ecoli.fasta'
-        record_list = ['NC_002695.1']
+        genome_file = "data/ecoli.fasta"
+        record_list = ["NC_002695.1"]
         n = 4
-        with open(genome_file, 'r') as f:
-            fasta_file = SeqIO.parse(f, 'fasta')
+        with open(genome_file, "r") as f:
+            fasta_file = SeqIO.parse(f, "fasta")
             for record in util.reservoir(fasta_file, record_list, n):
                 pass
 
 
 def test_concatenate(setup_and_teardown):
-    genome_files = ['data/ecoli.fasta'] * 2
-    util.concatenate(genome_files, 'data/test_concat.iss.tmp.genomes.fasta')
-    with open('data/test_concat.iss.tmp.genomes.fasta', 'rb') as f:
+    genome_files = ["data/ecoli.fasta"] * 2
+    util.concatenate(genome_files, "data/test_concat.iss.tmp.genomes.fasta")
+    with open("data/test_concat.iss.tmp.genomes.fasta", "rb") as f:
         assert len(f.readlines()) == 40
 
 
 def test_concatenate_read_only():
     with pytest.raises(SystemExit):
-        genome_files = ['data/ecoli.fasta'] * 2
-        util.concatenate(genome_files, 'data/read_only.fasta')
+        genome_files = ["data/ecoli.fasta"] * 2
+        util.concatenate(genome_files, "data/read_only.fasta")
 
 
 def test_compress(setup_and_teardown_compress):
-    genome_file = 'data/ecoli.fasta'
+    genome_file = "data/ecoli.fasta"
     util.compress(genome_file, remove=False)

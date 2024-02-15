@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from Bio import SeqIO
-
-import os
-import sys
 import gzip
+import logging
+import os
 import pickle
 import random
-import logging
-import numpy as np
-
+import sys
 from shutil import copyfileobj
+
+import numpy as np
+from Bio import SeqIO
 
 
 def phred_to_prob(q):
@@ -56,11 +55,37 @@ def rev_comp(s):
         list: reverse complement of the input sequence
     """
     bases = {
-        "a": "t", "c": "g", "g": "c", "t": "a", "y": "r", "r": "y", "w": "w",
-        "s": "s", "k": "m", "m": "k", "n": "n", "b": "v", "v": "b", "d": "h",
-        "h": "d", "A": "T", "C": "G", "G": "C", "T": "A", "Y": "R", "R": "Y",
-        "W": "W", "S": "S", "K": "M", "M": "K", "N": "N", "B": "V", "V": "B",
-        "D": "H", "H": "D"}
+        "a": "t",
+        "c": "g",
+        "g": "c",
+        "t": "a",
+        "y": "r",
+        "r": "y",
+        "w": "w",
+        "s": "s",
+        "k": "m",
+        "m": "k",
+        "n": "n",
+        "b": "v",
+        "v": "b",
+        "d": "h",
+        "h": "d",
+        "A": "T",
+        "C": "G",
+        "G": "C",
+        "T": "A",
+        "Y": "R",
+        "R": "Y",
+        "W": "W",
+        "S": "S",
+        "K": "M",
+        "M": "K",
+        "N": "N",
+        "B": "V",
+        "V": "B",
+        "D": "H",
+        "H": "D",
+    }
     sequence = list(s)
     complement = "".join([bases[b] for b in sequence])
     reverse_complement = complement[::-1]
@@ -83,15 +108,14 @@ def count_records(fasta_file):
         record_list.append(record.id)
     try:
         assert len(record_list) != 0
-    except AssertionError as e:
-        logger.error(
-            'Failed to find records in genome(s) file:%s' % fasta_file)
+    except AssertionError:
+        logger.error("Failed to find records in genome(s) file:%s" % fasta_file)
         sys.exit(1)
     else:
         return record_list
 
 
-def split_list(l, n_parts=1):
+def split_list(lst, n_parts=1):
     """Split a list in a number of parts
 
     Args:
@@ -101,9 +125,8 @@ def split_list(l, n_parts=1):
     Returns:
         list: a list of n_parts lists
     """
-    length = len(l)
-    return [l[i * length // n_parts: (i + 1) * length // n_parts]
-            for i in range(n_parts)]
+    length = len(lst)
+    return [lst[i * length // n_parts : (i + 1) * length // n_parts] for i in range(n_parts)]
 
 
 def nplog(type, flag):
@@ -121,19 +144,19 @@ def convert_n_reads(unit):
         float: a number of reads
     """
     logger = logging.getLogger(__name__)
-    suffixes = {'k': 3, 'm': 6, 'g': 9}
+    suffixes = {"k": 3, "m": 6, "g": 9}
     if unit[-1].isdigit():
         try:
             unit_int = int(unit)
-        except ValueError as e:
-            logger.error('%s is not a valid number of reads' % unit)
+        except ValueError:
+            logger.error("%s is not a valid number of reads" % unit)
             sys.exit(1)
     elif unit[-1].lower() in suffixes:
         number = unit[:-1]
         exponent = suffixes[unit[-1].lower()]
         unit_int = int(float(number) * 10**exponent)
     else:
-        logger.error('%s is not a valid number of reads' % unit)
+        logger.error("%s is not a valid number of reads" % unit)
         sys.exit(1)
     return unit_int
 
@@ -147,9 +170,9 @@ def genome_file_exists(filename):
     logger = logging.getLogger(__name__)
     try:
         assert os.path.exists(filename) is False
-    except AssertionError as e:
-        logger.error('%s already exists. Aborting.' % filename)
-        logger.error('Maybe use another --output prefix')
+    except AssertionError:
+        logger.error("%s already exists. Aborting." % filename)
+        logger.error("Maybe use another --output prefix")
         sys.exit(1)
 
 
@@ -167,9 +190,8 @@ def reservoir(records, record_list, n=None):
         try:
             total = len(record_list)
             assert n < total
-        except AssertionError as e:
-            logger.error(
-                '-u should be strictly smaller than total number of records.')
+        except AssertionError:
+            logger.error("-u should be strictly smaller than total number of records.")
             sys.exit(1)
         else:
             random.seed()
@@ -188,7 +210,7 @@ def reservoir(records, record_list, n=None):
             yield record
 
 
-def concatenate(file_list, output):
+def concatenate(file_list, output, header=None):
     """Concatenate files together
 
     Args:
@@ -196,17 +218,19 @@ def concatenate(file_list, output):
         output (string): the output file name
     """
     logger = logging.getLogger(__name__)
-    logger.info('Stitching input files together')
+    logger.info("Stitching input files together")
     try:
-        out_file = open(output, 'wb')
+        out_file = open(output, "wb")
     except (IOError, OSError) as e:
-        logger.error('Failed to open output file: %s' % e)
+        logger.error("Failed to open output file: %s" % e)
         sys.exit(1)
 
     with out_file:
+        if header is not None:
+            out_file.write(str.encode(header + "\n"))
         for file_name in file_list:
             if file_name is not None:
-                with open(file_name, 'rb') as f:
+                with open(file_name, "rb") as f:
                     copyfileobj(f, out_file)
 
 
@@ -217,14 +241,14 @@ def cleanup(file_list):
         file_list (list): a list of files to be removed
     """
     logger = logging.getLogger(__name__)
-    logger.info('Cleaning up')
+    logger.info("Cleaning up")
     for temp_file in file_list:
         if temp_file is not None:
             try:
                 os.remove(temp_file)
-            except (IOError, OSError) as e:
-                logger.error('Could not read temporary file: %s' % temp_file)
-                logger.error('You may have to remove temporary files manually')
+            except (IOError, OSError):
+                logger.error("Could not read temporary file: %s" % temp_file)
+                logger.error("You may have to remove temporary files manually")
                 sys.exit(1)
 
 
@@ -235,9 +259,9 @@ def compress(filename, remove=True):
         filename (string): name of file to be compressed
     """
     logger = logging.getLogger(__name__)
-    logger.info('Compressing %s' % filename)
-    outfile = filename + '.gz'
-    with open(filename, 'rb') as i, gzip.open(outfile, 'wb') as o:
+    logger.info("Compressing %s" % filename)
+    outfile = filename + ".gz"
+    with open(filename, "rb") as i, gzip.open(outfile, "wb") as o:
         copyfileobj(i, o)
     if remove:
         cleanup([filename])
@@ -255,9 +279,9 @@ def dump(object, output):
     pickled_object = pickle.dumps(object, protocol=pickle.HIGHEST_PROTOCOL)
     size = sys.getsizeof(pickled_object)
 
-    with open(output, 'wb') as out_file:
+    with open(output, "wb") as out_file:
         for i in range(0, size, MAX_BYTES):
-            out_file.write(pickled_object[i:i + MAX_BYTES])
+            out_file.write(pickled_object[i : i + MAX_BYTES])
 
 
 def load(filename):
@@ -272,7 +296,7 @@ def load(filename):
     size = os.path.getsize(filename)
     bytes = bytearray(0)
 
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         for _ in range(0, size, MAX_BYTES):
             bytes += f.read(MAX_BYTES)
     object = pickle.loads(bytes)

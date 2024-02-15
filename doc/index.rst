@@ -16,7 +16,7 @@ InSilicoSeq supports substitution, insertion, deletion errors, and models gc bia
 Details
 -------
 
-* **Authors:** Hadrien Gourlé, Juliette Hayer, Oskar E. Karlsson and Erik Bongcam-Rudloff
+* **Authors:** Hadrien Gourlé, Juliette Hayer, Oskar E. Karlsson, Erik Bongcam-Rudloff, Stefan Lelieveld, Thijs Maas
 * **Contact:** `hadrien.gourle@slu.se <hadrien.gourle@slu.se>`_
 * **GitHub:** `HadrienG/InSilicoSeq <https://github.com/HadrienG/InSilicoSeq>`_
 * **License:** MIT

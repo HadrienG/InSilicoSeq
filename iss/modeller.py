@@ -1,31 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from iss import util
-from scipy import stats
-from joblib import Parallel, delayed
-
 import logging
+
 import numpy as np
+from scipy import stats
+
+from iss import util
 
 
-def insert_size(insert_size_distribution):
+def insert_size(template_length_dist, read_length):
     """Calculate cumulative distribution function from the raw insert size
     distributin. Uses 1D kernel density estimation.
 
     Args:
-        insert_size_distribution (list): list of insert sizes from aligned
-        read pairs
+        template_length_dist (list): List of template lengths from bam file.
+        read_length (int): The length of the read.
 
     Returns:
         1darray: a cumulative density function
     """
-    kde = stats.gaussian_kde(
-        insert_size_distribution,
-        bw_method=0.2 / np.std(insert_size_distribution, ddof=1))
-    x_grid = np.linspace(
-        min(insert_size_distribution),
-        max(insert_size_distribution), 1000)
+    # we want to remove zeroes and outliers
+    tld = np.asarray(template_length_dist)
+    min_mask = tld > 0
+    tld = tld[min_mask]
+    # 2000 is a common upper limit for template length for illumina sequencing
+    max_mask = tld < 2000
+    tld = tld[max_mask]
+
+    isd = tld - (2 * read_length)  # convert to insert size
+
+    kde = stats.gaussian_kde(isd, bw_method=0.2 / np.std(isd, ddof=1))
+    x_grid = np.linspace(min(isd), max(isd), 2000)
     kde = kde.evaluate(x_grid)
     cdf = np.cumsum(kde)
     cdf = cdf / cdf[-1]
@@ -45,7 +51,7 @@ def divide_qualities_into_bins(qualities, n_bins=4):
         list: a list of lists containing the binned quality scores
     """
     logger = logging.getLogger(__name__)
-    logger.debug('Dividing qualities into mean clusters')
+    logger.debug("Dividing qualities into mean clusters")
     bin_lists = [[] for _ in range(n_bins)]  # create list of `n_bins` list
     ranges = np.split(np.array(range(40)), n_bins)
     for quality in qualities:
@@ -77,15 +83,14 @@ def quality_bins_to_histogram(bin_lists):
     i = 0
     for qual_bin in bin_lists:
         if len(qual_bin) > 1:
-            logger.debug('Transposing matrix for mean cluster #%s' % i)
+            logger.debug("Transposing matrix for mean cluster #%s" % i)
             # quals = np.asarray(qual_bin).T  # seems to make clunkier models
             quals = [q for q in zip(*qual_bin)]
-            logger.debug(
-                'Modelling quality distribution for mean cluster #%s' % i)
+            logger.debug("Modelling quality distribution for mean cluster #%s" % i)
             cdfs_list = raw_qualities_to_histogram(quals)
             cdf_bins.append(cdfs_list)
         else:
-            logger.debug('Mean quality bin #%s of length < 1. Skipping' % i)
+            logger.debug("Mean quality bin #%s of length < 1. Skipping" % i)
             cdf_bins.append([])
         i += 1
     return cdf_bins
@@ -104,17 +109,17 @@ def raw_qualities_to_histogram(qualities):
         list: list of cumulative distribution functions. One cdf per base. The
             list has the size of the read length
     """
-    logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
 
     # moved this in quality_bins_to_histogram to try parallelization
     # quals = util.split_list([i for i in zip(*qualities)], n_parts=cpus)
     cdfs_list = []
     for q in qualities:
-        numpy_log_handler = np.seterrcall(util.nplog)
-        with np.errstate(under='ignore', divide='call'):
+        np.seterrcall(util.nplog)
+        with np.errstate(under="ignore", divide="call"):
             try:
                 kde = stats.gaussian_kde(q, bw_method=0.2 / np.std(q, ddof=1))
-            except np.linalg.linalg.LinAlgError as e:
+            except np.linalg.linalg.LinAlgError:
                 # if np.std of array is 0, we modify the array slightly to be
                 # able to divide by ~ np.std
                 # this will print a FloatingPointError in DEBUG mode
@@ -156,22 +161,22 @@ def dispatch_subst(base, read, read_has_indels):
         third element: True if an indel has been detected, False otherwise
     """
     dispatch_dict = {
-        'AA': 0,
-        'aT': 1,
-        'aG': 2,
-        'aC': 3,
-        'TT': 4,
-        'tA': 5,
-        'tG': 6,
-        'tC': 7,
-        'CC': 8,
-        'cA': 9,
-        'cT': 10,
-        'cG': 11,
-        'GG': 12,
-        'gA': 13,
-        'gT': 14,
-        'gC': 15
+        "AA": 0,
+        "aT": 1,
+        "aG": 2,
+        "aC": 3,
+        "TT": 4,
+        "tA": 5,
+        "tG": 6,
+        "tC": 7,
+        "CC": 8,
+        "cA": 9,
+        "cT": 10,
+        "cG": 11,
+        "GG": 12,
+        "gA": 13,
+        "gT": 14,
+        "gC": 15,
     }
 
     query_pos = base[0]
@@ -211,53 +216,41 @@ def subst_matrix_to_choices(substitution_matrix, read_length):
     nucl_choices_list = []
     for pos in range(read_length):
         sums = {
-            'A': np.sum(substitution_matrix[pos][1:4]),
-            'T': np.sum(substitution_matrix[pos][5:8]),
-            'C': np.sum(substitution_matrix[pos][9:12]),
-            'G': np.sum(substitution_matrix[pos][13:])
+            "A": np.sum(substitution_matrix[pos][1:4]),
+            "T": np.sum(substitution_matrix[pos][5:8]),
+            "C": np.sum(substitution_matrix[pos][9:12]),
+            "G": np.sum(substitution_matrix[pos][13:]),
         }
         # we want to avoid 'na' in the data so we raise FloatingPointError
         # if we try to divide by 0 (no count data for that nucl at that pos)
         # we assume equal rate of substitution
-        with np.errstate(all='raise'):
+        with np.errstate(all="raise"):
             nucl_choices = {}
             try:
-                A = (
-                    ['T', 'C', 'G'],
-                    [count / sums['A'] for
-                        count in substitution_matrix[pos][1:4]])
+                A = (["T", "C", "G"], [count / sums["A"] for count in substitution_matrix[pos][1:4]])
             except FloatingPointError as e:
                 logger.debug(e, exc_info=True)
-                A = (['T', 'C', 'G'], [1/3, 1/3, 1/3])
+                A = (["T", "C", "G"], [1 / 3, 1 / 3, 1 / 3])
             try:
-                T = (
-                    ['A', 'C', 'G'],
-                    [count / sums['T'] for
-                        count in substitution_matrix[pos][5:8]])
+                T = (["A", "C", "G"], [count / sums["T"] for count in substitution_matrix[pos][5:8]])
             except FloatingPointError as e:
                 logger.debug(e, exc_info=True)
-                T = (['A', 'C', 'G'], [1/3, 1/3, 1/3])
+                T = (["A", "C", "G"], [1 / 3, 1 / 3, 1 / 3])
             try:
-                C = (
-                    ['A', 'T', 'G'],
-                    [count / sums['C'] for
-                        count in substitution_matrix[pos][9:12]])
+                C = (["A", "T", "G"], [count / sums["C"] for count in substitution_matrix[pos][9:12]])
             except FloatingPointError as e:
                 logger.debug(e, exc_info=True)
-                C = (['A', 'T', 'G'], [1/3, 1/3, 1/3])
+                C = (["A", "T", "G"], [1 / 3, 1 / 3, 1 / 3])
             try:
-                G = (
-                    ['A', 'T', 'C'],
-                    [count / sums['G'] for
-                        count in substitution_matrix[pos][13:]])
+                G = (["A", "T", "C"], [count / sums["G"] for count in substitution_matrix[pos][13:]])
             except FloatingPointError as e:
                 logger.debug(e, exc_info=True)
-                G = (['A', 'T', 'C'], [1/3, 1/3, 1/3])
+                G = (["A", "T", "C"], [1 / 3, 1 / 3, 1 / 3])
 
-            nucl_choices['A'] = A
-            nucl_choices['T'] = T
-            nucl_choices['C'] = C
-            nucl_choices['G'] = G
+            nucl_choices["A"] = A
+            nucl_choices["T"] = T
+            nucl_choices["C"] = C
+            nucl_choices["G"] = G
         nucl_choices_list.append(nucl_choices)
     return nucl_choices_list
 
@@ -283,43 +276,33 @@ def dispatch_indels(read):
     """
     logger = logging.getLogger(__name__)
 
-    dispatch_indels = {
-        0: 0,
-        'A1': 1,
-        'T1': 2,
-        'C1': 3,
-        'G1': 4,
-        'A2': 5,
-        'T2': 6,
-        'C2': 7,
-        'G2': 8
-    }
+    dispatch_indels = {0: 0, "A1": 1, "T1": 2, "C1": 3, "G1": 4, "A2": 5, "T2": 6, "C2": 7, "G2": 8}
 
     position = 0
-    for (cigar_type, cigar_length) in read.cigartuples:
+    for cigar_type, cigar_length in read.cigartuples:
         if cigar_type == 0:  # match
             position += cigar_length
             continue
         elif cigar_type == 1:  # insertion
             query_base = read.query_sequence[position]
-            insertion = query_base.upper() + '1'
+            insertion = query_base.upper() + "1"
             try:
                 indel = dispatch_indels[insertion]
                 dispatch_tuple = (position, indel)
                 position += cigar_length
-            except KeyError as e:  # we avoid ambiguous bases
+            except KeyError:  # we avoid ambiguous bases
                 # logger.debug(
                 #     '%s not in dispatch: %s' % (insertion, e), exc_info=True)
                 position += cigar_length
                 continue
         elif cigar_type == 2:  # deletion
             ref_base = read.query_alignment_sequence[position]
-            deletion = ref_base.upper() + '2'
+            deletion = ref_base.upper() + "2"
             try:
                 indel = dispatch_indels[deletion]
                 dispatch_tuple = (position, indel)
                 position -= cigar_length
-            except KeyError as e:  # we avoid ambiguous bases
+            except KeyError:  # we avoid ambiguous bases
                 # logger.debug(
                 #     '%s not in dispatch: %s' % (deletion, e), exc_info=True)
                 position -= cigar_length
@@ -353,16 +336,16 @@ def indel_matrix_to_choices(indel_matrix, read_length):
     del_choices = []
     for pos in range(read_length):
         insertions = {
-            'A': indel_matrix[pos][1] / indel_matrix[pos][0],
-            'T': indel_matrix[pos][2] / indel_matrix[pos][0],
-            'C': indel_matrix[pos][3] / indel_matrix[pos][0],
-            'G': indel_matrix[pos][4] / indel_matrix[pos][0]
+            "A": indel_matrix[pos][1] / indel_matrix[pos][0],
+            "T": indel_matrix[pos][2] / indel_matrix[pos][0],
+            "C": indel_matrix[pos][3] / indel_matrix[pos][0],
+            "G": indel_matrix[pos][4] / indel_matrix[pos][0],
         }
         deletions = {
-            'A': indel_matrix[pos][5] / indel_matrix[pos][0],
-            'T': indel_matrix[pos][6] / indel_matrix[pos][0],
-            'C': indel_matrix[pos][7] / indel_matrix[pos][0],
-            'G': indel_matrix[pos][8] / indel_matrix[pos][0]
+            "A": indel_matrix[pos][5] / indel_matrix[pos][0],
+            "T": indel_matrix[pos][6] / indel_matrix[pos][0],
+            "C": indel_matrix[pos][7] / indel_matrix[pos][0],
+            "G": indel_matrix[pos][8] / indel_matrix[pos][0],
         }
         ins_choices.append(insertions)
         del_choices.append(deletions)
