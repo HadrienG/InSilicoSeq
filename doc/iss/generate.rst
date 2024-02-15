@@ -3,10 +3,19 @@
 Generating reads
 ================
 
+InSilicoSeq can simulate amplicon reads, or reads from whole metagenome sequencing (the default).
+You can specify the type of reads you want to simulate with the ``--sequence_type`` option.
+
 InSilicoSeq comes with a set of pre-computed error models to allow the user to easily generate reads from the most popular Illumina instruments:
 
 - HiSeq
-- MiSeq
+- MiSeq (optionally, with various quality thresholds):
+    - MiSeq-20
+    - MiSeq-24
+    - MiSeq-28
+    - MiSeq-32
+    - MiSeq-36
+- NextSeq
 - NovaSeq
 
 Per example generate 1 million MiSeq reads from a set of input genomes:
@@ -48,6 +57,19 @@ You can also provide multiple input files:
     curl -O -J -L https://osf.io/thser/download  # download the example data
     curl -O -J -L https://osf.io/37kg8/download  # download another example file
     iss generate --genomes SRS121011.fasta minigut.fasta --n_genomes 5 --model novaseq --output novaseq_reads
+
+Amplicons
+---------
+
+To generate amplicon reads, use the ``--sequence_type amplicon`` option:
+
+.. code-block:: bash
+
+    # no example data is provided here
+    iss generate --genomes my_amplicons.fasta ---readcount_file counts.txt -sequence_type amplicon --model nextseq --output reads
+
+where ``counts.txt`` is a tab-delimited file containing the number of reads to generate for each amplicon sequence present in ``my_amplicons.fasta``.
+Alternatively, you can use the ``--n_reads`` option to generate a fixed number of reads, together with an abundance distribution.
 
 Draft genomes
 -------------
@@ -230,6 +252,11 @@ coverage distribution. Can be uniform, halfnormal, exponential, lognormal or zer
 
 file containing coverage information (default: None).
 
+--readcount_file
+^^^^^^^^^^^^^^^^
+
+file containing read_count information (default: None).
+
 --n_reads
 ^^^^^^^^^
 
@@ -246,15 +273,20 @@ Can be 'kde' or 'basic'
 ^^^^^^^^
 
 Error model file. (default: None).
-Use HiSeq, NovaSeq or MiSeq for a pre-computed error model provided with the software, or a file generated with iss model.
-If you do not wish to use a model, use --mode basic.
-The name of the built-in models is case insensitive.
+Use HiSeq, NextSeq, NovaSeq, MiSeq or Miseq-[20,24,28,32] for a pre-computed error model provided with the software, or a file generated with iss model.
+If you do not wish to use a model, use --mode basic or --mode perfect.
+The name of the built-in models are case insensitive.
 
 --gc_bias
 ^^^^^^^^^
 
 If set, may fail to sequence reads with abnormal GC content.
 Does not guarantee --n_reads (default: False)
+
+--sequence_type
+^^^^^^^^^^^^^^^
+
+Type of sequencing. Can be metagenomics or amplicon (default: metagenomics).
 
 --cpus
 ^^^^^^
@@ -285,3 +317,8 @@ Output file path and prefix (Required)
 ^^^^^^^^^^
 
 Compress the output in gzip format (default: False).
+
+--store_mutations
+^^^^^^^^^^^^^^^^^
+
+Generates an additional VCF file with the mutations introduced in the reads (bool).

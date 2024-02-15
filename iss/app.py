@@ -344,9 +344,9 @@ def main():
         "-m",
         metavar="<npz>",
         default=None,
-        help="Error model file. (default: %(default)s). Use HiSeq, NovaSeq or \
-        MiSeq for a pre-computed error model provided with the software, or a \
-        file generated with iss model. If you do not wish to use a model, use \
+        help="Error model file. (default: %(default)s). Use HiSeq, NextSeq, NovaSeq, \
+        MiSeq or Miseq-[20,24,28,32] for a pre-computed error model provided with the \
+        software, or a file generated with iss model. If you do not wish to use a model, use \
         --mode basic or --mode perfect. The name of the built-in models are  \
         case insensitive.",
     )
