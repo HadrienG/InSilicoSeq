@@ -12,14 +12,16 @@ Available models
 +------------+-------------+
 | Model name | Read length |
 +============+=============+
-| MiSeq      | 300 bp      |
+| MiSeq*     | 300 bp      |
 +------------+-------------+
 | HiSeq      | 125 bp      |
++------------+-------------+
+| NextSeq    | 300 bp      |
 +------------+-------------+
 | NovaSeq    | 150 bp      |
 +------------+-------------+
 
-.. figure:: qualities.png
+.. figure:: qualities.png TODO fig from paper
 
     Average per base quality profiles for the prebuilt error models
 
