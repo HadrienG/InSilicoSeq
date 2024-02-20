@@ -37,7 +37,7 @@ _Note:_ Insilicoseq requires python >= 3.5
 Alternatively, with docker:
 
 ```shell
-docker pull hadrieng/insilicoseq:latest
+docker pull quay.io/biocontainers/insilicoseq:2.0.0--pyh7cba7a3_0
 ```
 
 For more installation options, please refer to the full [documentation](http://insilicoseq.readthedocs.io)
