@@ -63,15 +63,16 @@ If you wish to use InSilicoSeq using docker
 
 .. code-block:: bash
 
-    docker pull hadrieng/insilicoseq:latest
+    docker pull docker pull quay.io/biocontainers/insilicoseq:<tag>
 
+Where <tag> should be chosen amongst the tags available on `quay.io <https://quay.io/repository/biocontainers/insilicoseq?tab=tags>`_ .
 To use InSilicoSeq with docker, you need to provide a `volume` to the ``docker run`` command.
 Given with the ``-v`` option, the volume is your way of exchanging data (in this case, your input and output files) with the docker container.
 
 .. code-block:: bash
 
     docker run -v /Users/hadrien/data:/mnt/data -it --rm \
-        hadrieng/insilicoseq iss generate \
+        quay.io/biocontainers/insilicoseq:<tag> iss generate \
         --genomes /mnt/data/genomes.fasta -m miseq \
         -o /mnt/data/reads
 
