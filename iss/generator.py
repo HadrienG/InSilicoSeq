@@ -560,7 +560,6 @@ def load_readcount_or_abundance(
             abundance_dic = abundance.parse_abundance_file(coverage_file)
     elif coverage in abundance_dispatch:
         # todo coverage distribution with --draft
-        logger.warning("--coverage is an experimental feature")
         logger.info("Using %s coverage distribution" % coverage)
         if draft:
             abundance_dic = abundance.draft(

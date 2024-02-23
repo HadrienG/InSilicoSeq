@@ -64,7 +64,7 @@ def generate_reads(args):
     if readcount_dic is not None:
         n_reads = sum(readcount_dic.values())
         logger.info("Generating %s reads" % n_reads)
-    elif not (args.coverage or args.coverage_file):
+    else:
         n_reads = util.convert_n_reads(args.n_reads)
         logger.info("Generating %s reads" % n_reads)
 
