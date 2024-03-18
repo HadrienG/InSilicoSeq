@@ -7,8 +7,6 @@ import multiprocessing as mp
 import os
 import sys
 
-from Bio import SeqIO
-
 from iss import util
 from iss.generator import (
     generate_work_divider,
@@ -71,39 +69,42 @@ def generate_reads(args):
     try:
         # list holding the prefix for each cpu's temp file
         temp_file_list = [f"{args.output}.iss.tmp.{i}" for i in range(args.cpus)]
-        f = open(genome_file, "r")  # re-opens the file
-        with f:
-            fasta_file = SeqIO.parse(f, "fasta")
-            # TODO check if a SeqIO.index (db) leads to better memory usage and is not slower
-            # fasta_dict = SeqIO.index(f, 'fasta')
 
-            # Calculate how many reads we want each cpu to generate
-            n_read_pairs = n_reads // 2
-            chunk_size = -((n_read_pairs) // -args.cpus)  # this is ceildiv, see https://stackoverflow.com/a/17511341
-            logger.debug("Chunk size: %s" % chunk_size)
+        # Calculate how many reads we want each cpu to generate
+        n_read_pairs = n_reads // 2
+        chunk_size = -((n_read_pairs) // -args.cpus)  # this is ceildiv, see https://stackoverflow.com/a/17511341
+        logger.debug("Chunk size: %s" % chunk_size)
 
-            # Divide the work of generating n_reads for each record into chunks
-            work_chunks = generate_work_divider(
-                fasta_file,
-                readcount_dic,
-                abundance_dic,
-                n_reads,
-                args.coverage,
-                args.coverage_file,
-                error_model,
-                args.output,
-                chunk_size,
+        # Divide the work of generating n_reads for each record into chunks
+        work_chunks = generate_work_divider(
+            genome_file,
+            readcount_dic,
+            abundance_dic,
+            n_reads,
+            args.coverage,
+            args.coverage_file,
+            error_model,
+            chunk_size,
+        )
+
+        # Generate reads for each chunk in parallel
+        with mp.Pool(args.cpus) as pool:
+            pool.starmap(
+                worker_iterator,
+                [
+                    (
+                        work,
+                        error_model,
+                        cpu_number,
+                        worker_prefix,
+                        args.seed,
+                        args.sequence_type,
+                        args.gc_bias,
+                        genome_file,
+                    )
+                    for cpu_number, (work, worker_prefix) in enumerate(zip(work_chunks, temp_file_list))
+                ],
             )
-
-            # Generate reads for each chunk in parallel
-            with mp.Pool(args.cpus) as pool:
-                pool.starmap(
-                    worker_iterator,
-                    [
-                        (work, error_model, cpu_number, worker_prefix, args.seed, args.sequence_type, args.gc_bias)
-                        for cpu_number, (work, worker_prefix) in enumerate(zip(work_chunks, temp_file_list))
-                    ],
-                )
 
     except KeyboardInterrupt as e:
         logger.error("iss generate interrupted: %s" % e)
@@ -122,7 +123,7 @@ def generate_reads(args):
         # and reads were appended to the same temp file.
         temp_R1 = [temp_file + "_R1.fastq" for temp_file in temp_file_list]
         temp_R2 = [temp_file + "_R2.fastq" for temp_file in temp_file_list]
-        temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list] if args.store_mutations else []
+        temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list]
         util.concatenate(temp_R1, args.output + "_R1.fastq")
         util.concatenate(temp_R2, args.output + "_R2.fastq")
         if args.store_mutations:

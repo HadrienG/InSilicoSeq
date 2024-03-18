@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import gc
 import logging
 import os
 import random
@@ -15,7 +14,7 @@ from Bio.SeqUtils import gc_fraction
 
 from iss import abundance, download, util
 from iss.error_models import basic, kde, perfect
-from iss.util import load, rev_comp
+from iss.util import rev_comp
 
 
 def simulate_reads(
@@ -28,7 +27,6 @@ def simulate_reads(
     mutations_handle,
     sequence_type,
     gc_bias=False,
-    mode="default",
 ):
     """Simulate reads from one genome (or sequence) according to an ErrorModel
 
@@ -50,11 +48,6 @@ def simulate_reads(
 
     """
     logger = logging.getLogger(__name__)
-
-    # load the record from disk if mode is memmap
-    if mode == "memmap":
-        record_mmap = load(record)
-        record = record_mmap
 
     logger.debug("Cpu #%s: Generating %s read pairs" % (cpu_number, n_pairs))
 
@@ -220,7 +213,7 @@ def to_fastq(generator, output):
                 SeqIO.write(read_tuple[1], r, "fastq-sanger")
 
 
-def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence_type, gc_bias):
+def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence_type, gc_bias, genome_file):
     """A utility function to run the reads simulation of each record in a loop for a specific cpu"""
     logger = logging.getLogger(__name__)
     try:
@@ -234,13 +227,14 @@ def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence
     if seed is not None:
         random.seed(seed + cpu_number)
         np.random.seed(seed + cpu_number)
+    fasta_index = SeqIO.index(genome_file, "fasta")
 
     with forward_handle, reverse_handle, mutation_handle:
-        for record, n_pairs, mode in work:
+        for record_id, n_pairs in work:
+            record = fasta_index[record_id]
             simulate_reads(
                 record=record,
                 n_pairs=n_pairs,
-                mode=mode,
                 error_model=error_model,
                 cpu_number=cpu_number,
                 forward_handle=forward_handle,
@@ -252,7 +246,14 @@ def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence
 
 
 def generate_work_divider(
-    fasta_file, readcount_dic, abundance_dic, n_reads, coverage, coverage_file, error_model, output, chunk_size
+    genome_file,
+    readcount_dic,
+    abundance_dic,
+    n_reads,
+    coverage,
+    coverage_file,
+    error_model,
+    chunk_size,
 ):
     """Yields a list of tuples containing the records and the number of reads to generate for each record
 
@@ -267,8 +268,9 @@ def generate_work_divider(
     total_reads_generated_unrounded = 0
 
     chunk_work = []
+    fasta_index = SeqIO.index(genome_file, "fasta")
 
-    for record in fasta_file:
+    for record in fasta_index.values():
         # generate reads for records
         if readcount_dic is not None:
             if record.id not in readcount_dic:
@@ -310,37 +312,17 @@ def generate_work_divider(
         if n_pairs == 0:
             continue
 
-        # due to a bug in multiprocessing
-        # https://bugs.python.org/issue17560
-        # we can't send records taking more than 2**31 bytes
-        # through serialisation.
-        # In those cases we use memmapping
-        if sys.getsizeof(str(record.seq)) >= 2**31 - 1:
-            logger.warning("record %s unusually big." % record.id)
-            logger.warning("Using a memory map.")
-            mode = "memmap"
-
-            record_mmap = "%s.memmap" % output
-            if os.path.exists(record_mmap):
-                os.unlink(record_mmap)
-            util.dump(record, record_mmap)
-            del record
-            record = record_mmap
-            gc.collect()
-        else:
-            mode = "default"
-
         n_pairs_remaining = n_pairs
         while n_pairs_remaining > 0:
             chunk_remaining = chunk_size - current_chunk
 
             if n_pairs_remaining <= chunk_remaining:
                 # Record fits in the current chunk
-                chunk_work.append((record, n_pairs_remaining, mode))
+                chunk_work.append((record.id, n_pairs_remaining))
                 n_pairs_added = n_pairs_remaining
             else:
                 # Record does not fit in the current chunk
-                chunk_work.append((record, chunk_remaining, mode))
+                chunk_work.append((record.id, chunk_remaining))
                 n_pairs_added = chunk_remaining
 
             n_pairs_remaining -= n_pairs_added
@@ -350,6 +332,8 @@ def generate_work_divider(
                 yield chunk_work
                 chunk_work = []
                 current_chunk = 0
+
+    fasta_index.close()
 
     if chunk_work:
         # Yield the last (not full) chunk
