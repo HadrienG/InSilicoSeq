@@ -82,7 +82,7 @@ We can download some for you! InSilicoSeq can download random genomes from the n
 The command
 
 ```shell
-iss generate --ncbi bacteria -u 10 --model MiSeq --output ncbi_reads
+iss generate --ncbi bacteria -U 10 --model MiSeq --output ncbi_reads
 ```
 
 will generate 1 million reads from 10 random bacterial genomes.
