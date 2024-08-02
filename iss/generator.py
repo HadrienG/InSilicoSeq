@@ -558,7 +558,7 @@ def load_readcount_or_abundance(
             coverage_dic = {**complete_genomes_dic, **draft_dic}
         else:
             coverage_dic = abundance.parse_abundance_file(coverage_file)
-        # generate new n_reads from coverage
+        # generate n_reads for each genome from coverage
         readcount_dic = abundance.to_readcount(coverage_dic, error_model.read_length, genome_file)
     elif coverage in abundance_dispatch:
         # todo coverage distribution with --draft
