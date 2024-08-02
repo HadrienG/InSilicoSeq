@@ -315,3 +315,20 @@ def expand_draft_abundance(abundance_dic, draft, mode="abundance"):
                     elif mode == "coverage":
                         draft_dic[record.id] = abundance
     return draft_dic
+
+
+def to_readcount(coverage_dic, read_length, genome_file):
+    logger = logging.getLogger(__name__)
+    readcount_dic = {}
+    f = open(genome_file, "r")  # re-opens the file
+    with f:
+        fasta_file = SeqIO.parse(f, "fasta")
+        for record in fasta_file:
+            try:
+                record_coverage = coverage_dic[record.id]
+            except KeyError as e:
+                logger.warning("Fasta record not found in coverage file: %s" % e)
+                continue
+            n_reads = int((record_coverage * len(record.seq)) / read_length)
+            readcount_dic[record.id] = n_reads
+    return readcount_dic
