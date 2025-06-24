@@ -18,6 +18,7 @@ class PerfectErrorModel(ErrorModel):
         self.fragment_length = fragment_length
         self.fragment_sd = fragment_sd
         self.quality_forward = self.quality_reverse = 40
+        self.store_mutations = False
 
         self.subst_choices_for = self.subst_choices_rev = [
             {
