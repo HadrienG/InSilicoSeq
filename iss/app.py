@@ -122,7 +122,7 @@ def generate_reads(args):
         # and reads were appended to the same temp file.
         temp_R1 = [temp_file + "_R1.fastq" for temp_file in temp_file_list]
         temp_R2 = [temp_file + "_R2.fastq" for temp_file in temp_file_list]
-        temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list] if args.store_mutations else []
+        temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list]
         util.concatenate(temp_R1, args.output + "_R1.fastq")
         util.concatenate(temp_R2, args.output + "_R2.fastq")
         if args.store_mutations:
