@@ -42,3 +42,11 @@ venv_iss/
 
 # editor configs
 .vscode/
+
+.venv/
+test_data/
+test_output/
+test_output_*/
+test_organism.csv
+annotation-aware-changes.patch
+annotation-aware-changes-summary.txt

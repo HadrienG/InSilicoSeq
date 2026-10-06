@@ -18,7 +18,7 @@ from iss.generator import (
     worker_iterator,
 )
 from iss.version import __version__
-
+from iss.annotated import generate_annotated_reads
 
 def generate_reads(args):
     """Main function for the `iss generate` submodule
@@ -195,6 +195,19 @@ def main():
         prog="iss generate",
         description="simulate reads from an error model",
         help="simulate reads from an error model",
+    )
+
+    parser_ann = subparsers.add_parser(
+        "generate-annotated",
+        prog="iss generate-annotated",
+        description=(
+            "simulate annotation-aware reads from "
+            "FASTA genomes and GTF/GFF annotations"
+        ),
+        help=(
+            "simulate reads with CDS and "
+            "reading-frame annotations"
+        ),
     )
 
     # arguments form the read generator module
@@ -437,6 +450,160 @@ def main():
     )
     parser_mod._optionals.title = "arguments"
     parser_mod.set_defaults(func=model_from_bam)
+
+    param_ann_logging = (
+        parser_ann.add_mutually_exclusive_group()
+    )
+
+    param_ann_logging.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        default=False,
+        help="Disable info logging.",
+    )
+
+    param_ann_logging.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        default=False,
+        help="Enable debug logging.",
+    )
+
+    parser_ann.add_argument(
+        "--csv",
+        required=True,
+        help=(
+            "CSV containing organism_name, fna_path, "
+            "and optionally gtf_path/gff_path"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--output-dir",
+        required=True,
+        help="Directory for generated output files",
+    )
+
+    parser_ann.add_argument(
+        "--read-pairs",
+        type=int,
+        default=4000,
+        help=(
+            "Number of paired-end read pairs "
+            "to generate per organism "
+            "(default: %(default)s)"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--mode",
+        choices=["kde", "basic", "perfect"],
+        default="kde",
+        help=(
+            "InSilicoSeq error-model mode "
+            "(default: %(default)s)"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--model",
+        default="miseq",
+        help=(
+            "Built-in InSilicoSeq model name "
+            "or custom model path "
+            "(default: %(default)s)"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--output-read-length",
+        type=int,
+        default=None,
+        help=(
+            "Optional final R1/R2 length after "
+            "symmetric trimming"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--reading-frame",
+        type=int,
+        choices=[-3, -2, -1, 1, 2, 3],
+        default=None,
+        help=(
+            "Restrict R1 to a reference-derived "
+            "coding frame"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--only-full-coding",
+        action="store_true",
+        help=(
+            "Require final R1 to be fully contained "
+            "within a single CDS"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help=(
+            "Random seed "
+            "(default: %(default)s)"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--fragment-length",
+        type=int,
+        default=None,
+        help="Optional mean fragment length",
+    )
+
+    parser_ann.add_argument(
+        "--fragment-length-sd",
+        type=int,
+        default=None,
+        help=(
+            "Optional fragment-length "
+            "standard deviation"
+        ),
+    )
+
+    parser_ann.add_argument(
+        "--gc-bias",
+        dest="gc_bias",
+        action="store_true",
+        help="Enable GC-bias filtering",
+    )
+
+    parser_ann.add_argument(
+        "--no-gc-bias",
+        dest="gc_bias",
+        action="store_false",
+        help="Disable GC-bias filtering",
+    )
+
+    parser_ann.set_defaults(
+        gc_bias=True,
+    )
+
+    parser_ann.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace existing output files",
+    )
+
+    parser_ann._optionals.title = "arguments"
+
+    parser_ann.set_defaults(
+        func=generate_annotated_reads
+    )
+
     args = parser.parse_args()
 
     # set logger and display version if args.version
