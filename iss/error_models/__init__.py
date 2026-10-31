@@ -182,9 +182,13 @@ class ErrorModel(object):
             insertions = self.ins_rev
             deletions = self.del_rev
 
+        self.logger.debug("self.read_length=%r type=%s", self.read_length, type(self.read_length))
+
+        read_length = int(self.read_length)
         mutable_seq = MutableSeq(record.seq)
+        cigar_ops = [0] * read_length
         position = 0
-        for nucl in range(self.read_length - 1):
+        for nucl in range(read_length - 1):
             try:
                 # skip ambiguous nucleotides
                 if mutable_seq[nucl].upper() in "RYWSMKHBVDN":
@@ -194,6 +198,8 @@ class ErrorModel(object):
                     if random.random() < prob:
                         # we want to insert after the base read
                         mutable_seq.insert(position + 1, str(nucl_to_insert))
+                        insert_at = util.query_index_to_cigar_index(cigar_ops, position) + 1
+                        cigar_ops.insert(insert_at, 1)  # I
                         if self.store_mutations:
                             record.annotations["mutations"].append(
                                 {
@@ -208,6 +214,8 @@ class ErrorModel(object):
 
                 if random.random() < deletions[position][mutable_seq[nucl].upper()]:
                     mutable_seq.pop(position)
+                    delete_at = util.query_index_to_cigar_index(cigar_ops, position)
+                    cigar_ops[delete_at] = 2  # D
                     if self.store_mutations:
                         record.annotations["mutations"].append(
                             {
@@ -225,4 +233,16 @@ class ErrorModel(object):
 
         seq = self.adjust_seq_length(mutable_seq, orientation, full_seq, bounds)
         record.seq = seq
+
+        query_length = sum(op in (0, 1) for op in cigar_ops)
+        while query_length > len(seq):
+            op = cigar_ops.pop()
+            if op in (0, 1):
+                query_length -= 1
+
+        while query_length < len(seq):
+            cigar_ops.append(0)  # Added reference bases are M
+            query_length += 1
+        
+        record.annotations["cigar"] = cigar_ops
         return record

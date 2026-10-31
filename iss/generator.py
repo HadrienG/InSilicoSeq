@@ -12,6 +12,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqUtils import gc_fraction
+import pysam
+from itertools import groupby
 
 from iss import abundance, download, util
 from iss.error_models import basic, kde, perfect
@@ -26,6 +28,7 @@ def simulate_reads(
     forward_handle,
     reverse_handle,
     mutations_handle,
+    sam_handle,
     sequence_type,
     gc_bias=False,
     mode="default",
@@ -58,13 +61,23 @@ def simulate_reads(
 
     logger.debug("Cpu #%s: Generating %s read pairs" % (cpu_number, n_pairs))
 
-    for forward_record, reverse_record, mutations in reads_generator(
+    for (
+        forward_record,
+        reverse_record,
+        mutations,
+        coordinates,
+    ) in reads_generator(
         n_pairs, record, error_model, cpu_number, gc_bias, sequence_type
     ):
         SeqIO.write(forward_record, forward_handle, "fastq-sanger")
         SeqIO.write(reverse_record, reverse_handle, "fastq-sanger")
         write_mutations(mutations, mutations_handle)
-
+        write_alignments(
+            forward_record,
+            reverse_record,
+            coordinates,
+            sam_handle,
+        )
 
 def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_type):
     logger = logging.getLogger(__name__)
@@ -72,8 +85,9 @@ def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_
     i = 0
     while i < n_pairs:
         try:
-            forward, reverse, mutations = simulate_read(record, error_model, i, cpu_number, sequence_type)
-
+            forward, reverse, mutations, coordinates = (
+                simulate_read(record, error_model, i, cpu_number, sequence_type)
+            )
         except AssertionError:
             logger.warning("%s shorter than read length for this ErrorModel" % record.id)
             logger.warning("Skipping %s. You will have less reads than specified" % record.id)
@@ -83,15 +97,30 @@ def reads_generator(n_pairs, record, error_model, cpu_number, gc_bias, sequence_
                 stiched_seq = forward.seq + reverse.seq
                 gc_content = gc_fraction(stiched_seq)
                 if 40 < gc_content < 60:
-                    yield (forward, reverse, mutations)
+                    yield (
+                        forward,
+                        reverse,
+                        mutations,
+                        coordinates,
+                    )
                     i += 1
                 elif np.random.rand() < 0.90:
-                    yield (forward, reverse, mutations)
+                    yield (
+                        forward,
+                        reverse,
+                        mutations,
+                        coordinates,
+                    )
                     i += 1
                 else:
                     continue
             else:
-                yield (forward, reverse, mutations)
+                yield (
+                    forward,
+                    reverse,
+                    mutations,
+                    coordinates,
+                )
                 i += 1
 
 
@@ -169,12 +198,15 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
         reverse_end = reverse_start + read_length
     else:
         raise ValueError(f"Sequence type {sequence_type} not known")
+
     if reverse_end > len(record.seq):
         # we use random insert when the modelled template length distribution
         # is too large
         reverse_end = random.randrange(read_length, len(record.seq))
         reverse_start = reverse_end - read_length
+
     bounds = (reverse_start, reverse_end)
+
     # create a perfect read
     reverse = SeqRecord(
         Seq(rev_comp(str(sequence[reverse_start:reverse_end]))),
@@ -189,8 +221,31 @@ def simulate_read(record, error_model, i, cpu_number, sequence_type):
     reverse = error_model.introduce_error_scores(reverse, "reverse")
     reverse = error_model.mut_sequence(reverse, "reverse")
 
-    return (forward, reverse, forward.annotations["mutations"] + reverse.annotations["mutations"])
+    # forward read is not guaranteed to be the leftmost read
+    template_length = max(forward_end, reverse_end) - min(
+        forward_start, reverse_start
+    )
 
+    if forward_start <=  reverse_start:
+        forward_tlen = template_length
+        reverse_tlen = -template_length
+    else:
+        forward_tlen = -template_length
+        reverse_tlen = template_length
+
+    coordinates = (
+        header,
+        forward_start, forward_end,
+        reverse_start, reverse_end,
+        forward_tlen, reverse_tlen
+    )
+
+    return (
+        forward,
+        reverse,
+        forward.annotations["mutations"] + reverse.annotations["mutations"],
+        coordinates
+    )
 
 def to_fastq(generator, output):
     """Write reads to a fastq file
@@ -220,36 +275,37 @@ def to_fastq(generator, output):
                 SeqIO.write(read_tuple[1], r, "fastq-sanger")
 
 
-def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence_type, gc_bias):
+def worker_iterator(work, error_model, cpu_number, worker_prefix, seed, sequence_type, gc_bias, sam_header):
     """A utility function to run the reads simulation of each record in a loop for a specific cpu"""
     logger = logging.getLogger(__name__)
     try:
-        forward_handle = open(f"{worker_prefix}_R1.fastq", "w")
-        reverse_handle = open(f"{worker_prefix}_R2.fastq", "w")
-        mutation_handle = open(f"{worker_prefix}.vcf", "w")
+        with (
+            open(f"{worker_prefix}_R1.fastq", "w") as forward_handle,
+            open(f"{worker_prefix}_R2.fastq", "w") as reverse_handle,
+            open(f"{worker_prefix}.vcf", "w") as mutation_handle,
+            pysam.AlignmentFile(f"{worker_prefix}.sam", "w", header=sam_header) as sam_handle,
+        ):
+            if seed is not None:
+                random.seed(seed + cpu_number)
+                np.random.seed(seed + cpu_number)
+
+            for record, n_pairs, mode in work:
+                simulate_reads(
+                    record=record,
+                    n_pairs=n_pairs,
+                    mode=mode,
+                    error_model=error_model,
+                    cpu_number=cpu_number,
+                    forward_handle=forward_handle,
+                    reverse_handle=reverse_handle,
+                    mutations_handle=mutation_handle,
+                    sam_handle=sam_handle,
+                    sequence_type=sequence_type,
+                    gc_bias=gc_bias,
+                )
     except PermissionError as e:
         logger.error("Failed to write temporary output file(s): %s" % e)
         sys.exit(1)
-
-    if seed is not None:
-        random.seed(seed + cpu_number)
-        np.random.seed(seed + cpu_number)
-
-    with forward_handle, reverse_handle, mutation_handle:
-        for record, n_pairs, mode in work:
-            simulate_reads(
-                record=record,
-                n_pairs=n_pairs,
-                mode=mode,
-                error_model=error_model,
-                cpu_number=cpu_number,
-                forward_handle=forward_handle,
-                reverse_handle=reverse_handle,
-                mutations_handle=mutation_handle,
-                sequence_type=sequence_type,
-                gc_bias=gc_bias,
-            )
-
 
 def generate_work_divider(
     fasta_file, readcount_dic, abundance_dic, n_reads, coverage, coverage_file, error_model, output, chunk_size
@@ -618,3 +674,81 @@ def write_mutations(mutations, mutations_handle):
             )
             + "\n"
         )
+
+
+def write_alignments(
+    forward_record,
+    reverse_record,
+    coordinates,
+    sam_handle,
+):
+    (
+        header,
+        forward_start, forward_end,
+        reverse_start, reverse_end,
+        forward_tlen, reverse_tlen,
+    ) = coordinates
+    tid = sam_handle.get_tid(header)
+
+    def make_segment(read, start, mate_start, flag, tlen):
+        segment = pysam.AlignedSegment(sam_handle.header)
+        segment.query_name = read.id.rsplit("/", 1)[0]
+        segment.flag = flag
+
+        is_reverse = bool(flag & 0x10)
+        if is_reverse:
+            sequence = read.seq.reverse_complement()
+        else:
+            sequence = read.seq
+
+        segment.query_sequence = str(sequence)
+
+        segment.reference_id = tid
+        segment.reference_start = start
+        segment.mapping_quality = 60
+
+        cigar_ops = read.annotations.get("cigar")
+        if cigar_ops is None:
+            cigar_ops = [0] * len(read.seq)  # 0 = M
+        else:
+            cigar_ops = list(cigar_ops)
+
+        if is_reverse:
+            cigar_ops = cigar_ops[::-1]
+
+        segment.cigartuples = [
+            (op, sum(1 for _ in group))
+            for op, group in groupby(cigar_ops)
+        ]
+
+        segment.next_reference_id = tid
+        segment.next_reference_start = mate_start
+        segment.template_length = tlen
+
+        if "phred_quality" in read.letter_annotations:
+            qualities = read.letter_annotations["phred_quality"]
+            if is_reverse:
+                segment.query_qualities = qualities[::-1]
+            else:
+                segment.query_qualities = qualities
+
+        return segment
+
+    forward = make_segment(
+        forward_record,
+        forward_start,
+        reverse_start,
+        0x1 | 0x2 | 0x40 | 0x20,
+        forward_tlen,
+    )
+
+    reverse = make_segment(
+        reverse_record,
+        reverse_start,
+        forward_start,
+        0x1 | 0x2 | 0x80 | 0x10,
+        reverse_tlen,
+    )
+
+    sam_handle.write(forward)
+    sam_handle.write(reverse)
