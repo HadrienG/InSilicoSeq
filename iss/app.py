@@ -71,6 +71,14 @@ def generate_reads(args):
     try:
         # list holding the prefix for each cpu's temp file
         temp_file_list = [f"{args.output}.iss.tmp.{i}" for i in range(args.cpus)]
+        with open(genome_file, "r") as header_fasta:
+            sam_header = {
+                    "HD": {"VN": "1.6", "SO": "unsorted"},
+                "SQ": [
+                    {"SN": record.id, "LN": len(record.seq)}
+                    for record in SeqIO.parse(header_fasta, "fasta")
+                ],
+            }
         f = open(genome_file, "r")  # re-opens the file
         with f:
             fasta_file = SeqIO.parse(f, "fasta")
@@ -100,7 +108,7 @@ def generate_reads(args):
                 pool.starmap(
                     worker_iterator,
                     [
-                        (work, error_model, cpu_number, worker_prefix, args.seed, args.sequence_type, args.gc_bias)
+                        (work, error_model, cpu_number, worker_prefix, args.seed, args.sequence_type, args.gc_bias, sam_header)
                         for cpu_number, (work, worker_prefix) in enumerate(zip(work_chunks, temp_file_list))
                     ],
                 )
@@ -110,7 +118,8 @@ def generate_reads(args):
         temp_R1 = [temp_file + "_R1.fastq" for temp_file in temp_file_list]
         temp_R2 = [temp_file + "_R2.fastq" for temp_file in temp_file_list]
         temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list]
-        full_tmp_list = temp_R1 + temp_R2 + temp_mut
+        temp_sam = [temp_file + ".sam" for temp_file in temp_file_list]
+        full_tmp_list = temp_R1 + temp_R2 + temp_mut + temp_sam
         full_tmp_list.append(genome_file)
         if os.path.exists("%s.memmap" % args.output):
             full_tmp_list.append("%s.memmap" % args.output)
@@ -122,7 +131,9 @@ def generate_reads(args):
         # and reads were appended to the same temp file.
         temp_R1 = [temp_file + "_R1.fastq" for temp_file in temp_file_list]
         temp_R2 = [temp_file + "_R2.fastq" for temp_file in temp_file_list]
+        temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list]
         temp_mut = [temp_file + ".vcf" for temp_file in temp_file_list] if args.store_mutations else []
+        temp_sam = [temp_file + ".sam" for temp_file in temp_file_list]
         util.concatenate(temp_R1, args.output + "_R1.fastq")
         util.concatenate(temp_R2, args.output + "_R2.fastq")
         if args.store_mutations:
@@ -131,7 +142,12 @@ def generate_reads(args):
                 args.output + ".vcf",
                 "##fileformat=VCFv4.1\n" + "\t".join(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]),
             )
-        full_tmp_list = temp_R1 + temp_R2 + temp_mut
+        util.concatenate_sam(
+            temp_sam,
+            args.output + ".sam",
+            sam_header,
+        )
+        full_tmp_list = temp_R1 + temp_R2 + temp_mut + temp_sam
         full_tmp_list.append(genome_file)
         if os.path.exists("%s.memmap" % args.output):
             full_tmp_list.append("%s.memmap" % args.output)

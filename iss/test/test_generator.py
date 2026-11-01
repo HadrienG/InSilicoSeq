@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import pysam
 
 from iss import generator
 from iss.error_models import basic, kde
@@ -43,8 +44,16 @@ def test_simulate_and_save(setup_and_teardown):
     forward_handle = open("data/.test.iss.tmp.my_genome.0_R1.fastq", "w")
     reverse_handle = open("data/.test.iss.tmp.my_genome.0_R2.fastq", "w")
     mutations_handle = open("data/.test.iss.tmp.my_genome.tsv", "w")
+
+    sam_header = {
+        "HD": {"VN": "1.6", "SO": "unsorted"},
+        "SQ": [{"SN": ref_genome.id, "LN": len(ref_genome.seq)}],
+    }
+
+    sam_handle = pysam.AlignmentFile("data/.test.iss.tmp.my_genome.sam", "w", header=sam_header)
+
     generator.simulate_reads(
-        ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, mutations_handle, "metagenomics", gc_bias=True
+        ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, mutations_handle, sam_handle, "metagenomics", gc_bias=True
     )
 
 
@@ -54,8 +63,16 @@ def test_simulate_and_save_short(setup_and_teardown):
     forward_handle = open("data/.test.iss.tmp.my_genome.0_R1.fastq", "w")
     reverse_handle = open("data/.test.iss.tmp.my_genome.0_R2.fastq", "w")
     mutations_handle = open("data/.test.iss.tmp.my_genome.tsv", "w")
+
+    sam_header = {
+        "HD": {"VN": "1.6", "SO": "unsorted"},
+        "SQ": [{"SN": ref_genome.id, "LN": len(ref_genome.seq)}],
+    }
+
+    sam_handle = pysam.AlignmentFile("data/.test.iss.tmp.my_genome.sam", "w", header=sam_header)
+
     generator.simulate_reads(
-        ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, mutations_handle, "metagenomics", gc_bias=True
+        ref_genome, err_mod, 1000, 0, forward_handle, reverse_handle, mutations_handle, sam_handle, "metagenomics", gc_bias=True
     )
 
 
